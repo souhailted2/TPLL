@@ -61,7 +61,6 @@ export default function AdminProducts() {
         name: row["name"] || row["اسم المنتج"] || row["الاسم"] || "",
         sku: row["sku"] || row["SKU"] || row["رمز المنتج"] || "",
         price: parseFloat(row["price"] || row["السعر"] || 0),
-        stockQuantity: parseInt(row["stockQuantity"] || row["الكمية"] || row["المخزون"] || 0),
         description: row["description"] || row["الوصف"] || "",
       }));
 
@@ -77,7 +76,6 @@ export default function AdminProducts() {
       name: "",
       sku: "",
       price: "0",
-      stockQuantity: 0,
       description: "",
       imageUrl: "",
     },
@@ -111,7 +109,6 @@ export default function AdminProducts() {
       name: product.name,
       sku: product.sku,
       price: product.price.toString(),
-      stockQuantity: product.stockQuantity,
       description: product.description || "",
       imageUrl: product.imageUrl || "",
     });
@@ -124,7 +121,6 @@ export default function AdminProducts() {
       name: "",
       sku: "",
       price: "0",
-      stockQuantity: 0,
       description: "",
       imageUrl: "",
     });
@@ -197,7 +193,7 @@ export default function AdminProducts() {
                         </FormItem>
                       )}
                     />
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 gap-4">
                       <FormField
                         control={form.control}
                         name="sku"
@@ -205,17 +201,6 @@ export default function AdminProducts() {
                           <FormItem>
                             <FormLabel>رمز المنتج (SKU)</FormLabel>
                             <FormControl><Input {...field} /></FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="stockQuantity"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>الكمية المتوفرة</FormLabel>
-                            <FormControl><Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value))} /></FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
@@ -274,7 +259,6 @@ export default function AdminProducts() {
                     <TableHead>المنتج</TableHead>
                     <TableHead>SKU</TableHead>
                     <TableHead>السعر</TableHead>
-                    <TableHead>المخزون</TableHead>
                     <TableHead className="text-left">إجراءات</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -290,13 +274,6 @@ export default function AdminProducts() {
                       <TableCell className="font-mono text-xs">{product.sku}</TableCell>
                       <TableCell>{Number(product.price).toFixed(2)} ر.س</TableCell>
                       <TableCell>
-                        <span className={`px-2 py-1 rounded-full text-xs font-bold ${
-                          product.stockQuantity < 1000 ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'
-                        }`}>
-                          {product.stockQuantity}
-                        </span>
-                      </TableCell>
-                      <TableCell>
                         <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                           <Button variant="ghost" size="icon" onClick={() => openEdit(product)}>
                             <Pencil className="h-4 w-4 text-blue-500" />
@@ -310,7 +287,7 @@ export default function AdminProducts() {
                   ))}
                   {filteredProducts?.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center py-8 text-slate-400">
+                      <TableCell colSpan={4} className="text-center py-8 text-slate-400">
                         لا توجد منتجات مطابقة
                       </TableCell>
                     </TableRow>

@@ -163,7 +163,6 @@ export async function registerRoutes(
           name: item.name,
           sku: item.sku,
           price: item.price.toString(),
-          stockQuantity: item.stockQuantity || 0,
           description: item.description || null,
           imageUrl: null
         });
@@ -239,7 +238,6 @@ async function seedDatabase() {
       name: "برغي 10مم (Screw 10mm)",
       sku: "SCR-010",
       price: "0.50",
-      stockQuantity: 10000,
       description: "برغي فولاذي عالي الجودة 10مم (High quality steel screw)",
       imageUrl: "https://placehold.co/400x400?text=Screw+10mm"
     });
@@ -247,7 +245,6 @@ async function seedDatabase() {
       name: "صامولة 10مم (Nut 10mm)",
       sku: "NUT-010",
       price: "0.20",
-      stockQuantity: 20000,
       description: "صامولة سداسية الشكل (Hexagonal nut)",
       imageUrl: "https://placehold.co/400x400?text=Nut+10mm"
     });
@@ -255,7 +252,6 @@ async function seedDatabase() {
       name: "رنديلة (Washer)",
       sku: "WSH-010",
       price: "0.05",
-      stockQuantity: 50000,
       description: "رنديلة معدنية (Metal washer)",
       imageUrl: "https://placehold.co/400x400?text=Washer"
     });

@@ -124,7 +124,6 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createOrder(salesPointId: string, orderRequest: CreateOrderRequest): Promise<Order> {
-    // Calculate total amount and verify stock (optional, not strictly enforced yet)
     let totalAmount = 0;
     const itemsToInsert = [];
 
@@ -141,7 +140,6 @@ export class DatabaseStorage implements IStorage {
       });
     }
 
-    // Start transaction ideally, but for now sequential
     const [newOrder] = await db.insert(orders).values({
       salesPointId,
       totalAmount: totalAmount.toFixed(2),
