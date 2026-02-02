@@ -94,6 +94,23 @@ export async function registerRoutes(
       const input = api.orders.create.input.parse(req.body);
       const userId = req.user.claims.sub;
       const order = await storage.createOrder(userId, input);
+      
+      // Notify all admins about the new order
+      const userRole = await storage.getUserRole(userId);
+      const salesPointName = userRole?.salesPointName || "نقطة بيع";
+      const adminIds = await storage.getAdminUserIds();
+      
+      for (const adminId of adminIds) {
+        await storage.createNotification({
+          userId: adminId,
+          type: "new_order",
+          title: "طلب جديد",
+          message: `طلب جديد #${order.id} من ${salesPointName}`,
+          orderId: order.id,
+          isRead: false
+        });
+      }
+      
       res.status(201).json(order);
     } catch (err) {
       if (err instanceof z.ZodError) {
@@ -106,8 +123,32 @@ export async function registerRoutes(
   app.patch(api.orders.updateStatus.path, requireAdmin, async (req, res) => {
     try {
       const { status } = req.body;
-      const order = await storage.updateOrderStatus(Number(req.params.id), status);
+      const orderId = Number(req.params.id);
+      
+      // Get order details before update
+      const existingOrder = await storage.getOrder(orderId);
+      if (!existingOrder) return res.status(404).json({ message: "Order not found" });
+      
+      const order = await storage.updateOrderStatus(orderId, status);
       if (!order) return res.status(404).json({ message: "Order not found" });
+      
+      // Notify the sales point about the status change
+      const statusLabels: Record<string, string> = {
+        submitted: "قيد الانتظار",
+        processing: "قيد المعالجة",
+        completed: "مكتمل",
+        cancelled: "ملغي"
+      };
+      
+      await storage.createNotification({
+        userId: order.salesPointId,
+        type: "status_change",
+        title: "تحديث حالة الطلب",
+        message: `تم تغيير حالة الطلب #${order.id} إلى: ${statusLabels[status] || status}`,
+        orderId: order.id,
+        isRead: false
+      });
+      
       res.json(order);
     } catch (err) {
       res.status(500).json({ message: "Failed to update status" });
@@ -191,6 +232,27 @@ export async function registerRoutes(
       }
       throw err;
     }
+  });
+
+  // === Notifications API ===
+  
+  app.get(api.notifications.list.path, requireAuth, async (req: any, res) => {
+    const userId = req.user.claims.sub;
+    const userNotifications = await storage.getNotifications(userId);
+    res.json(userNotifications);
+  });
+
+  app.patch(api.notifications.markRead.path, requireAuth, async (req: any, res) => {
+    const userId = req.user.claims.sub;
+    const notification = await storage.markNotificationAsRead(Number(req.params.id), userId);
+    if (!notification) return res.status(404).json({ message: "Notification not found" });
+    res.json(notification);
+  });
+
+  app.post(api.notifications.markAllRead.path, requireAuth, async (req: any, res) => {
+    const userId = req.user.claims.sub;
+    await storage.markAllNotificationsAsRead(userId);
+    res.json({ success: true });
   });
 
   // Seed Data

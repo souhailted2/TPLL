@@ -121,3 +121,31 @@ export const insertUserRoleSchema = createInsertSchema(userRoles);
 export type UserRole = typeof userRoles.$inferSelect;
 export type UpdateUserRoleRequest = Partial<z.infer<typeof insertUserRoleSchema>>;
 
+// === NOTIFICATIONS ===
+
+export const notifications = pgTable("notifications", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  type: text("type").notNull(), // 'new_order', 'status_change'
+  title: text("title").notNull(),
+  message: text("message").notNull(),
+  orderId: integer("order_id").references(() => orders.id),
+  isRead: boolean("is_read").notNull().default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const notificationsRelations = relations(notifications, ({ one }) => ({
+  user: one(users, {
+    fields: [notifications.userId],
+    references: [users.id],
+  }),
+  order: one(orders, {
+    fields: [notifications.orderId],
+    references: [orders.id],
+  }),
+}));
+
+export const insertNotificationSchema = createInsertSchema(notifications).omit({ id: true, createdAt: true });
+export type Notification = typeof notifications.$inferSelect;
+export type InsertNotification = z.infer<typeof insertNotificationSchema>;
+

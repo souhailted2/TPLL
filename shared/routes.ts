@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { insertProductSchema, insertOrderSchema, insertOrderItemSchema, products, orders, userRoles } from './schema';
+import { insertProductSchema, insertOrderSchema, insertOrderItemSchema, products, orders, userRoles, notifications } from './schema';
 
 export const errorSchemas = {
   validation: z.object({
@@ -138,6 +138,30 @@ export const api = {
         401: errorSchemas.unauthorized,
       },
     }
+  },
+  notifications: {
+    list: {
+      method: 'GET' as const,
+      path: '/api/notifications',
+      responses: {
+        200: z.array(z.custom<typeof notifications.$inferSelect>()),
+      },
+    },
+    markRead: {
+      method: 'PATCH' as const,
+      path: '/api/notifications/:id/read',
+      responses: {
+        200: z.custom<typeof notifications.$inferSelect>(),
+        404: errorSchemas.notFound,
+      },
+    },
+    markAllRead: {
+      method: 'POST' as const,
+      path: '/api/notifications/read-all',
+      responses: {
+        200: z.object({ success: z.boolean() }),
+      },
+    },
   }
 };
 

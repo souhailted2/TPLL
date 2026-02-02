@@ -1,12 +1,13 @@
 import { db } from "./db";
 import {
-  products, orders, orderItems, userRoles,
+  products, orders, orderItems, userRoles, notifications,
   type Product, type InsertProduct, type UpdateProductRequest,
   type Order, type CreateOrderRequest, type OrderItem,
   type UserRole, type UpdateUserRoleRequest,
+  type Notification, type InsertNotification,
   users
 } from "@shared/schema";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and } from "drizzle-orm";
 
 export interface IStorage {
   // Products
@@ -25,6 +26,13 @@ export interface IStorage {
   // User Roles
   getUserRole(userId: string): Promise<UserRole | undefined>;
   upsertUserRole(userId: string, roleData: UpdateUserRoleRequest): Promise<UserRole>;
+
+  // Notifications
+  getNotifications(userId: string): Promise<Notification[]>;
+  createNotification(notification: InsertNotification): Promise<Notification>;
+  markNotificationAsRead(id: number, userId: string): Promise<Notification | undefined>;
+  markAllNotificationsAsRead(userId: string): Promise<void>;
+  getAdminUserIds(): Promise<string[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -175,6 +183,44 @@ export class DatabaseStorage implements IStorage {
       })
       .returning();
     return role;
+  }
+
+  // Notifications
+  async getNotifications(userId: string): Promise<Notification[]> {
+    return await db
+      .select()
+      .from(notifications)
+      .where(eq(notifications.userId, userId))
+      .orderBy(desc(notifications.createdAt));
+  }
+
+  async createNotification(notification: InsertNotification): Promise<Notification> {
+    const [newNotification] = await db.insert(notifications).values(notification).returning();
+    return newNotification;
+  }
+
+  async markNotificationAsRead(id: number, userId: string): Promise<Notification | undefined> {
+    const [updated] = await db
+      .update(notifications)
+      .set({ isRead: true })
+      .where(and(eq(notifications.id, id), eq(notifications.userId, userId)))
+      .returning();
+    return updated;
+  }
+
+  async markAllNotificationsAsRead(userId: string): Promise<void> {
+    await db
+      .update(notifications)
+      .set({ isRead: true })
+      .where(eq(notifications.userId, userId));
+  }
+
+  async getAdminUserIds(): Promise<string[]> {
+    const admins = await db
+      .select({ userId: userRoles.userId })
+      .from(userRoles)
+      .where(eq(userRoles.role, 'admin'));
+    return admins.map(a => a.userId);
   }
 }
 

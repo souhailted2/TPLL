@@ -12,6 +12,7 @@ import {
 import { useAuth } from "@/hooks/use-auth";
 import { useState } from "react";
 import { Button } from "./ui/button";
+import { NotificationDropdown } from "./notification-dropdown";
 
 interface SidebarProps {
   role: 'admin' | 'sales_point';
@@ -52,14 +53,17 @@ export function Sidebar({ role }: SidebarProps) {
         <div className="h-full flex flex-col">
           {/* Header */}
           <div className="p-6 border-b border-slate-700">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
-                <Package className="h-6 w-6 text-white" />
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
+                  <Package className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <h1 className="font-bold font-display text-lg">مصنع البراغي</h1>
+                  <p className="text-xs text-slate-400">نظام إدارة الطلبات</p>
+                </div>
               </div>
-              <div>
-                <h1 className="font-bold font-display text-lg">مصنع البراغي</h1>
-                <p className="text-xs text-slate-400">نظام إدارة الطلبات</p>
-              </div>
+              <NotificationDropdown />
             </div>
           </div>
 
