@@ -39,9 +39,15 @@ export function Sidebar({ role }: SidebarProps) {
   return (
     <>
       {/* Mobile Toggle */}
-      <div className="md:hidden fixed top-0 right-0 z-50 p-4">
-        <Button variant="outline" size="icon" onClick={() => setIsOpen(!isOpen)}>
-          {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+      <div className="md:hidden fixed top-2 right-2 z-50 flex items-center gap-2">
+        <NotificationDropdown />
+        <Button 
+          variant="outline" 
+          size="icon" 
+          className="bg-slate-900/80 backdrop-blur-md text-white border-slate-700/50 hover:bg-slate-800 shadow-xl" 
+          onClick={() => setIsOpen(!isOpen)}
+        >
+          {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </Button>
       </div>
 
@@ -50,9 +56,9 @@ export function Sidebar({ role }: SidebarProps) {
         "fixed inset-y-0 right-0 z-40 w-64 bg-slate-900 text-white transform transition-transform duration-300 ease-in-out md:translate-x-0",
         isOpen ? "translate-x-0" : "translate-x-full"
       )}>
-        <div className="h-full flex flex-col">
+        <div className="h-full flex flex-col pt-16 md:pt-0">
           {/* Header */}
-          <div className="p-6 border-b border-slate-700">
+          <div className="p-6 border-b border-slate-700 hidden md:block">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <img src="/images/logo.png" alt="TPL Logo" className="h-10 w-10 object-contain rounded-lg" />
@@ -66,7 +72,14 @@ export function Sidebar({ role }: SidebarProps) {
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
+          <nav className="flex-1 p-4 space-y-2 overflow-y-auto" onClick={() => setIsOpen(false)}>
+            <div className="md:hidden flex items-center gap-3 mb-6 px-2 pb-6 border-b border-slate-700">
+              <img src="/images/logo.png" alt="TPL Logo" className="h-10 w-10 object-contain rounded-lg" />
+              <div>
+                <h1 className="font-bold font-display text-lg">شركة TPL</h1>
+                <p className="text-xs text-slate-400">نظام إدارة الطلبات</p>
+              </div>
+            </div>
             {links.map((link) => {
               const Icon = link.icon;
               const isActive = location === link.href;
