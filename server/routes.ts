@@ -1,6 +1,6 @@
 import type { Express } from "express";
 import type { Server } from "http";
-import { setupAuth, registerAuthRoutes } from "./replit_integrations/auth";
+import { setupAuth, isAuthenticated, seedUsers } from "./auth";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
@@ -11,19 +11,18 @@ export async function registerRoutes(
 ): Promise<Server> {
   // Auth setup
   await setupAuth(app);
-  registerAuthRoutes(app);
 
   // Middleware to check authentication
   const requireAuth = (req: any, res: any, next: any) => {
-    if (req.isAuthenticated()) {
-      return next();
+    if (!req.session.userId) {
+      return res.status(401).json({ message: "Unauthorized" });
     }
-    res.status(401).json({ message: "Unauthorized" });
+    next();
   };
 
   const requireAdmin = async (req: any, res: any, next: any) => {
-    if (!req.isAuthenticated()) return res.status(401).json({ message: "Unauthorized" });
-    const userId = req.user.claims.sub;
+    if (!req.session.userId) return res.status(401).json({ message: "Unauthorized" });
+    const userId = req.session.userId;
     const role = await storage.getUserRole(userId);
     if (role?.role !== 'admin') {
       return res.status(403).json({ message: "Forbidden: Admins only" });
@@ -80,7 +79,7 @@ export async function registerRoutes(
   // === Orders API ===
 
   app.get(api.orders.list.path, requireAuth, async (req: any, res) => {
-    const userId = req.user.claims.sub;
+    const userId = req.session.userId;
     const role = await storage.getUserRole(userId);
     
     // If admin, see all. If sales point, see own.
@@ -92,7 +91,7 @@ export async function registerRoutes(
   app.post(api.orders.create.path, requireAuth, async (req: any, res) => {
     try {
       const input = api.orders.create.input.parse(req.body);
-      const userId = req.user.claims.sub;
+      const userId = req.session.userId;
       const order = await storage.createOrder(userId, input);
       
       // Notify all admins about the new order
@@ -182,28 +181,8 @@ export async function registerRoutes(
   // === User Role API ===
 
   app.get(api.userRoles.get.path, requireAuth, async (req: any, res) => {
-    const userId = req.user.claims.sub;
-    const email = req.user.claims.email;
+    const userId = req.session.userId;
     let role = await storage.getUserRole(userId);
-    
-    if (!role && email) {
-      // Auto-assign roles based on email for the requested accounts
-      const userMappings: Record<string, { role: "admin" | "sales_point", spName?: string }> = {
-        "owner@tpl.dz": { role: "admin" },
-        "alger@tpl.dz": { role: "sales_point", spName: "الجزائر" },
-        "eloued@tpl.dz": { role: "sales_point", spName: "الوادي" },
-        "elma@tpl.dz": { role: "sales_point", spName: "العلمة" },
-        "factory@tpl.dz": { role: "admin" },
-      };
-
-      const mapping = userMappings[email.toLowerCase()];
-      if (mapping) {
-        role = await storage.upsertUserRole(userId, { 
-          role: mapping.role, 
-          salesPointName: mapping.spName 
-        });
-      }
-    }
 
     if (!role) {
       return res.status(404).json({ message: "Role not set" });
@@ -212,18 +191,9 @@ export async function registerRoutes(
   });
 
   app.post(api.userRoles.update.path, requireAuth, async (req: any, res) => {
-    // This endpoint allows setting the role. 
-    // In a real app, this should be restricted. 
-    // For this prototype, we'll allow setting it once or if admin?
-    // Let's allow any user to set their OWN role/salesPointName initially for onboarding.
     try {
       const input = api.userRoles.update.input.parse(req.body);
-      const userId = req.user.claims.sub;
-      
-      // Basic protection: don't allow setting admin unless... well, for this demo we might need an admin.
-      // Let's say the first user can become admin, or we just trust the input for the demo.
-      // Or we hardcode specific emails.
-      // For now, allow update.
+      const userId = req.session.userId;
       const role = await storage.upsertUserRole(userId, input);
       res.json(role);
     } catch (err) {
@@ -237,26 +207,27 @@ export async function registerRoutes(
   // === Notifications API ===
   
   app.get(api.notifications.list.path, requireAuth, async (req: any, res) => {
-    const userId = req.user.claims.sub;
+    const userId = req.session.userId;
     const userNotifications = await storage.getNotifications(userId);
     res.json(userNotifications);
   });
 
   app.patch(api.notifications.markRead.path, requireAuth, async (req: any, res) => {
-    const userId = req.user.claims.sub;
+    const userId = req.session.userId;
     const notification = await storage.markNotificationAsRead(Number(req.params.id), userId);
     if (!notification) return res.status(404).json({ message: "Notification not found" });
     res.json(notification);
   });
 
   app.post(api.notifications.markAllRead.path, requireAuth, async (req: any, res) => {
-    const userId = req.user.claims.sub;
+    const userId = req.session.userId;
     await storage.markAllNotificationsAsRead(userId);
     res.json({ success: true });
   });
 
-  // Seed Data
+  // Seed Data and Users
   await seedDatabase();
+  await seedUsers();
 
   return httpServer;
 }
@@ -288,26 +259,5 @@ async function seedDatabase() {
       description: "رنديلة معدنية (Metal washer)",
       imageUrl: "https://placehold.co/400x400?text=Washer"
     });
-  }
-
-  // Pre-defined user mapping for the project
-  const userMappings = [
-    { id: "owner-id", email: "owner@tpl.dz", role: "admin", name: "المالك (Owner)" },
-    { id: "sp-alger", email: "alger@tpl.dz", role: "sales_point", name: "نقطة بيع الجزائر", spName: "الجزائر" },
-    { id: "sp-eloued", email: "eloued@tpl.dz", role: "sales_point", name: "نقطة بيع الوادي", spName: "الوادي" },
-    { id: "sp-elma", email: "elma@tpl.dz", role: "sales_point", name: "نقطة بيع العلمة", spName: "العلمة" },
-    { id: "factory-worker", email: "factory@tpl.dz", role: "admin", name: "موظف المصنع" },
-  ];
-
-  for (const mapping of userMappings) {
-    const existingUser = await storage.getUserRole(mapping.id);
-    if (!existingUser) {
-      // In Replit Auth, we usually upsert the user role when they first login.
-      // However, for seeding logic, we can pre-create roles if IDs are known, 
-      // but usually we wait for the first login to get the actual Replit ID.
-      // For this demo, I will store these in a "pre_authorized_users" logic or similar 
-      // if I had a table. Since I don't, I'll update the `registerRoutes` to auto-assign 
-      // roles based on email during first login.
-    }
   }
 }
