@@ -118,9 +118,29 @@ export async function registerRoutes(
 
   app.get(api.userRoles.get.path, requireAuth, async (req: any, res) => {
     const userId = req.user.claims.sub;
-    const role = await storage.getUserRole(userId);
+    const email = req.user.claims.email;
+    let role = await storage.getUserRole(userId);
+    
+    if (!role && email) {
+      // Auto-assign roles based on email for the requested accounts
+      const userMappings: Record<string, { role: "admin" | "sales_point", spName?: string }> = {
+        "owner@tpl.dz": { role: "admin" },
+        "alger@tpl.dz": { role: "sales_point", spName: "الجزائر" },
+        "eloued@tpl.dz": { role: "sales_point", spName: "الوادي" },
+        "elma@tpl.dz": { role: "sales_point", spName: "العلمة" },
+        "factory@tpl.dz": { role: "admin" },
+      };
+
+      const mapping = userMappings[email.toLowerCase()];
+      if (mapping) {
+        role = await storage.upsertUserRole(userId, { 
+          role: mapping.role, 
+          salesPointName: mapping.spName 
+        });
+      }
+    }
+
     if (!role) {
-      // Return default or empty if not found
       return res.status(404).json({ message: "Role not set" });
     }
     res.json(role);
@@ -156,8 +176,8 @@ export async function registerRoutes(
 }
 
 async function seedDatabase() {
-  const products = await storage.getProducts();
-  if (products.length === 0) {
+  const existingProducts = await storage.getProducts();
+  if (existingProducts.length === 0) {
     await storage.createProduct({
       name: "برغي 10مم (Screw 10mm)",
       sku: "SCR-010",
@@ -182,5 +202,26 @@ async function seedDatabase() {
       description: "رنديلة معدنية (Metal washer)",
       imageUrl: "https://placehold.co/400x400?text=Washer"
     });
+  }
+
+  // Pre-defined user mapping for the project
+  const userMappings = [
+    { id: "owner-id", email: "owner@tpl.dz", role: "admin", name: "المالك (Owner)" },
+    { id: "sp-alger", email: "alger@tpl.dz", role: "sales_point", name: "نقطة بيع الجزائر", spName: "الجزائر" },
+    { id: "sp-eloued", email: "eloued@tpl.dz", role: "sales_point", name: "نقطة بيع الوادي", spName: "الوادي" },
+    { id: "sp-elma", email: "elma@tpl.dz", role: "sales_point", name: "نقطة بيع العلمة", spName: "العلمة" },
+    { id: "factory-worker", email: "factory@tpl.dz", role: "admin", name: "موظف المصنع" },
+  ];
+
+  for (const mapping of userMappings) {
+    const existingUser = await storage.getUserRole(mapping.id);
+    if (!existingUser) {
+      // In Replit Auth, we usually upsert the user role when they first login.
+      // However, for seeding logic, we can pre-create roles if IDs are known, 
+      // but usually we wait for the first login to get the actual Replit ID.
+      // For this demo, I will store these in a "pre_authorized_users" logic or similar 
+      // if I had a table. Since I don't, I'll update the `registerRoutes` to auto-assign 
+      // roles based on email during first login.
+    }
   }
 }
