@@ -5,13 +5,16 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Loader2, Plus, Pencil, Trash2, Search, Package } from "lucide-react";
-import { useState } from "react";
+import { Loader2, Plus, Pencil, Trash2, Search, Package, FileSpreadsheet } from "lucide-react";
+import { useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertProductSchema } from "@shared/schema";
 import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import * as XLSX from "xlsx";
 
 type ProductFormValues = z.infer<typeof insertProductSchema>;
 
@@ -25,6 +28,48 @@ export default function AdminProducts() {
   const updateMutation = useUpdateProduct();
   const deleteMutation = useDeleteProduct();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const importMutation = useMutation({
+    mutationFn: async (products: any[]) => {
+      const res = await apiRequest("POST", "/api/import/products", products);
+      return res.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/products"] });
+      toast({ title: "تم الاستيراد بنجاح", description: `تم إضافة ${data.count} منتج` });
+    },
+    onError: () => {
+      toast({ title: "خطأ", description: "فشل استيراد الملف", variant: "destructive" });
+    }
+  });
+
+  const handleExcelImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const data = new Uint8Array(event.target?.result as ArrayBuffer);
+      const workbook = XLSX.read(data, { type: "array" });
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
+      const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+      const products = jsonData.map((row: any) => ({
+        name: row["name"] || row["اسم المنتج"] || row["الاسم"] || "",
+        sku: row["sku"] || row["SKU"] || row["رمز المنتج"] || "",
+        price: parseFloat(row["price"] || row["السعر"] || 0),
+        stockQuantity: parseInt(row["stockQuantity"] || row["الكمية"] || row["المخزون"] || 0),
+        description: row["description"] || row["الوصف"] || "",
+      }));
+
+      importMutation.mutate(products);
+    };
+    reader.readAsArrayBuffer(file);
+    e.target.value = "";
+  };
 
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(insertProductSchema),
@@ -105,13 +150,35 @@ export default function AdminProducts() {
               <p className="text-slate-500">إضافة وتعديل منتجات المصنع والمخزون</p>
             </div>
             
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-              <DialogTrigger asChild>
-                <Button onClick={openCreate} size="lg" className="shadow-lg shadow-primary/20">
-                  <Plus className="ml-2 h-5 w-5" />
-                  إضافة منتج جديد
-                </Button>
-              </DialogTrigger>
+            <div className="flex gap-3">
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleExcelImport}
+                accept=".xlsx,.xls,.csv"
+                className="hidden"
+              />
+              <Button 
+                variant="outline" 
+                size="lg" 
+                onClick={() => fileInputRef.current?.click()}
+                disabled={importMutation.isPending}
+              >
+                {importMutation.isPending ? (
+                  <Loader2 className="ml-2 h-5 w-5 animate-spin" />
+                ) : (
+                  <FileSpreadsheet className="ml-2 h-5 w-5" />
+                )}
+                استيراد من Excel
+              </Button>
+              
+              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button onClick={openCreate} size="lg" className="shadow-lg shadow-primary/20">
+                    <Plus className="ml-2 h-5 w-5" />
+                    إضافة منتج جديد
+                  </Button>
+                </DialogTrigger>
               <DialogContent className="sm:max-w-[500px]" dir="rtl">
                 <DialogHeader>
                   <DialogTitle>{editingProduct ? "تعديل منتج" : "إضافة منتج جديد"}</DialogTitle>
@@ -184,6 +251,7 @@ export default function AdminProducts() {
                 </Form>
               </DialogContent>
             </Dialog>
+            </div>
           </div>
 
           <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
