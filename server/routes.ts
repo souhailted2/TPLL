@@ -114,6 +114,30 @@ export async function registerRoutes(
     }
   });
 
+  app.post(api.import.products.path, requireAdmin, async (req, res) => {
+    try {
+      const items = api.import.products.input.parse(req.body);
+      let count = 0;
+      for (const item of items) {
+        await storage.createProduct({
+          name: item.name,
+          sku: item.sku,
+          price: item.price.toString(),
+          stockQuantity: item.stockQuantity || 0,
+          description: item.description || null,
+          imageUrl: null
+        });
+        count++;
+      }
+      res.status(201).json({ count });
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors[0].message });
+      }
+      res.status(500).json({ message: "Failed to import products" });
+    }
+  });
+
   // === User Role API ===
 
   app.get(api.userRoles.get.path, requireAuth, async (req: any, res) => {

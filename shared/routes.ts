@@ -99,6 +99,24 @@ export const api = {
       },
     },
   },
+  import: {
+    products: {
+      method: 'POST' as const,
+      path: '/api/import/products',
+      input: z.array(z.object({
+        name: z.string(),
+        sku: z.string(),
+        price: z.union([z.string(), z.number()]),
+        stockQuantity: z.number().optional(),
+        description: z.string().optional(),
+      })),
+      responses: {
+        201: z.object({ count: z.number() }),
+        400: errorSchemas.validation,
+        401: errorSchemas.unauthorized,
+      },
+    }
+  },
   userRoles: {
     get: {
       method: 'GET' as const,
