@@ -3,10 +3,19 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/hooks/use-auth";
-import { Loader2, ShieldCheck, BarChart3, Globe, Package, LogIn, User, Lock } from "lucide-react";
+import { Loader2, ShieldCheck, BarChart3, Globe, LogIn, User, Lock, Check } from "lucide-react";
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
+
+const ACCOUNTS = [
+  { id: "owner", label: "المالك (Owner)", role: "admin" },
+  { id: "factory", label: "المصنع (Factory)", role: "admin" },
+  { id: "alger", label: "نقطة الجزائر (Alger)", role: "sales" },
+  { id: "eloued", label: "نقطة الوادي (El Oued)", role: "sales" },
+  { id: "elma", label: "نقطة العلمة (Elma)", role: "sales" },
+];
 
 export default function LandingPage() {
   const { isLoading, login, isLoggingIn } = useAuth();
@@ -20,7 +29,7 @@ export default function LandingPage() {
     if (!username || !password) {
       toast({
         title: "خطأ",
-        description: "يرجى إدخال اسم المستخدم وكلمة المرور",
+        description: "يرجى اختيار حساب وإدخال كلمة المرور",
         variant: "destructive",
       });
       return;
@@ -35,7 +44,7 @@ export default function LandingPage() {
     } catch (error: any) {
       toast({
         title: "فشل تسجيل الدخول",
-        description: error.message || "اسم المستخدم أو كلمة المرور غير صحيحة",
+        description: error.message || "كلمة المرور غير صحيحة",
         variant: "destructive",
       });
     }
@@ -119,28 +128,42 @@ export default function LandingPage() {
                 <LogIn className="h-8 w-8 text-primary" />
               </div>
               <CardTitle className="text-2xl font-bold">تسجيل الدخول</CardTitle>
-              <p className="text-muted-foreground text-sm mt-2">أدخل بيانات حسابك للدخول إلى النظام</p>
+              <p className="text-muted-foreground text-sm mt-2">اختر حسابك وأدخل كلمة المرور</p>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleLogin} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="username" className="flex items-center gap-2">
+              <form onSubmit={handleLogin} className="space-y-6">
+                <div className="space-y-3">
+                  <Label className="flex items-center gap-2 text-base">
                     <User className="h-4 w-4" />
-                    اسم المستخدم
+                    اختر الحساب
                   </Label>
-                  <Input
-                    id="username"
-                    type="text"
-                    placeholder="أدخل اسم المستخدم"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    className="text-right"
-                    data-testid="input-username"
-                    disabled={isLoggingIn}
-                  />
+                  <div className="grid grid-cols-1 gap-2 max-h-[200px] overflow-y-auto p-1">
+                    {ACCOUNTS.map((acc) => (
+                      <button
+                        key={acc.id}
+                        type="button"
+                        onClick={() => setUsername(acc.id)}
+                        className={cn(
+                          "flex items-center justify-between px-4 py-3 rounded-lg border transition-all text-right",
+                          username === acc.id
+                            ? "border-primary bg-primary/5 ring-1 ring-primary"
+                            : "border-slate-200 hover:border-slate-300 hover:bg-slate-50"
+                        )}
+                      >
+                        <span className={cn(
+                          "font-medium",
+                          username === acc.id ? "text-primary" : "text-slate-700"
+                        )}>
+                          {acc.label}
+                        </span>
+                        {username === acc.id && <Check className="h-4 w-4 text-primary" />}
+                      </button>
+                    ))}
+                  </div>
                 </div>
+
                 <div className="space-y-2">
-                  <Label htmlFor="password" className="flex items-center gap-2">
+                  <Label htmlFor="password" className="flex items-center gap-2 text-base">
                     <Lock className="h-4 w-4" />
                     كلمة المرور
                   </Label>
@@ -150,45 +173,31 @@ export default function LandingPage() {
                     placeholder="أدخل كلمة المرور"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="text-right"
+                    className="text-right h-12 text-lg"
                     data-testid="input-password"
                     disabled={isLoggingIn}
                   />
                 </div>
+
                 <Button 
                   type="submit" 
-                  className="w-full mt-6" 
-                  size="lg"
-                  disabled={isLoggingIn}
+                  className="w-full mt-2 h-12 text-lg shadow-lg shadow-primary/20" 
+                  disabled={isLoggingIn || !username}
                   data-testid="button-login"
                 >
                   {isLoggingIn ? (
                     <>
                       <Loader2 className="ml-2 h-5 w-5 animate-spin" />
-                      جاري تسجيل الدخول...
+                      جاري الدخول...
                     </>
                   ) : (
                     <>
                       <LogIn className="ml-2 h-5 w-5" />
-                      دخول
+                      دخول للنظام
                     </>
                   )}
                 </Button>
               </form>
-
-              <div className="mt-6 pt-6 border-t text-center">
-                <p className="text-sm text-muted-foreground mb-3">حسابات النظام:</p>
-                <div className="grid grid-cols-2 gap-2 text-xs">
-                  <div className="bg-slate-50 p-2 rounded">
-                    <p className="font-bold">المالك/المصنع</p>
-                    <p className="text-muted-foreground">owner / factory</p>
-                  </div>
-                  <div className="bg-slate-50 p-2 rounded">
-                    <p className="font-bold">نقاط البيع</p>
-                    <p className="text-muted-foreground">alger / eloued / elma</p>
-                  </div>
-                </div>
-              </div>
             </CardContent>
           </Card>
         </motion.div>
