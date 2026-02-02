@@ -23,10 +23,8 @@ export default function LandingPage() {
       {/* Navigation */}
       <header className="px-6 lg:px-12 py-6 flex justify-between items-center max-w-7xl mx-auto w-full">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center shadow-lg shadow-primary/20">
-            <Wrench className="h-6 w-6 text-white" />
-          </div>
-          <span className="font-bold text-xl text-slate-900 font-display">مصنع البراغي</span>
+          <img src="/images/logo.png" alt="TPL Logo" className="h-12 w-12 object-contain" />
+          <span className="font-bold text-xl text-slate-900 font-display">شركة صناعة البراغي واللوالب والمسامير (TPL)</span>
         </div>
         <Button onClick={handleLogin} variant="outline" className="hidden sm:flex border-primary text-primary hover:bg-primary hover:text-white">
           تسجيل الدخول
@@ -98,13 +96,11 @@ export default function LandingPage() {
           className="flex-1 w-full max-w-lg lg:max-w-xl"
         >
           <div className="relative">
-            <div className="absolute -inset-4 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-3xl blur-2xl opacity-20 animate-pulse"></div>
-            {/* Manufacturing/Factory Stock Image */}
-            {/* modern factory automation machine parts */}
+            <div className="absolute -inset-4 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-3xl blur-2xl opacity-20 animate-pulse"></div>
             <img 
-              src="https://pixabay.com/get/g5dcd391f6cfff2f498a15f3a7ca397f7d52ff28d5c375590378e7b4bcd3d1cceae569462a34491befa3ba7c20cb499ddc7b90baaae31221aa74f6681f4d9e745_1280.jpg" 
-              alt="Industrial Factory" 
-              className="relative rounded-3xl shadow-2xl border-4 border-white object-cover aspect-square w-full"
+              src="/images/business_card.png" 
+              alt="TPL Business Card" 
+              className="relative rounded-3xl shadow-2xl border-4 border-white object-cover w-full"
             />
             
             {/* Floating Card 1 */}

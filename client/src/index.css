@@ -12,16 +12,9 @@
   --background: 210 20% 98%;
   --foreground: 222 47% 11%;
 
-  --primary: 215 100% 45%; /* Strong Industrial Blue */
-  --primary-foreground: 0 0% 100%;
-
-  --secondary: 210 40% 96%;
-  --secondary-foreground: 222 47% 11%;
-
-  --muted: 210 40% 96%;
-  --muted-foreground: 215 16% 47%;
-
-  --accent: 38 92% 50%; /* Industrial Orange/Yellow for warnings/highlights */
+  --primary: 45 100% 48%; /* Logo Yellow */
+  --primary-foreground: 0 0% 0%;
+  --accent: 215 100% 45%; /* Logo Blue */
   --accent-foreground: 222 47% 11%;
 
   --destructive: 0 84% 60%;
