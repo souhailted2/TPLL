@@ -58,8 +58,7 @@ export function NotificationDropdown() {
           <div className="flex gap-1">
             <Button 
               variant="ghost" 
-              size="icon" 
-              className="h-6 w-6" 
+              size="sm"
               onClick={() => refetch()}
               data-testid="button-refresh-notifications"
             >
@@ -68,8 +67,7 @@ export function NotificationDropdown() {
             {unreadCount > 0 && (
               <Button 
                 variant="ghost" 
-                size="icon" 
-                className="h-6 w-6"
+                size="sm"
                 onClick={handleMarkAllRead}
                 disabled={markAllReadMutation.isPending}
                 data-testid="button-mark-all-read"
@@ -131,8 +129,8 @@ export function NotificationDropdown() {
                   {!notification.isRead && (
                     <Button
                       variant="ghost"
-                      size="icon"
-                      className="h-6 w-6 shrink-0"
+                      size="sm"
+                      className="shrink-0"
                       onClick={(e) => {
                         e.stopPropagation();
                         handleMarkRead(notification.id);
