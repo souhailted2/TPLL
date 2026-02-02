@@ -55,11 +55,9 @@ export function Sidebar({ role }: SidebarProps) {
           <div className="p-6 border-b border-slate-700">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
-                  <Package className="h-6 w-6 text-white" />
-                </div>
+                <img src="/images/logo.png" alt="TPL Logo" className="h-10 w-10 object-contain rounded-lg" />
                 <div>
-                  <h1 className="font-bold font-display text-lg">مصنع البراغي</h1>
+                  <h1 className="font-bold font-display text-lg">شركة TPL</h1>
                   <p className="text-xs text-slate-400">نظام إدارة الطلبات</p>
                 </div>
               </div>
