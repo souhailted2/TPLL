@@ -36,6 +36,7 @@ export function Sidebar({ role }: SidebarProps) {
   const salesLinks = [
     { href: "/sales/new-order", label: "طلب جديد", icon: ShoppingCart },
     { href: "/sales/orders", label: "طلباتي", icon: ClipboardList },
+    { href: "/sales/history", label: "سجل الطلبات", icon: Package },
   ];
 
   const links = role === 'admin' ? adminLinks : salesLinks;

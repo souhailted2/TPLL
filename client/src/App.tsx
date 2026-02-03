@@ -16,6 +16,7 @@ import AdminProducts from "@/pages/admin/products";
 import AdminOrders from "@/pages/admin/orders";
 import SalesNewOrder from "@/pages/sales/new-order";
 import SalesOrders from "@/pages/sales/orders";
+import SalesOrderHistory from "@/pages/sales/history";
 import { useEffect } from "react";
 
 function Router() {
@@ -66,6 +67,7 @@ function Router() {
         <>
           <Route path="/sales/new-order" component={SalesNewOrder} />
           <Route path="/sales/orders" component={SalesOrders} />
+          <Route path="/sales/history" component={SalesOrderHistory} />
         </>
       )}
 

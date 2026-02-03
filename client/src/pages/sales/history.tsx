@@ -2,20 +2,20 @@ import { Sidebar } from "@/components/layout-sidebar";
 import { useOrders } from "@/hooks/use-orders";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Package, ChevronDown, ChevronUp } from "lucide-react";
+import { Loader2, Package, ChevronDown, ChevronUp, History } from "lucide-react";
 import { format } from "date-fns";
 import { arSA } from "date-fns/locale";
 import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 
-export default function SalesOrders() {
+export default function SalesOrderHistory() {
   const { data: orders, isLoading } = useOrders();
   const [expandedOrders, setExpandedOrders] = useState<number[]>([]);
 
-  const activeOrders = useMemo(() => {
+  const completedOrders = useMemo(() => {
     if (!orders) return [];
     return orders.filter(order => 
-      order.status !== 'completed' && order.status !== 'cancelled'
+      order.status === 'completed' || order.status === 'cancelled'
     );
   }, [orders]);
 
@@ -30,20 +30,16 @@ export default function SalesOrders() {
   const getStatusColor = (status: string) => {
     switch(status) {
       case 'completed': return 'bg-green-100 text-green-800';
-      case 'processing': return 'bg-blue-100 text-blue-800';
-      case 'shipped': return 'bg-purple-100 text-purple-800';
       case 'cancelled': return 'bg-red-100 text-red-800';
-      default: return 'bg-orange-100 text-orange-800';
+      default: return 'bg-slate-100 text-slate-800';
     }
   };
 
   const getStatusLabel = (status: string) => {
     switch(status) {
       case 'completed': return 'تم الاستلام';
-      case 'processing': return 'قيد الانجاز';
-      case 'shipped': return 'تم الشحن';
       case 'cancelled': return 'ملغي';
-      default: return 'في الانتظار';
+      default: return status;
     }
   };
 
@@ -54,11 +50,14 @@ export default function SalesOrders() {
   return (
     <div className="min-h-screen bg-slate-50 flex" dir="rtl">
       <Sidebar role="sales_point" />
-      <main className="flex-1 md:mr-64 p-4 md:p-8 pt-24 md:pt-8">
+      <main className="flex-1 md:mr-64 p-4 md:p-8 pt-24 md:pt-8 overflow-x-hidden">
         <div className="max-w-7xl mx-auto space-y-6">
           <div className="flex flex-col gap-2">
-            <h1 className="text-3xl font-bold text-slate-900">طلباتي</h1>
-            <p className="text-slate-500">سجل الطلبات المرسلة إلى المصنع وحالاتها</p>
+            <div className="flex items-center gap-3">
+              <History className="h-8 w-8 text-primary" />
+              <h1 className="text-3xl font-bold text-slate-900">سجل الطلبات</h1>
+            </div>
+            <p className="text-slate-500">الطلبات المكتملة والملغاة</p>
           </div>
 
           <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-x-auto">
@@ -77,7 +76,7 @@ export default function SalesOrders() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {activeOrders?.map((order) => (
+                  {completedOrders?.map((order) => (
                     <>
                       <TableRow key={order.id} className="hover:bg-slate-50 transition-colors">
                         <TableCell className="font-mono font-bold">#{order.id}</TableCell>
@@ -100,7 +99,7 @@ export default function SalesOrders() {
                             variant="ghost" 
                             size="sm"
                             onClick={() => toggleOrder(order.id)}
-                            data-testid={`button-toggle-order-${order.id}`}
+                            data-testid={`button-toggle-history-order-${order.id}`}
                           >
                             {expandedOrders.includes(order.id) ? (
                               <ChevronUp className="h-4 w-4" />
@@ -137,10 +136,10 @@ export default function SalesOrders() {
                       )}
                     </>
                   ))}
-                  {activeOrders?.length === 0 && (
+                  {completedOrders?.length === 0 && (
                     <TableRow>
                       <TableCell colSpan={5} className="text-center py-12 text-slate-400">
-                        لا توجد طلبات نشطة حالياً
+                        لا توجد طلبات مكتملة أو ملغاة بعد
                       </TableCell>
                     </TableRow>
                   )}
