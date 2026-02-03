@@ -39,7 +39,7 @@ export function Sidebar({ role }: SidebarProps) {
   return (
     <>
       {/* Mobile Toggle */}
-      <div className="md:hidden fixed top-0 right-0 left-0 z-50 p-4 bg-slate-900/80 backdrop-blur-md border-b border-slate-700 flex items-center justify-between">
+      <div className="md:hidden fixed top-0 right-0 left-0 z-[70] p-4 bg-slate-900 backdrop-blur-md border-b border-slate-700 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <img src="/images/logo.png" alt="TPL Logo" className="h-8 w-8 object-contain" />
           <span className="font-bold text-white text-sm">شركة TPL</span>
@@ -59,7 +59,7 @@ export function Sidebar({ role }: SidebarProps) {
 
       {/* Sidebar Container */}
       <aside className={cn(
-        "fixed inset-y-0 right-0 z-[60] w-64 bg-slate-900 text-white transform transition-transform duration-300 ease-in-out md:translate-x-0",
+        "fixed inset-y-0 right-0 z-[80] w-64 bg-slate-900 text-white transform transition-transform duration-300 ease-in-out md:translate-x-0",
         isOpen ? "translate-x-0" : "translate-x-full"
       )}>
         <div className="h-full flex flex-col pt-20 md:pt-0">
@@ -131,7 +131,7 @@ export function Sidebar({ role }: SidebarProps) {
       {/* Overlay for mobile */}
       {isOpen && (
         <div 
-          className="fixed inset-0 bg-black/60 z-[55] md:hidden backdrop-blur-sm transition-opacity"
+          className="fixed inset-0 bg-black/60 z-[75] md:hidden backdrop-blur-sm transition-opacity"
           onClick={() => setIsOpen(false)}
         />
       )}
