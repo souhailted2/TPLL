@@ -59,8 +59,8 @@ export function Sidebar({ role }: SidebarProps) {
 
       {/* Sidebar Container */}
       <aside className={cn(
-        "fixed inset-y-0 right-0 z-[80] w-64 bg-slate-900 text-white transform transition-transform duration-300 ease-in-out md:translate-x-0",
-        isOpen ? "translate-x-0" : "translate-x-full"
+        "fixed inset-y-0 right-0 z-[80] w-64 bg-slate-900 text-white transition-all duration-300 ease-in-out",
+        isOpen ? "opacity-100 visible" : "opacity-0 invisible md:opacity-100 md:visible"
       )}>
         <div className="h-full flex flex-col pt-20 md:pt-0">
           {/* Header */}
