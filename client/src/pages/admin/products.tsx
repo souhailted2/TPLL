@@ -183,7 +183,7 @@ export default function AdminProducts() {
                     إضافة منتج جديد
                   </Button>
                 </DialogTrigger>
-              <DialogContent className="sm:max-w-[500px]" dir="rtl">
+              <DialogContent className="sm:max-w-[500px] z-[100] max-h-[90vh] overflow-y-auto" dir="rtl">
                 <DialogHeader>
                   <DialogTitle>{editingProduct ? "تعديل منتج" : "إضافة منتج جديد"}</DialogTitle>
                 </DialogHeader>
