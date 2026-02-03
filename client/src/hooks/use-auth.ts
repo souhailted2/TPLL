@@ -53,6 +53,8 @@ export function useAuth() {
     mutationFn: login,
     onSuccess: (user) => {
       queryClient.setQueryData(["/api/auth/user"], user);
+      // Invalidate user-role query to trigger refetch
+      queryClient.invalidateQueries({ queryKey: ["/api/user-role"] });
     },
   });
 

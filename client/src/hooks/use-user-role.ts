@@ -1,5 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { api, type UpdateUserRoleRequest } from "@shared/routes";
+import { api } from "@shared/routes";
+import { z } from "zod";
+
+type UpdateUserRoleRequest = z.infer<typeof api.userRoles.update.input>;
 
 export function useUserRole() {
   return useQuery({
