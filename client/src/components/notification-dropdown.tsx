@@ -52,7 +52,7 @@ export function NotificationDropdown() {
           )}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-80">
+      <DropdownMenuContent align="end" className="w-80 bg-white dark:bg-slate-900 border shadow-lg">
         <DropdownMenuLabel className="flex items-center justify-between">
           <span>الإشعارات</span>
           <div className="flex gap-1">
