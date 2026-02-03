@@ -235,11 +235,25 @@ async function seedDatabase() {
   const existingProducts = await storage.getProducts();
   if (existingProducts.length === 0) {
     await storage.createProduct({
-      name: "برغي 10مم (Screw 10mm)",
-      sku: "SCR-010",
+      name: "Boulon M10 (Brut)",
+      sku: "BLT-M10-BRT",
       price: "0.50",
-      description: "برغي فولاذي عالي الجودة 10مم (High quality steel screw)",
-      imageUrl: "https://placehold.co/400x400?text=Screw+10mm"
+      description: "Boulon en acier sans revêtement (Brut)",
+      imageUrl: "https://placehold.co/400x400?text=Boulon+Brut"
+    });
+    await storage.createProduct({
+      name: "Boulon M10 (Zingue a froid)",
+      sku: "BLT-M10-ZAF",
+      price: "0.60",
+      description: "Boulon avec zingage électrolytique (à froid)",
+      imageUrl: "https://placehold.co/400x400?text=Zingue+Froid"
+    });
+    await storage.createProduct({
+      name: "Boulon M10 (Zingue a chaud)",
+      sku: "BLT-M10-ZAC",
+      price: "0.75",
+      description: "Boulon avec galvanisation à chaud (au trempé)",
+      imageUrl: "https://placehold.co/400x400?text=Zingue+Chaud"
     });
     await storage.createProduct({
       name: "صامولة 10مم (Nut 10mm)",

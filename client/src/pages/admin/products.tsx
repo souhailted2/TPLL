@@ -61,6 +61,7 @@ export default function AdminProducts() {
         name: row["name"] || row["اسم المنتج"] || row["الاسم"] || "",
         sku: row["sku"] || row["SKU"] || row["رمز المنتج"] || "",
         price: parseFloat(row["price"] || row["السعر"] || 0),
+        finish: row["finish"] || row["النوع"] || "none",
         description: row["description"] || row["الوصف"] || "",
       }));
 
@@ -76,6 +77,7 @@ export default function AdminProducts() {
       name: "",
       sku: "",
       price: "0",
+      finish: "none",
       description: "",
       imageUrl: "",
     },
@@ -109,6 +111,7 @@ export default function AdminProducts() {
       name: product.name,
       sku: product.sku,
       price: product.price.toString(),
+      finish: product.finish || "none",
       description: product.description || "",
       imageUrl: product.imageUrl || "",
     });
@@ -121,6 +124,7 @@ export default function AdminProducts() {
       name: "",
       sku: "",
       price: "0",
+      finish: "none",
       description: "",
       imageUrl: "",
     });
@@ -193,7 +197,7 @@ export default function AdminProducts() {
                         </FormItem>
                       )}
                     />
-                    <div className="grid grid-cols-1 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <FormField
                         control={form.control}
                         name="sku"
@@ -201,6 +205,26 @@ export default function AdminProducts() {
                           <FormItem>
                             <FormLabel>رمز المنتج (SKU)</FormLabel>
                             <FormControl><Input {...field} /></FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="finish"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>النوع (Finition)</FormLabel>
+                            <FormControl>
+                              <select 
+                                {...field} 
+                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                              >
+                                <option value="none">بدون (Brut)</option>
+                                <option value="cold">غلفنة على البارد (Zingué à froid)</option>
+                                <option value="hot">غلفنة على الساخن (Zingué à chaud)</option>
+                              </select>
+                            </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
