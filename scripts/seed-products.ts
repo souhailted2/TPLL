@@ -2,10 +2,10 @@ import { db } from "../server/db";
 import { products } from "../shared/schema";
 
 const FINISHES = [
-  { code: "none", label: "Brut" },
-  { code: "cold", label: "Zingué" },
-  { code: "hot", label: "Zingué à chaud" },
-  { code: "acier", label: "Acier" },
+  { code: "none", label: "Brut", abbr: "B" },
+  { code: "cold", label: "Zingué", abbr: "Z" },
+  { code: "hot", label: "Zingué à chaud", abbr: "ZC" },
+  { code: "acier", label: "Acier", abbr: "A" },
 ];
 
 const DIAMETERS_FULL = [6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 27, 30];
@@ -35,16 +35,33 @@ interface ProductData {
   size: string;
 }
 
+function generateSKU(categoryAbbr: string, finishAbbr: string, diameter: number | null, length: number | null): string {
+  if (diameter && length) {
+    return `${categoryAbbr}${finishAbbr}${diameter}${length}`;
+  } else if (diameter) {
+    return `${categoryAbbr}${finishAbbr}${diameter}`;
+  }
+  return `${categoryAbbr}${finishAbbr}`;
+}
+
 function generateProducts(): ProductData[] {
   const allProducts: ProductData[] = [];
-  let skuCounter = 1;
 
-  function addProduct(category: string, diameter: number | null, length: number | null, finish: typeof FINISHES[0], sizeLabel: string) {
+  function addProduct(
+    category: string, 
+    categoryAbbr: string,
+    diameter: number | null, 
+    length: number | null, 
+    finish: typeof FINISHES[0], 
+    sizeLabel: string
+  ) {
     const name = length 
       ? `${category} ${finish.label} ${diameter}x${length}`
-      : `${category} ${finish.label} ${sizeLabel}`;
+      : diameter 
+        ? `${category} ${finish.label} ${sizeLabel}`
+        : `${category} ${finish.label} ${sizeLabel}`;
     
-    const sku = `SKU-${String(skuCounter++).padStart(5, '0')}`;
+    const sku = generateSKU(categoryAbbr, finish.abbr, diameter, length);
     
     allProducts.push({
       name,
@@ -59,7 +76,7 @@ function generateProducts(): ProductData[] {
   for (const d of DIAMETERS_FULL) {
     for (const l of LENGTHS_200) {
       for (const f of FINISHES) {
-        addProduct("Boulon", d, l, f, `${d}x${l}`);
+        addProduct("Boulon", "B", d, l, f, `${d}x${l}`);
       }
     }
   }
@@ -68,7 +85,7 @@ function generateProducts(): ProductData[] {
   for (const d of DIAMETERS_POELIER) {
     for (const l of LENGTHS_150) {
       for (const f of FINISHES) {
-        addProduct("Boulon Poelier", d, l, f, `${d}x${l}`);
+        addProduct("Boulon Poelier", "BP", d, l, f, `${d}x${l}`);
       }
     }
   }
@@ -77,7 +94,7 @@ function generateProducts(): ProductData[] {
   for (const d of DIAMETERS_POELIER) {
     for (const l of LENGTHS_150) {
       for (const f of FINISHES) {
-        addProduct("Boulon Tête Fraisée", d, l, f, `${d}x${l}`);
+        addProduct("Boulon Tête Fraisée", "BTF", d, l, f, `${d}x${l}`);
       }
     }
   }
@@ -86,7 +103,7 @@ function generateProducts(): ProductData[] {
   for (const d of DIAMETERS_FROM_12) {
     for (const l of LENGTHS_200) {
       for (const f of FINISHES) {
-        addProduct("Boulon Demi Filetage", d, l, f, `${d}x${l}`);
+        addProduct("Boulon Demi Filetage", "BDF", d, l, f, `${d}x${l}`);
       }
     }
   }
@@ -94,14 +111,14 @@ function generateProducts(): ProductData[] {
   // 5. Tige Filetée - 12 diameters × 1 length × 4 finishes
   for (const d of DIAMETERS_FULL) {
     for (const f of FINISHES) {
-      addProduct("Tige Filetée", d, null, f, `${d}mm - 1m`);
+      addProduct("Tige Filetée", "TF", d, null, f, `${d}mm - 1m`);
     }
   }
 
   // 6. Ecrou - 13 sizes × 4 finishes
   for (const s of ECROU_SIZES) {
     for (const f of FINISHES) {
-      addProduct("Ecrou", null, null, f, `M${s}`);
+      addProduct("Ecrou", "E", s, null, f, `M${s}`);
     }
   }
 
@@ -109,7 +126,7 @@ function generateProducts(): ProductData[] {
   for (const d of DIAMETERS_FROM_12) {
     for (const l of LENGTHS_200) {
       for (const f of FINISHES) {
-        addProduct("Rivet", d, l, f, `${d}x${l}`);
+        addProduct("Rivet", "R", d, l, f, `${d}x${l}`);
       }
     }
   }
@@ -118,7 +135,7 @@ function generateProducts(): ProductData[] {
 }
 
 async function seed() {
-  console.log("Generating products...");
+  console.log("Generating products with new SKU format...");
   const allProducts = generateProducts();
   console.log(`Total products to insert: ${allProducts.length}`);
 
@@ -130,6 +147,12 @@ async function seed() {
   }
 
   console.log("Done!");
+  console.log("\nSample SKUs:");
+  console.log("- Boulon Zingué 8x50:", generateSKU("B", "Z", 8, 50));
+  console.log("- Boulon Brut 10x100:", generateSKU("B", "B", 10, 100));
+  console.log("- Ecrou Acier M12:", generateSKU("E", "A", 12, null));
+  console.log("- Tige Filetée Zingué à chaud 20:", generateSKU("TF", "ZC", 20, null));
+  
   process.exit(0);
 }
 
