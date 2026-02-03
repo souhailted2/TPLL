@@ -143,25 +143,25 @@ export default function NewOrder() {
                           <p className="text-xs text-slate-400">{product.sku}</p>
                         </div>
                       </div>
-                      <div className="flex gap-2">
+                      <div className="flex flex-wrap gap-2">
                         <Button 
                           size="sm" 
                           variant="outline"
-                          className="flex-1 gap-1"
+                          className="min-w-[70px] gap-1 text-xs"
                           onClick={() => addToCart(product, "piece")}
                           data-testid={`button-add-piece-${product.id}`}
                         >
-                          <Package className="h-3 w-3" />
-                          قطعة
+                          <Package className="h-3 w-3 shrink-0" />
+                          <span>قطعة</span>
                         </Button>
                         <Button 
                           size="sm" 
-                          className="flex-1 gap-1"
+                          className="min-w-[70px] gap-1 text-xs"
                           onClick={() => addToCart(product, "bag")}
                           data-testid={`button-add-bag-${product.id}`}
                         >
-                          <Weight className="h-3 w-3" />
-                          شكارة
+                          <Weight className="h-3 w-3 shrink-0" />
+                          <span>شكارة</span>
                         </Button>
                       </div>
                     </CardContent>
