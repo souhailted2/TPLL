@@ -5,9 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Plus, ShoppingCart, Trash2, Search } from "lucide-react";
+import { Loader2, Plus, ShoppingCart, Trash2, Search, X, ChevronLeft } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 
 interface CartItem {
   productId: number;
@@ -23,6 +24,7 @@ export default function NewOrder() {
   
   const [searchTerm, setSearchTerm] = useState("");
   const [cart, setCart] = useState<CartItem[]>([]);
+  const [cartOpen, setCartOpen] = useState(false);
 
   const filteredProducts = products?.filter(p => 
     p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -109,7 +111,7 @@ export default function NewOrder() {
           </div>
 
           {/* Products Grid - Full Width */}
-          <div className="flex-1 overflow-y-auto pb-32 lg:pb-0 lg:pl-80">
+          <div className="flex-1 overflow-y-auto pl-0 lg:pl-80">
             {productsLoading ? (
               <div className="flex justify-center p-12"><Loader2 className="animate-spin" /></div>
             ) : (
@@ -132,19 +134,59 @@ export default function NewOrder() {
             )}
           </div>
 
+          {/* Mobile Cart Toggle Button */}
+          <Button
+            onClick={() => setCartOpen(true)}
+            className={cn(
+              "lg:hidden fixed bottom-4 left-4 z-50 h-14 w-14 rounded-full shadow-xl",
+              cartOpen && "opacity-0 invisible"
+            )}
+            size="icon"
+            data-testid="button-open-cart"
+          >
+            <ShoppingCart className="h-6 w-6" />
+            {cart.length > 0 && (
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
+                {cart.length}
+              </span>
+            )}
+          </Button>
+
+          {/* Cart Overlay for Mobile */}
+          {cartOpen && (
+            <div 
+              className="lg:hidden fixed inset-0 bg-black/50 z-40"
+              onClick={() => setCartOpen(false)}
+            />
+          )}
+
           {/* Cart Sidebar - Fixed Position */}
-          <div className="fixed bottom-0 left-0 right-0 lg:bottom-auto lg:top-0 lg:right-auto lg:left-0 lg:w-72 lg:h-screen bg-white border-t lg:border-t-0 lg:border-l border-slate-200 shadow-xl flex flex-col z-40">
+          <div className={cn(
+            "fixed top-0 left-0 w-72 h-screen bg-white border-l border-slate-200 shadow-xl flex flex-col z-50 transition-all duration-300",
+            cartOpen ? "opacity-100 visible" : "opacity-0 invisible lg:opacity-100 lg:visible"
+          )}>
             <div className="p-4 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <ShoppingCart className="h-5 w-5 text-primary" />
                 <span className="font-bold">سلة الطلبات</span>
               </div>
-              <span className="bg-primary text-white text-xs px-2 py-1 rounded-full">{cart.length}</span>
+              <div className="flex items-center gap-2">
+                <span className="bg-primary text-white text-xs px-2 py-1 rounded-full">{cart.length}</span>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="lg:hidden h-8 w-8"
+                  onClick={() => setCartOpen(false)}
+                  data-testid="button-close-cart"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 max-h-48 lg:max-h-none">
+            <div className="flex-1 overflow-y-auto p-4 space-y-4">
               {cart.length === 0 ? (
-                <div className="h-full flex flex-col items-center justify-center text-slate-400 gap-2 py-8 lg:py-0">
+                <div className="h-full flex flex-col items-center justify-center text-slate-400 gap-2 py-8">
                   <ShoppingCart className="h-12 w-12 opacity-20" />
                   <p>السلة فارغة</p>
                 </div>
@@ -180,6 +222,7 @@ export default function NewOrder() {
                 onClick={handleSubmitOrder} 
                 className="w-full py-4 text-base shadow-lg shadow-primary/20"
                 disabled={cart.length === 0 || isSubmitting}
+                data-testid="button-submit-order"
               >
                 {isSubmitting ? <Loader2 className="animate-spin" /> : "إرسال الطلب للمصنع"}
               </Button>
