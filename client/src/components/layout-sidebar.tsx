@@ -7,12 +7,15 @@ import {
   ClipboardList, 
   LogOut, 
   Menu,
-  X
+  X,
+  Bell,
+  BellRing
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useState } from "react";
 import { Button } from "./ui/button";
 import { NotificationDropdown } from "./notification-dropdown";
+import { usePushNotifications } from "@/hooks/use-push-notifications";
 
 interface SidebarProps {
   role: 'admin' | 'sales_point';
@@ -22,6 +25,7 @@ export function Sidebar({ role }: SidebarProps) {
   const [location] = useLocation();
   const { logout } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
+  const { isSupported, isEnabled, isLoading, enableNotifications } = usePushNotifications();
 
   const adminLinks = [
     { href: "/admin", label: "لوحة التحكم", icon: LayoutDashboard },
@@ -117,6 +121,25 @@ export function Sidebar({ role }: SidebarProps) {
                 <p className="text-sm font-medium truncate">{role === 'admin' ? 'المدير' : 'نقطة بيع'}</p>
               </div>
             </div>
+            
+            {isSupported && !isEnabled && (
+              <button 
+                onClick={() => enableNotifications()}
+                disabled={isLoading}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-primary/20 text-primary hover:bg-primary/30 transition-colors border border-primary/30 mb-2"
+                data-testid="button-enable-notifications"
+              >
+                <Bell className="h-4 w-4" />
+                <span>{isLoading ? 'جاري التفعيل...' : 'تفعيل الإشعارات'}</span>
+              </button>
+            )}
+            
+            {isEnabled && (
+              <div className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-green-500/20 text-green-400 border border-green-500/30 mb-2">
+                <BellRing className="h-4 w-4" />
+                <span>الإشعارات مفعّلة</span>
+              </div>
+            )}
             
             <button 
               onClick={() => logout()}

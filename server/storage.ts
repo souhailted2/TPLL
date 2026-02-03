@@ -1,10 +1,11 @@
 import { db } from "./db";
 import {
-  products, orders, orderItems, userRoles, notifications,
+  products, orders, orderItems, userRoles, notifications, pushTokens,
   type Product, type InsertProduct, type UpdateProductRequest,
   type Order, type CreateOrderRequest, type OrderItem,
   type UserRole, type UpdateUserRoleRequest,
   type Notification, type InsertNotification,
+  type PushToken, type InsertPushToken,
   users
 } from "@shared/schema";
 import { eq, desc, and, or, ilike, sql } from "drizzle-orm";
@@ -33,6 +34,12 @@ export interface IStorage {
   markNotificationAsRead(id: number, userId: string): Promise<Notification | undefined>;
   markAllNotificationsAsRead(userId: string): Promise<void>;
   getAdminUserIds(): Promise<string[]>;
+
+  // Push Tokens
+  savePushToken(userId: string, token: string): Promise<PushToken>;
+  getPushTokens(userId: string): Promise<PushToken[]>;
+  getPushTokensByUserIds(userIds: string[]): Promise<PushToken[]>;
+  deletePushToken(token: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -228,6 +235,45 @@ export class DatabaseStorage implements IStorage {
       .from(userRoles)
       .where(eq(userRoles.role, 'admin'));
     return admins.map(a => a.userId);
+  }
+
+  // Push Tokens
+  async savePushToken(userId: string, token: string): Promise<PushToken> {
+    const existing = await db
+      .select()
+      .from(pushTokens)
+      .where(eq(pushTokens.token, token))
+      .limit(1);
+    
+    if (existing.length > 0) {
+      const [updated] = await db
+        .update(pushTokens)
+        .set({ userId })
+        .where(eq(pushTokens.token, token))
+        .returning();
+      return updated;
+    }
+    
+    const [newToken] = await db.insert(pushTokens).values({ userId, token }).returning();
+    return newToken;
+  }
+
+  async getPushTokens(userId: string): Promise<PushToken[]> {
+    return db.select().from(pushTokens).where(eq(pushTokens.userId, userId));
+  }
+
+  async getPushTokensByUserIds(userIds: string[]): Promise<PushToken[]> {
+    if (userIds.length === 0) return [];
+    
+    const tokens = await db
+      .select()
+      .from(pushTokens)
+      .where(sql`${pushTokens.userId} IN ${userIds}`);
+    return tokens;
+  }
+
+  async deletePushToken(token: string): Promise<void> {
+    await db.delete(pushTokens).where(eq(pushTokens.token, token));
   }
 }
 

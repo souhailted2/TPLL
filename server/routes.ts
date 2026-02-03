@@ -4,11 +4,15 @@ import { setupAuth, isAuthenticated, seedUsers } from "./auth";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
+import { initializeFirebaseAdmin, sendPushToMultipleTokens } from "./firebase";
 
 export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
+  // Initialize Firebase Admin
+  initializeFirebaseAdmin();
+  
   // Auth setup
   await setupAuth(app);
 
@@ -114,6 +118,22 @@ export async function registerRoutes(
         });
       }
       
+      // Send push notifications to admins
+      const adminTokens = await storage.getPushTokensByUserIds(adminIds);
+      if (adminTokens.length > 0) {
+        const tokens = adminTokens.map(t => t.token);
+        const invalidTokens = await sendPushToMultipleTokens(
+          tokens,
+          "طلب جديد",
+          `طلب جديد #${order.id} من ${salesPointName}`,
+          { orderId: String(order.id), type: "new_order" }
+        );
+        // Remove invalid tokens
+        for (const invalidToken of invalidTokens) {
+          await storage.deletePushToken(invalidToken);
+        }
+      }
+      
       res.status(201).json(order);
     } catch (err) {
       if (err instanceof z.ZodError) {
@@ -151,6 +171,21 @@ export async function registerRoutes(
         orderId: order.id,
         isRead: false
       });
+      
+      // Send push notification to sales point
+      const salesPointTokens = await storage.getPushTokens(order.salesPointId);
+      if (salesPointTokens.length > 0) {
+        const tokens = salesPointTokens.map(t => t.token);
+        const invalidTokens = await sendPushToMultipleTokens(
+          tokens,
+          "تحديث حالة الطلب",
+          `تم تغيير حالة الطلب #${order.id} إلى: ${statusLabels[status] || status}`,
+          { orderId: String(order.id), type: "status_change" }
+        );
+        for (const invalidToken of invalidTokens) {
+          await storage.deletePushToken(invalidToken);
+        }
+      }
       
       res.json(order);
     } catch (err) {
@@ -227,6 +262,24 @@ export async function registerRoutes(
     const userId = req.session.userId;
     await storage.markAllNotificationsAsRead(userId);
     res.json({ success: true });
+  });
+
+  // === Push Token API ===
+  
+  app.post("/api/push-token", requireAuth, async (req: any, res) => {
+    try {
+      const { token } = req.body;
+      if (!token || typeof token !== 'string') {
+        return res.status(400).json({ message: "Token is required" });
+      }
+      
+      const userId = req.session.userId;
+      await storage.savePushToken(userId, token);
+      res.json({ success: true });
+    } catch (err) {
+      console.error("Error saving push token:", err);
+      res.status(500).json({ message: "Failed to save push token" });
+    }
   });
 
   // Seed Data and Users
