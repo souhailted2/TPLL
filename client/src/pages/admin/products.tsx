@@ -6,7 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Loader2, Plus, Pencil, Trash2, Search, Package, FileSpreadsheet } from "lucide-react";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertProductSchema } from "@shared/schema";
@@ -19,10 +19,19 @@ import * as XLSX from "xlsx";
 type ProductFormValues = z.infer<typeof insertProductSchema>;
 
 export default function AdminProducts() {
-  const { data: products, isLoading } = useProducts();
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const { data: productsData, isLoading } = useProducts({ search: debouncedSearch, limit: 100 });
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<ProductFormValues & { id: number } | null>(null);
+  
+  const products = productsData?.products || [];
+  
+  // Debounce search to avoid too many API calls
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(searchTerm), 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
   
   const createMutation = useCreateProduct();
   const updateMutation = useUpdateProduct();
@@ -82,11 +91,6 @@ export default function AdminProducts() {
       imageUrl: "",
     },
   });
-
-  const filteredProducts = products?.filter(p => 
-    p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    p.sku.toLowerCase().includes(searchTerm.toLowerCase())
-  );
 
   const onSubmit = async (data: ProductFormValues) => {
     try {
@@ -299,7 +303,7 @@ export default function AdminProducts() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredProducts?.map((product) => (
+                  {products?.map((product) => (
                     <TableRow key={product.id} className="group hover:bg-slate-50" data-testid={`row-product-${product.id}`}>
                       <TableCell className="font-medium flex items-center gap-3">
                         <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center text-slate-500">
@@ -322,7 +326,7 @@ export default function AdminProducts() {
                       </TableCell>
                     </TableRow>
                   ))}
-                  {filteredProducts?.length === 0 && (
+                  {products?.length === 0 && (
                     <TableRow>
                       <TableCell colSpan={5} className="text-center py-8 text-slate-400">
                         لا توجد منتجات مطابقة

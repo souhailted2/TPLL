@@ -22,8 +22,16 @@ export const api = {
     list: {
       method: 'GET' as const,
       path: '/api/products',
+      query: z.object({
+        search: z.string().optional(),
+        limit: z.string().optional(),
+        offset: z.string().optional(),
+      }).optional(),
       responses: {
-        200: z.array(z.custom<typeof products.$inferSelect>()),
+        200: z.object({
+          products: z.array(z.custom<typeof products.$inferSelect>()),
+          total: z.number(),
+        }),
       },
     },
     get: {

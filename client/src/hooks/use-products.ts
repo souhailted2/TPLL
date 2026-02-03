@@ -1,13 +1,27 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, buildUrl, type CreateProductRequest, type UpdateProductRequest } from "@shared/routes";
 
-export function useProducts() {
+interface UseProductsOptions {
+  search?: string;
+  limit?: number;
+  offset?: number;
+}
+
+export function useProducts(options?: UseProductsOptions) {
+  const { search = '', limit = 50, offset = 0 } = options || {};
+  
   return useQuery({
-    queryKey: [api.products.list.path],
+    queryKey: [api.products.list.path, search, limit, offset],
     queryFn: async () => {
-      const res = await fetch(api.products.list.path, { credentials: "include" });
+      const params = new URLSearchParams();
+      if (search) params.set('search', search);
+      params.set('limit', String(limit));
+      params.set('offset', String(offset));
+      
+      const url = `${api.products.list.path}?${params.toString()}`;
+      const res = await fetch(url, { credentials: "include" });
       if (!res.ok) throw new Error("فشل تحميل المنتجات");
-      return api.products.list.responses[200].parse(await res.json());
+      return res.json() as Promise<{ products: any[]; total: number }>;
     },
   });
 }

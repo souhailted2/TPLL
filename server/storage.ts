@@ -7,11 +7,11 @@ import {
   type Notification, type InsertNotification,
   users
 } from "@shared/schema";
-import { eq, desc, and } from "drizzle-orm";
+import { eq, desc, and, or, ilike, sql } from "drizzle-orm";
 
 export interface IStorage {
   // Products
-  getProducts(): Promise<Product[]>;
+  getProducts(options?: { search?: string; limit?: number; offset?: number }): Promise<{ products: Product[]; total: number }>;
   getProduct(id: number): Promise<Product | undefined>;
   createProduct(product: InsertProduct): Promise<Product>;
   updateProduct(id: number, product: UpdateProductRequest): Promise<Product | undefined>;
@@ -37,8 +37,31 @@ export interface IStorage {
 
 export class DatabaseStorage implements IStorage {
   // Products
-  async getProducts(): Promise<Product[]> {
-    return await db.select().from(products).orderBy(products.name);
+  async getProducts(options?: { search?: string; limit?: number; offset?: number }): Promise<{ products: Product[]; total: number }> {
+    const { search, limit = 50, offset = 0 } = options || {};
+    
+    let baseQuery = db.select().from(products);
+    let countQuery = db.select({ count: sql<number>`count(*)` }).from(products);
+    
+    if (search && search.trim()) {
+      const searchPattern = `%${search.trim()}%`;
+      const searchCondition = or(
+        ilike(products.name, searchPattern),
+        ilike(products.sku, searchPattern)
+      );
+      // @ts-ignore
+      baseQuery = baseQuery.where(searchCondition);
+      // @ts-ignore
+      countQuery = countQuery.where(searchCondition);
+    }
+    
+    const [countResult] = await countQuery;
+    const total = Number(countResult?.count || 0);
+    
+    // @ts-ignore
+    const productList = await baseQuery.orderBy(products.name).limit(limit).offset(offset);
+    
+    return { products: productList, total };
   }
 
   async getProduct(id: number): Promise<Product | undefined> {
@@ -66,7 +89,7 @@ export class DatabaseStorage implements IStorage {
 
   // Orders
   async getOrders(salesPointId?: string): Promise<(Order & { items: (OrderItem & { product: Product })[], salesPoint: any })[]> {
-    let query = db.select({
+    const baseQuery = db.select({
       order: orders,
       item: orderItems,
       product: products,
@@ -75,17 +98,15 @@ export class DatabaseStorage implements IStorage {
     .from(orders)
     .leftJoin(orderItems, eq(orders.id, orderItems.orderId))
     .leftJoin(products, eq(orderItems.productId, products.id))
-    .leftJoin(users, eq(orders.salesPointId, users.id));
+    .leftJoin(users, eq(orders.salesPointId, users.id))
+    .orderBy(desc(orders.createdAt));
 
+    let rows;
     if (salesPointId) {
-      // @ts-ignore - complicated join typing
-      query.where(eq(orders.salesPointId, salesPointId));
+      rows = await baseQuery.where(eq(orders.salesPointId, salesPointId));
+    } else {
+      rows = await baseQuery;
     }
-    
-    // @ts-ignore
-    query.orderBy(desc(orders.createdAt));
-
-    const rows = await query;
     
     // Group by order
     const result = new Map<number, Order & { items: (OrderItem & { product: Product })[], salesPoint: any }>();

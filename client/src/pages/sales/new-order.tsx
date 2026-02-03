@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Plus, ShoppingCart, Trash2, Search, X, Package, Weight } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
@@ -21,18 +21,25 @@ interface CartItem {
 }
 
 export default function NewOrder() {
-  const { data: products, isLoading: productsLoading } = useProducts();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const { data: productsData, isLoading: productsLoading } = useProducts({ 
+    search: debouncedSearch, 
+    limit: 100 
+  });
   const { mutateAsync: createOrder, isPending: isSubmitting } = useCreateOrder();
   const { toast } = useToast();
   
-  const [searchTerm, setSearchTerm] = useState("");
   const [cart, setCart] = useState<CartItem[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
 
-  const filteredProducts = products?.filter(p => 
-    p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    p.sku.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Debounce search to avoid too many API calls
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(searchTerm), 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  const products = productsData?.products || [];
 
   const addToCart = (product: any, unit: UnitType = "piece") => {
     setCart(prev => {
@@ -123,7 +130,7 @@ export default function NewOrder() {
               <div className="flex justify-center p-12"><Loader2 className="animate-spin" /></div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {filteredProducts?.map((product) => (
+                {products?.map((product) => (
                   <Card 
                     key={product.id} 
                     className="hover:border-primary transition-colors"

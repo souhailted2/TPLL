@@ -34,8 +34,12 @@ export async function registerRoutes(
   // Let's make list public or auth required, but mutations admin only.
   
   app.get(api.products.list.path, requireAuth, async (req, res) => {
-    const products = await storage.getProducts();
-    res.json(products);
+    const search = req.query.search as string | undefined;
+    const limit = req.query.limit ? parseInt(req.query.limit as string) : 50;
+    const offset = req.query.offset ? parseInt(req.query.offset as string) : 0;
+    
+    const result = await storage.getProducts({ search, limit, offset });
+    res.json(result);
   });
 
   app.get(api.products.get.path, requireAuth, async (req, res) => {
@@ -233,7 +237,7 @@ export async function registerRoutes(
 }
 
 async function seedDatabase() {
-  const existingProducts = await storage.getProducts();
+  const { products: existingProducts } = await storage.getProducts();
   if (existingProducts.length === 0) {
     await storage.createProduct({
       name: "Boulon M10 (Brut)",
