@@ -291,36 +291,47 @@ export async function registerRoutes(
 
 async function seedDatabase() {
   const { products: existingProducts } = await storage.getProducts();
-  if (existingProducts.length === 0) {
-    await storage.createProduct({
-      name: "Boulon M10 (Brut)",
-      sku: "BLT-M10-BRT",
-      description: "Boulon en acier sans revêtement (Brut)",
-      imageUrl: "https://placehold.co/400x400?text=Boulon+Brut"
-    });
-    await storage.createProduct({
-      name: "Boulon M10 (Zingue a froid)",
-      sku: "BLT-M10-ZAF",
-      description: "Boulon avec zingage électrolytique (à froid)",
-      imageUrl: "https://placehold.co/400x400?text=Zingue+Froid"
-    });
-    await storage.createProduct({
-      name: "Boulon M10 (Zingue a chaud)",
-      sku: "BLT-M10-ZAC",
-      description: "Boulon avec galvanisation à chaud (au trempé)",
-      imageUrl: "https://placehold.co/400x400?text=Zingue+Chaud"
-    });
-    await storage.createProduct({
-      name: "صامولة 10مم (Nut 10mm)",
-      sku: "NUT-010",
-      description: "صامولة سداسية الشكل (Hexagonal nut)",
-      imageUrl: "https://placehold.co/400x400?text=Nut+10mm"
-    });
-    await storage.createProduct({
-      name: "رنديلة (Washer)",
-      sku: "WSH-010",
-      description: "رنديلة معدنية (Metal washer)",
-      imageUrl: "https://placehold.co/400x400?text=Washer"
-    });
+  
+  if (existingProducts.length < 100) {
+    console.log("Seeding products database...");
+    
+    const diameters = [6, 8, 10, 12, 14, 16];
+    const lengths = [12, 16, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200];
+    const finishes = [
+      { code: "none", name: "Brut", prefix: "BB" },
+      { code: "cold", name: "Zingué", prefix: "BZ" },
+      { code: "hot", name: "Zingué à chaud", prefix: "BZC" },
+      { code: "acier", name: "Acier", prefix: "BA" },
+    ];
+
+    const existingSkus = new Set(existingProducts.map(p => p.sku));
+    let addedCount = 0;
+
+    for (const diameter of diameters) {
+      for (const length of lengths) {
+        for (const finish of finishes) {
+          const size = `${diameter}x${length}`;
+          const sku = `${finish.prefix}${diameter}${length}`;
+          
+          if (!existingSkus.has(sku)) {
+            try {
+              await storage.createProduct({
+                name: `Boulon ${finish.name} ${size}`,
+                sku,
+                size,
+                finish: finish.code as any,
+              });
+              addedCount++;
+            } catch (err: any) {
+              if (err.code !== '23505') {
+                console.error(`Error adding product ${sku}:`, err.message);
+              }
+            }
+          }
+        }
+      }
+    }
+
+    console.log(`Added ${addedCount} new products to database.`);
   }
 }
