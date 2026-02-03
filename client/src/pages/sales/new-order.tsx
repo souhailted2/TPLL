@@ -115,33 +115,15 @@ export default function NewOrder() {
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                 {filteredProducts?.map((product) => (
-                  <Card key={product.id} className="cursor-pointer hover:border-primary transition-colors group">
-                    <CardContent className="p-4 flex flex-col items-center text-center gap-3">
-                      <div className="w-full aspect-square bg-slate-100 rounded-lg flex items-center justify-center mb-2">
-                        <img 
-                          src={product.imageUrl || "https://images.unsplash.com/photo-1535295972055-1c762f4483e5?w=300&q=80"}
-                          alt={product.name}
-                          className="w-full h-full object-cover rounded-lg mix-blend-multiply"
-                        />
-                      </div>
-                      <div>
-                        <h3 className="font-bold text-slate-900">{product.name}</h3>
-                        <p className="text-sm text-slate-500 font-mono">{product.sku}</p>
-                        <div className="mt-1 flex justify-center gap-1">
-                          <Badge variant="outline" className="text-[10px] h-4">
-                            {product.finish === 'hot' ? 'Zingué à chaud' : 
-                             product.finish === 'cold' ? 'Zingué à froid' : 'Brut'}
-                          </Badge>
-                          {product.size && (
-                            <Badge variant="secondary" className="text-[10px] h-4 bg-slate-100">
-                              {product.size}
-                            </Badge>
-                          )}
-                        </div>
-                        <p className="text-primary font-bold mt-1">{Number(product.price).toFixed(2)} ر.س</p>
-                      </div>
-                      <Button onClick={() => addToCart(product)} className="w-full mt-2" size="sm">
-                        <Plus className="h-4 w-4 ml-1" /> إضافة
+                  <Card 
+                    key={product.id} 
+                    className="cursor-pointer hover:border-primary transition-colors group"
+                    onClick={() => addToCart(product)}
+                  >
+                    <CardContent className="p-3 flex items-center justify-between gap-2">
+                      <h3 className="font-medium text-slate-900 text-sm">{product.name}</h3>
+                      <Button size="icon" variant="ghost" className="h-7 w-7 shrink-0">
+                        <Plus className="h-4 w-4" />
                       </Button>
                     </CardContent>
                   </Card>
