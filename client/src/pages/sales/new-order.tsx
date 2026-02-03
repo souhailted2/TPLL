@@ -108,9 +108,9 @@ export default function NewOrder() {
             </div>
           </div>
 
-          <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-6 min-h-0 overflow-hidden">
+          <div className="flex-1 grid grid-cols-1 lg:grid-cols-4 gap-6 min-h-0 overflow-hidden">
             {/* Products Grid */}
-            <div className="lg:col-span-2 overflow-y-auto pr-2 pb-20 lg:pb-0">
+            <div className="lg:col-span-3 overflow-y-auto pr-2 pb-20 lg:pb-0">
               {productsLoading ? (
                 <div className="flex justify-center p-12"><Loader2 className="animate-spin" /></div>
               ) : (
