@@ -162,6 +162,8 @@ export async function registerRoutes(
         await storage.createProduct({
           name: item.name,
           sku: item.sku,
+          finish: item.finish || "none",
+          size: item.size || null,
           description: item.description || null,
           imageUrl: null
         });

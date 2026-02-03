@@ -30,7 +30,6 @@ const LENGTHS_150 = getLengths(150);
 interface ProductData {
   name: string;
   sku: string;
-  price: string;
   finish: string;
   size: string;
 }
@@ -66,7 +65,6 @@ function generateProducts(): ProductData[] {
     allProducts.push({
       name,
       sku,
-      price: "0.00",
       finish: finish.code,
       size: sizeLabel,
     });

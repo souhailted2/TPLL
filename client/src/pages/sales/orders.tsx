@@ -2,17 +2,29 @@ import { Sidebar } from "@/components/layout-sidebar";
 import { useOrders } from "@/hooks/use-orders";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Package } from "lucide-react";
+import { Loader2, Package, ChevronDown, ChevronUp } from "lucide-react";
 import { format } from "date-fns";
 import { arSA } from "date-fns/locale";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
 
 export default function SalesOrders() {
   const { data: orders, isLoading } = useOrders();
+  const [expandedOrders, setExpandedOrders] = useState<number[]>([]);
+
+  const toggleOrder = (orderId: number) => {
+    setExpandedOrders(prev => 
+      prev.includes(orderId) 
+        ? prev.filter(id => id !== orderId)
+        : [...prev, orderId]
+    );
+  };
 
   const getStatusColor = (status: string) => {
     switch(status) {
       case 'completed': return 'bg-green-100 text-green-800';
       case 'processing': return 'bg-blue-100 text-blue-800';
+      case 'shipped': return 'bg-purple-100 text-purple-800';
       case 'cancelled': return 'bg-red-100 text-red-800';
       default: return 'bg-orange-100 text-orange-800';
     }
@@ -20,11 +32,16 @@ export default function SalesOrders() {
 
   const getStatusLabel = (status: string) => {
     switch(status) {
-      case 'completed': return 'مكتمل';
-      case 'processing': return 'قيد التنفيذ';
+      case 'completed': return 'تم الاستلام';
+      case 'processing': return 'قيد الانجاز';
+      case 'shipped': return 'تم الشحن';
       case 'cancelled': return 'ملغي';
-      default: return 'قيد المراجعة';
+      default: return 'في الانتظار';
     }
+  };
+
+  const getUnitLabel = (unit: string) => {
+    return unit === 'bag' ? 'شكارة 25 كغ' : 'قطعة';
   };
 
   return (
@@ -41,37 +58,77 @@ export default function SalesOrders() {
             {isLoading ? (
               <div className="p-12 flex justify-center"><Loader2 className="animate-spin text-primary" /></div>
             ) : (
-              <div className="min-w-[700px]">
+              <div className="min-w-[600px]">
                 <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>رقم الطلب</TableHead>
                     <TableHead>التاريخ</TableHead>
                     <TableHead>عدد الأصناف</TableHead>
-                    <TableHead>الإجمالي</TableHead>
                     <TableHead>الحالة</TableHead>
+                    <TableHead>التفاصيل</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {orders?.map((order) => (
-                    <TableRow key={order.id} className="hover:bg-slate-50 transition-colors">
-                      <TableCell className="font-mono font-bold">#{order.id}</TableCell>
-                      <TableCell>
-                        {order.createdAt && format(new Date(order.createdAt), 'PPP p', { locale: arSA })}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Package className="h-4 w-4 text-slate-400" />
-                          <span>{order.items?.length || 0}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="font-bold">{Number(order.totalAmount).toLocaleString()} ر.س</TableCell>
-                      <TableCell>
-                        <Badge variant="secondary" className={getStatusColor(order.status)}>
-                          {getStatusLabel(order.status)}
-                        </Badge>
-                      </TableCell>
-                    </TableRow>
+                    <>
+                      <TableRow key={order.id} className="hover:bg-slate-50 transition-colors">
+                        <TableCell className="font-mono font-bold">#{order.id}</TableCell>
+                        <TableCell>
+                          {order.createdAt && format(new Date(order.createdAt), 'PPP p', { locale: arSA })}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Package className="h-4 w-4 text-slate-400" />
+                            <span>{order.items?.length || 0}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="secondary" className={getStatusColor(order.status)}>
+                            {getStatusLabel(order.status)}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => toggleOrder(order.id)}
+                            data-testid={`button-toggle-order-${order.id}`}
+                          >
+                            {expandedOrders.includes(order.id) ? (
+                              <ChevronUp className="h-4 w-4" />
+                            ) : (
+                              <ChevronDown className="h-4 w-4" />
+                            )}
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                      {expandedOrders.includes(order.id) && order.items && order.items.length > 0 && (
+                        <TableRow key={`${order.id}-details`}>
+                          <TableCell colSpan={5} className="bg-slate-50 p-4">
+                            <div className="space-y-2">
+                              <p className="font-bold text-sm mb-3">تفاصيل الطلب:</p>
+                              <div className="grid gap-2">
+                                {order.items.map((item: any, idx: number) => (
+                                  <div key={idx} className="flex items-center justify-between bg-white p-3 rounded-lg border">
+                                    <div className="flex-1">
+                                      <p className="font-medium">{item.product?.name}</p>
+                                      <p className="text-xs text-slate-400">{item.product?.sku}</p>
+                                    </div>
+                                    <div className="flex items-center gap-4">
+                                      <Badge variant={item.unit === 'bag' ? 'default' : 'outline'}>
+                                        {getUnitLabel(item.unit || 'piece')}
+                                      </Badge>
+                                      <span className="font-bold text-primary">{item.quantity}</span>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </>
                   ))}
                   {orders?.length === 0 && (
                     <TableRow>

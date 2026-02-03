@@ -60,7 +60,6 @@ export default function AdminProducts() {
       const products = jsonData.map((row: any) => ({
         name: row["name"] || row["اسم المنتج"] || row["الاسم"] || "",
         sku: row["sku"] || row["SKU"] || row["رمز المنتج"] || "",
-        price: parseFloat(row["price"] || row["السعر"] || 0),
         finish: row["finish"] || row["النوع"] || "none",
         size: row["size"] || row["المقاس"] || "",
         description: row["description"] || row["الوصف"] || "",
@@ -77,7 +76,6 @@ export default function AdminProducts() {
     defaultValues: {
       name: "",
       sku: "",
-      price: "0",
       finish: "none",
       size: "",
       description: "",
@@ -112,7 +110,6 @@ export default function AdminProducts() {
     form.reset({
       name: product.name,
       sku: product.sku,
-      price: product.price.toString(),
       finish: product.finish || "none",
       size: product.size || "",
       description: product.description || "",
@@ -126,7 +123,6 @@ export default function AdminProducts() {
     form.reset({
       name: "",
       sku: "",
-      price: "0",
       finish: "none",
       size: "",
       description: "",
@@ -142,6 +138,14 @@ export default function AdminProducts() {
     }
   };
 
+  const getFinishLabel = (finish: string) => {
+    switch(finish) {
+      case 'hot': return 'غلفنة على الساخن';
+      case 'cold': return 'غلفنة على البارد';
+      default: return 'بدون (Brut)';
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 flex" dir="rtl">
       <Sidebar role="admin" />
@@ -151,7 +155,7 @@ export default function AdminProducts() {
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
               <h1 className="text-3xl font-bold text-slate-900">إدارة المنتجات</h1>
-              <p className="text-slate-500">إضافة وتعديل منتجات المصنع والمخزون</p>
+              <p className="text-slate-500">إضافة وتعديل منتجات المصنع</p>
             </div>
             
             <div className="flex gap-3">
@@ -196,7 +200,7 @@ export default function AdminProducts() {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>اسم المنتج</FormLabel>
-                          <FormControl><Input {...field} /></FormControl>
+                          <FormControl><Input {...field} data-testid="input-product-name" /></FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -208,7 +212,7 @@ export default function AdminProducts() {
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>رمز المنتج (SKU)</FormLabel>
-                            <FormControl><Input {...field} /></FormControl>
+                            <FormControl><Input {...field} data-testid="input-product-sku" /></FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
@@ -223,6 +227,7 @@ export default function AdminProducts() {
                               <select 
                                 {...field} 
                                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                data-testid="select-product-finish"
                               >
                                 <option value="none">بدون (Brut)</option>
                                 <option value="cold">غلفنة على البارد (Zingué à froid)</option>
@@ -239,7 +244,7 @@ export default function AdminProducts() {
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>المقاس (Size)</FormLabel>
-                            <FormControl><Input {...field} value={field.value || ""} placeholder="مثال: 6, M10, 30" /></FormControl>
+                            <FormControl><Input {...field} value={field.value || ""} placeholder="مثال: 6, M10, 30" data-testid="input-product-size" /></FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
@@ -247,28 +252,17 @@ export default function AdminProducts() {
                     </div>
                     <FormField
                       control={form.control}
-                      name="price"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>السعر (ر.س)</FormLabel>
-                          <FormControl><Input type="number" step="0.01" {...field} /></FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
                       name="description"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>الوصف</FormLabel>
-                          <FormControl><Input {...field} value={field.value || ""} /></FormControl>
+                          <FormControl><Input {...field} value={field.value || ""} data-testid="input-product-description" /></FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
                     
-                    <Button type="submit" className="w-full mt-4" disabled={createMutation.isPending || updateMutation.isPending}>
+                    <Button type="submit" className="w-full mt-4" disabled={createMutation.isPending || updateMutation.isPending} data-testid="button-save-product">
                       {createMutation.isPending || updateMutation.isPending ? "جاري الحفظ..." : "حفظ"}
                     </Button>
                   </form>
@@ -279,53 +273,49 @@ export default function AdminProducts() {
           </div>
 
           <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-x-auto">
-            <div className="p-4 border-b border-slate-100 bg-slate-50/50 flex items-center gap-3 min-w-[800px]">
+            <div className="p-4 border-b border-slate-100 bg-slate-50/50 flex items-center gap-3 min-w-[600px]">
               <Search className="h-5 w-5 text-slate-400" />
               <Input 
-                placeholder="بحث عن منتج..." 
+                placeholder="بحث بالاسم أو الكود..." 
                 className="max-w-md bg-transparent border-none shadow-none focus-visible:ring-0 px-0"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
+                data-testid="input-search-products"
               />
             </div>
 
             {isLoading ? (
               <div className="p-12 flex justify-center"><Loader2 className="animate-spin text-primary" /></div>
             ) : (
-              <div className="min-w-[800px]">
+              <div className="min-w-[600px]">
                 <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>المنتج</TableHead>
+                    <TableHead>الكود</TableHead>
                     <TableHead>المقاس</TableHead>
                     <TableHead>النوع</TableHead>
-                    <TableHead>SKU</TableHead>
-                    <TableHead>السعر</TableHead>
                     <TableHead className="text-left">إجراءات</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredProducts?.map((product) => (
-                    <TableRow key={product.id} className="group hover:bg-slate-50">
+                    <TableRow key={product.id} className="group hover:bg-slate-50" data-testid={`row-product-${product.id}`}>
                       <TableCell className="font-medium flex items-center gap-3">
                         <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center text-slate-500">
                           <Package className="h-5 w-5" />
                         </div>
                         {product.name}
                       </TableCell>
-                      <TableCell className="font-bold">{product.size || '-'}</TableCell>
-                      <TableCell>
-                        {product.finish === 'hot' ? 'غلفنة على الساخن' : 
-                         product.finish === 'cold' ? 'غلفنة على البارد' : 'بدون (Brut)'}
-                      </TableCell>
                       <TableCell className="font-mono text-xs">{product.sku}</TableCell>
-                      <TableCell>{Number(product.price).toFixed(2)} ر.س</TableCell>
+                      <TableCell className="font-bold">{product.size || '-'}</TableCell>
+                      <TableCell>{getFinishLabel(product.finish)}</TableCell>
                       <TableCell>
                         <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Button variant="ghost" size="icon" onClick={() => openEdit(product)}>
+                          <Button variant="ghost" size="icon" onClick={() => openEdit(product)} data-testid={`button-edit-${product.id}`}>
                             <Pencil className="h-4 w-4 text-blue-500" />
                           </Button>
-                          <Button variant="ghost" size="icon" onClick={() => handleDelete(product.id)}>
+                          <Button variant="ghost" size="icon" onClick={() => handleDelete(product.id)} data-testid={`button-delete-${product.id}`}>
                             <Trash2 className="h-4 w-4 text-red-500" />
                           </Button>
                         </div>
@@ -334,7 +324,7 @@ export default function AdminProducts() {
                   ))}
                   {filteredProducts?.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={4} className="text-center py-8 text-slate-400">
+                      <TableCell colSpan={5} className="text-center py-8 text-slate-400">
                         لا توجد منتجات مطابقة
                       </TableCell>
                     </TableRow>

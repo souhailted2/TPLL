@@ -107,8 +107,8 @@ export const api = {
       input: z.array(z.object({
         name: z.string(),
         sku: z.string(),
-        price: z.union([z.string(), z.number()]),
-        stockQuantity: z.number().optional(),
+        finish: z.string().optional(),
+        size: z.string().optional(),
         description: z.string().optional(),
       })),
       responses: {
