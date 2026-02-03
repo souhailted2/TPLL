@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Loader2, Plus, Pencil, Trash2, Search, Package, FileSpreadsheet } from "lucide-react";
+import { Loader2, Plus, Pencil, Trash2, Search, Package, FileSpreadsheet, Download } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -150,6 +150,36 @@ export default function AdminProducts() {
     }
   };
 
+  const [isExporting, setIsExporting] = useState(false);
+
+  const handleExcelExport = async () => {
+    setIsExporting(true);
+    try {
+      const res = await fetch("/api/products/export", { credentials: "include" });
+      if (!res.ok) throw new Error("فشل تحميل المنتجات");
+      const allProducts = await res.json();
+
+      const exportData = allProducts.map((product: any) => ({
+        "رمز المنتج (SKU)": product.sku,
+        "اسم المنتج": product.name,
+        "المقاس": product.size || "",
+        "النوع": getFinishLabel(product.finish),
+        "الوصف": product.description || "",
+      }));
+
+      const worksheet = XLSX.utils.json_to_sheet(exportData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "المنتجات");
+      
+      XLSX.writeFile(workbook, `منتجات_TPL_${new Date().toLocaleDateString('ar-DZ')}.xlsx`);
+      toast({ title: "تم التصدير بنجاح", description: `تم تصدير ${allProducts.length} منتج` });
+    } catch (error) {
+      toast({ title: "خطأ", description: "فشل تصدير المنتجات", variant: "destructive" });
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 flex" dir="rtl">
       <Sidebar role="admin" />
@@ -162,7 +192,7 @@ export default function AdminProducts() {
               <p className="text-slate-500">إضافة وتعديل منتجات المصنع</p>
             </div>
             
-            <div className="flex gap-3">
+            <div className="flex gap-3 flex-wrap">
               <input
                 type="file"
                 ref={fileInputRef}
@@ -173,8 +203,23 @@ export default function AdminProducts() {
               <Button 
                 variant="outline" 
                 size="lg" 
+                onClick={handleExcelExport}
+                disabled={isExporting}
+                data-testid="button-export-excel"
+              >
+                {isExporting ? (
+                  <Loader2 className="ml-2 h-5 w-5 animate-spin" />
+                ) : (
+                  <Download className="ml-2 h-5 w-5" />
+                )}
+                تصدير إلى Excel
+              </Button>
+              <Button 
+                variant="outline" 
+                size="lg" 
                 onClick={() => fileInputRef.current?.click()}
                 disabled={importMutation.isPending}
+                data-testid="button-import-excel"
               >
                 {importMutation.isPending ? (
                   <Loader2 className="ml-2 h-5 w-5 animate-spin" />

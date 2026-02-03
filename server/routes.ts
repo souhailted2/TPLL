@@ -46,6 +46,11 @@ export async function registerRoutes(
     res.json(result);
   });
 
+  app.get("/api/products/export", requireAdmin, async (req, res) => {
+    const result = await storage.getProducts({ limit: 100000, offset: 0 });
+    res.json(result.products);
+  });
+
   app.get(api.products.get.path, requireAuth, async (req, res) => {
     const product = await storage.getProduct(Number(req.params.id));
     if (!product) return res.status(404).json({ message: "Product not found" });
