@@ -82,10 +82,10 @@ export default function AdminOrders() {
                             onValueChange={(val) => handleStatusChange(order.id, val)}
                             disabled={updateStatus.isPending}
                           >
-                            <SelectTrigger className="w-[140px] h-8">
+                            <SelectTrigger className="w-[140px] h-8" data-testid={`select-status-${order.id}`}>
                               <SelectValue />
                             </SelectTrigger>
-                            <SelectContent>
+                            <SelectContent className="z-[110]">
                               <SelectItem value="submitted">في الانتظار</SelectItem>
                               <SelectItem value="processing">قيد الانجاز</SelectItem>
                               <SelectItem value="shipped">تم الشحن</SelectItem>
