@@ -61,24 +61,28 @@ export default function AdminDashboard() {
               value={totalOrders}
               icon={ShoppingCart}
               color="blue"
+              href="/admin/orders"
             />
             <StatCard 
               title="طلبات قيد المعالجة" 
               value={pendingOrders}
               icon={Clock}
               color="orange"
+              href="/admin/orders?filter=pending"
             />
             <StatCard 
               title="الطلبات المكتملة" 
               value={completedOrders}
               icon={CheckCircle2}
               color="green"
+              href="/admin/orders?filter=completed"
             />
             <StatCard 
               title="عدد المنتجات" 
               value={totalProducts}
               icon={Package}
               color="purple"
+              href="/admin/products"
             />
           </div>
 

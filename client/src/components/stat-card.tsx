@@ -1,5 +1,6 @@
 import { cn } from "@/lib/utils";
 import { LucideIcon } from "lucide-react";
+import { Link } from "wouter";
 
 interface StatCardProps {
   title: string;
@@ -9,6 +10,7 @@ interface StatCardProps {
   trendUp?: boolean;
   className?: string;
   color?: "blue" | "green" | "orange" | "purple";
+  href?: string;
 }
 
 export function StatCard({ 
@@ -18,7 +20,8 @@ export function StatCard({
   trend, 
   trendUp,
   className,
-  color = "blue" 
+  color = "blue",
+  href
 }: StatCardProps) {
   
   const colorStyles = {
@@ -28,9 +31,10 @@ export function StatCard({
     purple: "bg-purple-50 text-purple-600 border-purple-100",
   };
 
-  return (
+  const cardContent = (
     <div className={cn(
-      "bg-white rounded-2xl p-6 border border-border shadow-sm hover:shadow-md transition-shadow",
+      "bg-white rounded-2xl p-6 border border-border shadow-sm hover:shadow-md transition-all",
+      href && "cursor-pointer hover:scale-[1.02]",
       className
     )}>
       <div className="flex items-center justify-between">
@@ -53,6 +57,17 @@ export function StatCard({
           <span className="text-muted-foreground">مقارنة بالشهر الماضي</span>
         </div>
       )}
+      {href && (
+        <div className="mt-3 text-xs text-primary font-medium">
+          اضغط للتفاصيل ←
+        </div>
+      )}
     </div>
   );
+
+  if (href) {
+    return <Link href={href}>{cardContent}</Link>;
+  }
+
+  return cardContent;
 }

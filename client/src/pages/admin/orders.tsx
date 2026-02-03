@@ -6,12 +6,44 @@ import { Loader2, ChevronDown, ChevronUp, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { arSA } from "date-fns/locale";
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
+import { useSearch, useLocation } from "wouter";
 
 export default function AdminOrders() {
   const { data: orders, isLoading } = useOrders();
   const updateStatus = useUpdateOrderStatus();
   const [expandedOrders, setExpandedOrders] = useState<number[]>([]);
+  const searchString = useSearch();
+  const [, setLocation] = useLocation();
+  
+  const searchParams = new URLSearchParams(searchString);
+  const filterParam = searchParams.get('filter');
+  const [activeFilter, setActiveFilter] = useState<string>(filterParam || 'all');
+  
+  const filteredOrders = useMemo(() => {
+    if (!orders) return [];
+    switch (activeFilter) {
+      case 'pending':
+        return orders.filter(o => o.status === 'submitted' || o.status === 'processing');
+      case 'completed':
+        return orders.filter(o => o.status === 'completed');
+      case 'shipped':
+        return orders.filter(o => o.status === 'shipped');
+      case 'cancelled':
+        return orders.filter(o => o.status === 'cancelled');
+      default:
+        return orders;
+    }
+  }, [orders, activeFilter]);
+  
+  const handleFilterChange = (filter: string) => {
+    setActiveFilter(filter);
+    if (filter === 'all') {
+      setLocation('/admin/orders');
+    } else {
+      setLocation(`/admin/orders?filter=${filter}`);
+    }
+  };
 
   const toggleOrder = (orderId: number) => {
     setExpandedOrders(prev => 
@@ -58,6 +90,50 @@ export default function AdminOrders() {
             <h1 className="text-3xl font-bold text-slate-900">سجل الطلبات</h1>
             <p className="text-slate-500">متابعة وتحديث حالات طلبات الفروع</p>
           </div>
+          
+          {/* Filter Buttons */}
+          <div className="flex flex-wrap gap-2">
+            <Button 
+              variant={activeFilter === 'all' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => handleFilterChange('all')}
+              data-testid="filter-all"
+            >
+              الكل ({orders?.length || 0})
+            </Button>
+            <Button 
+              variant={activeFilter === 'pending' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => handleFilterChange('pending')}
+              data-testid="filter-pending"
+            >
+              قيد المعالجة ({orders?.filter(o => o.status === 'submitted' || o.status === 'processing').length || 0})
+            </Button>
+            <Button 
+              variant={activeFilter === 'shipped' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => handleFilterChange('shipped')}
+              data-testid="filter-shipped"
+            >
+              تم الشحن ({orders?.filter(o => o.status === 'shipped').length || 0})
+            </Button>
+            <Button 
+              variant={activeFilter === 'completed' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => handleFilterChange('completed')}
+              data-testid="filter-completed"
+            >
+              مكتمل ({orders?.filter(o => o.status === 'completed').length || 0})
+            </Button>
+            <Button 
+              variant={activeFilter === 'cancelled' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => handleFilterChange('cancelled')}
+              data-testid="filter-cancelled"
+            >
+              ملغي ({orders?.filter(o => o.status === 'cancelled').length || 0})
+            </Button>
+          </div>
 
           <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-x-auto">
             {isLoading ? (
@@ -76,7 +152,7 @@ export default function AdminOrders() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {orders?.map((order) => (
+                  {filteredOrders?.map((order) => (
                     <React.Fragment key={order.id}>
                       <TableRow>
                         <TableCell className="font-mono font-bold">#{order.id}</TableCell>
@@ -152,7 +228,7 @@ export default function AdminOrders() {
                       )}
                     </React.Fragment>
                   ))}
-                  {orders?.length === 0 && (
+                  {filteredOrders?.length === 0 && (
                     <TableRow>
                       <TableCell colSpan={6} className="text-center py-12 text-slate-400">
                         لا توجد طلبات بعد
