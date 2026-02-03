@@ -96,6 +96,11 @@ export class DatabaseStorage implements IStorage {
     return newProduct;
   }
 
+  async createProductsBatch(productList: InsertProduct[]): Promise<void> {
+    if (productList.length === 0) return;
+    await db.insert(products).values(productList).onConflictDoNothing();
+  }
+
   async updateProduct(id: number, product: UpdateProductRequest): Promise<Product | undefined> {
     const [updatedProduct] = await db
       .update(products)

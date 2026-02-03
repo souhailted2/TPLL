@@ -295,7 +295,7 @@ async function seedDatabase() {
   const { products: existingProducts } = await storage.getProducts();
   
   if (existingProducts.length < 1000) {
-    console.log("Seeding products database...");
+    console.log("Seeding products database with batch insert...");
     
     const lengths = [12, 16, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200];
     const finishes = [
@@ -306,25 +306,7 @@ async function seedDatabase() {
     ];
 
     const existingSkus = new Set(existingProducts.map(p => p.sku));
-    let addedCount = 0;
-
-    const addProduct = async (name: string, sku: string, size: string, finishCode: string) => {
-      if (!existingSkus.has(sku)) {
-        try {
-          await storage.createProduct({
-            name,
-            sku,
-            size,
-            finish: finishCode as any,
-          });
-          addedCount++;
-        } catch (err: any) {
-          if (err.code !== '23505') {
-            console.error(`Error adding product ${sku}:`, err.message);
-          }
-        }
-      }
-    };
+    const allProducts: { name: string; sku: string; size: string; finish: string }[] = [];
 
     // Boulon Standard - 14 diameters × 28 lengths × 4 finishes = 1568
     const boulonDiameters = [4, 5, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 27, 30];
@@ -332,7 +314,10 @@ async function seedDatabase() {
       for (const l of lengths) {
         for (const f of finishes) {
           const size = `${d}x${l}`;
-          await addProduct(`Boulon ${f.name} ${size}`, `B${f.suffix}${d}${l}`, size, f.code);
+          const sku = `B${f.suffix}${d}${l}`;
+          if (!existingSkus.has(sku)) {
+            allProducts.push({ name: `Boulon ${f.name} ${size}`, sku, size, finish: f.code });
+          }
         }
       }
     }
@@ -343,7 +328,10 @@ async function seedDatabase() {
       for (const l of lengths) {
         for (const f of finishes) {
           const size = `${d}x${l}`;
-          await addProduct(`Boulon Demi Filetage ${f.name} ${size}`, `BDF${f.suffix}${d}${l}`, size, f.code);
+          const sku = `BDF${f.suffix}${d}${l}`;
+          if (!existingSkus.has(sku)) {
+            allProducts.push({ name: `Boulon Demi Filetage ${f.name} ${size}`, sku, size, finish: f.code });
+          }
         }
       }
     }
@@ -355,7 +343,10 @@ async function seedDatabase() {
       for (const l of poelierLengths) {
         for (const f of finishes) {
           const size = `${d}x${l}`;
-          await addProduct(`Boulon Poelier ${f.name} ${size}`, `BP${f.suffix}${d}${l}`, size, f.code);
+          const sku = `BP${f.suffix}${d}${l}`;
+          if (!existingSkus.has(sku)) {
+            allProducts.push({ name: `Boulon Poelier ${f.name} ${size}`, sku, size, finish: f.code });
+          }
         }
       }
     }
@@ -365,7 +356,10 @@ async function seedDatabase() {
       for (const l of poelierLengths) {
         for (const f of finishes) {
           const size = `${d}x${l}`;
-          await addProduct(`Boulon Tête Fraisée ${f.name} ${size}`, `BTF${f.suffix}${d}${l}`, size, f.code);
+          const sku = `BTF${f.suffix}${d}${l}`;
+          if (!existingSkus.has(sku)) {
+            allProducts.push({ name: `Boulon Tête Fraisée ${f.name} ${size}`, sku, size, finish: f.code });
+          }
         }
       }
     }
@@ -376,7 +370,10 @@ async function seedDatabase() {
       for (const l of lengths) {
         for (const f of finishes) {
           const size = `${d}x${l}`;
-          await addProduct(`Rivet ${f.name} ${size}`, `R${f.suffix}${d}${l}`, size, f.code);
+          const sku = `R${f.suffix}${d}${l}`;
+          if (!existingSkus.has(sku)) {
+            allProducts.push({ name: `Rivet ${f.name} ${size}`, sku, size, finish: f.code });
+          }
         }
       }
     }
@@ -386,7 +383,10 @@ async function seedDatabase() {
     for (const d of tigeDiameters) {
       for (const f of finishes) {
         const size = `${d}mm - 1m`;
-        await addProduct(`Tige Filetée ${f.name} ${size}`, `TF${f.suffix}${d}`, size, f.code);
+        const sku = `TF${f.suffix}${d}`;
+        if (!existingSkus.has(sku)) {
+          allProducts.push({ name: `Tige Filetée ${f.name} ${size}`, sku, size, finish: f.code });
+        }
       }
     }
 
@@ -395,10 +395,25 @@ async function seedDatabase() {
     for (const m of ecrouSizes) {
       for (const f of finishes) {
         const size = `M${m}`;
-        await addProduct(`Ecrou ${f.name} ${size}`, `E${f.suffix}${m}`, size, f.code);
+        const sku = `E${f.suffix}${m}`;
+        if (!existingSkus.has(sku)) {
+          allProducts.push({ name: `Ecrou ${f.name} ${size}`, sku, size, finish: f.code });
+        }
       }
     }
 
-    console.log(`Added ${addedCount} new products to database.`);
+    // Batch insert in chunks of 500
+    const chunkSize = 500;
+    for (let i = 0; i < allProducts.length; i += chunkSize) {
+      const chunk = allProducts.slice(i, i + chunkSize);
+      try {
+        await (storage as any).createProductsBatch(chunk);
+        console.log(`Inserted batch ${Math.floor(i / chunkSize) + 1}/${Math.ceil(allProducts.length / chunkSize)}`);
+      } catch (err: any) {
+        console.error(`Error inserting batch:`, err.message);
+      }
+    }
+
+    console.log(`Added ${allProducts.length} new products to database.`);
   }
 }
