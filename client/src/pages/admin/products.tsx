@@ -192,7 +192,7 @@ export default function AdminProducts() {
               <p className="text-slate-500">إضافة وتعديل منتجات المصنع</p>
             </div>
             
-            <div className="flex gap-3 flex-wrap">
+            <div className="flex items-center gap-2">
               <input
                 type="file"
                 ref={fileInputRef}
@@ -200,42 +200,49 @@ export default function AdminProducts() {
                 accept=".xlsx,.xls,.csv"
                 className="hidden"
               />
+              
               <Button 
                 variant="outline" 
-                size="lg" 
                 onClick={handleExcelExport}
                 disabled={isExporting}
                 data-testid="button-export-excel"
+                className="gap-2"
               >
                 {isExporting ? (
-                  <Loader2 className="ml-2 h-5 w-5 animate-spin" />
+                  <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
-                  <Download className="ml-2 h-5 w-5" />
+                  <Download className="h-4 w-4" />
                 )}
-                تصدير إلى Excel
+                <span className="hidden sm:inline">تصدير</span>
               </Button>
+              
               <Button 
                 variant="outline" 
-                size="lg" 
                 onClick={() => fileInputRef.current?.click()}
                 disabled={importMutation.isPending}
                 data-testid="button-import-excel"
+                className="gap-2"
               >
                 {importMutation.isPending ? (
-                  <Loader2 className="ml-2 h-5 w-5 animate-spin" />
+                  <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
-                  <FileSpreadsheet className="ml-2 h-5 w-5" />
+                  <FileSpreadsheet className="h-4 w-4" />
                 )}
-                استيراد من Excel
+                <span className="hidden sm:inline">استيراد</span>
               </Button>
               
-              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button onClick={openCreate} size="lg" className="shadow-lg shadow-primary/20">
-                    <Plus className="ml-2 h-5 w-5" />
-                    إضافة منتج جديد
-                  </Button>
-                </DialogTrigger>
+              <Button 
+                onClick={openCreate}
+                data-testid="button-add-product"
+                className="gap-2 shadow-lg shadow-primary/20"
+              >
+                <Plus className="h-4 w-4" />
+                <span className="hidden sm:inline">إضافة منتج</span>
+              </Button>
+            </div>
+          </div>
+
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogContent className="sm:max-w-[500px] z-[100] max-h-[90vh] overflow-y-auto" dir="rtl">
                 <DialogHeader>
                   <DialogTitle>{editingProduct ? "تعديل منتج" : "إضافة منتج جديد"}</DialogTitle>
@@ -317,9 +324,7 @@ export default function AdminProducts() {
                   </form>
                 </Form>
               </DialogContent>
-            </Dialog>
-            </div>
-          </div>
+          </Dialog>
 
           <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-x-auto">
             <div className="p-4 border-b border-slate-100 bg-slate-50/50 flex items-center gap-3 min-w-[600px]">
