@@ -69,14 +69,38 @@ export default function LandingPage() {
       </header>
 
       {/* Hero Section */}
-      <main className="flex-1 flex flex-col lg:flex-row-reverse items-center justify-center px-6 lg:px-12 gap-12 lg:gap-24 max-w-7xl mx-auto w-full py-12">
+      <main className="flex-1 flex flex-col items-center justify-center px-6 lg:px-12 gap-8 max-w-7xl mx-auto w-full py-12">
         
-        {/* Login Form - First on mobile */}
+        {/* Title Section - First */}
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="text-center max-w-2xl"
+        >
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-100 text-primary text-sm font-medium mb-6">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+            </span>
+            نظام إدارة سلسلة التوريد الذكي
+          </div>
+          
+          <h1 className="text-3xl lg:text-5xl font-bold font-display text-slate-900 leading-tight mb-4">
+            ربط نقاط البيع <span className="text-primary">بخط الإنتاج مباشرة</span>
+          </h1>
+          
+          <p className="text-lg text-slate-600 leading-relaxed">
+            منصة متكاملة لإدارة الطلبات والمخزون، مصممة خصيصاً لربط نقاط البيع بالمصنع لضمان سرعة التوريد ودقة الإنتاج.
+          </p>
+        </motion.div>
+
+        {/* Login Form - Second */}
         <motion.div 
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.7 }}
-          className="flex-1 w-full max-w-md"
+          transition={{ duration: 0.7, delay: 0.2 }}
+          className="w-full max-w-md"
         >
           <Card className="shadow-2xl border-0">
             <CardHeader className="text-center pb-2">
@@ -158,44 +182,26 @@ export default function LandingPage() {
           </Card>
         </motion.div>
 
-        {/* Text Content - Second on mobile */}
+        {/* Features Grid - Third (at the bottom) */}
         <motion.div 
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-          className="flex-1 max-w-xl text-center lg:text-right"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.4 }}
+          className="w-full max-w-4xl"
         >
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-100 text-primary text-sm font-medium mb-6">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
-            </span>
-            نظام إدارة سلسلة التوريد الذكي
-          </div>
-          
-          <h1 className="text-4xl lg:text-6xl font-bold font-display text-slate-900 leading-tight mb-6">
-            ربط نقاط البيع <br/>
-            <span className="text-primary">بخط الإنتاج مباشرة</span>
-          </h1>
-          
-          <p className="text-lg text-slate-600 mb-8 leading-relaxed">
-            منصة متكاملة لإدارة الطلبات والمخزون، مصممة خصيصاً لربط نقاط البيع بالمصنع لضمان سرعة التوريد ودقة الإنتاج.
-          </p>
-
-          {/* Features Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-8 text-right">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 text-center">
             <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-100">
-              <ShieldCheck className="h-8 w-8 text-emerald-500 mb-2" />
+              <ShieldCheck className="h-8 w-8 text-emerald-500 mb-2 mx-auto" />
               <h3 className="font-bold text-slate-900">أمان عالي</h3>
               <p className="text-sm text-slate-500">حماية بيانات العملاء والطلبات</p>
             </div>
             <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-100">
-              <BarChart3 className="h-8 w-8 text-blue-500 mb-2" />
+              <BarChart3 className="h-8 w-8 text-blue-500 mb-2 mx-auto" />
               <h3 className="font-bold text-slate-900">تحليلات دقيقة</h3>
               <p className="text-sm text-slate-500">تتبع المبيعات والإنتاج لحظياً</p>
             </div>
             <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-100">
-              <Globe className="h-8 w-8 text-purple-500 mb-2" />
+              <Globe className="h-8 w-8 text-purple-500 mb-2 mx-auto" />
               <h3 className="font-bold text-slate-900">ربط فوري</h3>
               <p className="text-sm text-slate-500">تحديث مباشر بين المعرض والمصنع</p>
             </div>
