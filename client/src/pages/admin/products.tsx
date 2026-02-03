@@ -281,6 +281,7 @@ export default function AdminProducts() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>المنتج</TableHead>
+                    <TableHead>النوع</TableHead>
                     <TableHead>SKU</TableHead>
                     <TableHead>السعر</TableHead>
                     <TableHead className="text-left">إجراءات</TableHead>
@@ -294,6 +295,10 @@ export default function AdminProducts() {
                           <Package className="h-5 w-5" />
                         </div>
                         {product.name}
+                      </TableCell>
+                      <TableCell>
+                        {product.finish === 'hot' ? 'غلفنة على الساخن' : 
+                         product.finish === 'cold' ? 'غلفنة على البارد' : 'بدون (Brut)'}
                       </TableCell>
                       <TableCell className="font-mono text-xs">{product.sku}</TableCell>
                       <TableCell>{Number(product.price).toFixed(2)} ر.س</TableCell>

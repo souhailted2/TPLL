@@ -4,6 +4,7 @@ import { useCreateOrder } from "@/hooks/use-orders";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Loader2, Plus, ShoppingCart, Trash2, Search } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -127,6 +128,12 @@ export default function NewOrder() {
                         <div>
                           <h3 className="font-bold text-slate-900">{product.name}</h3>
                           <p className="text-sm text-slate-500 font-mono">{product.sku}</p>
+                          <div className="mt-1 flex justify-center">
+                            <Badge variant="outline" className="text-[10px] h-4">
+                              {product.finish === 'hot' ? 'Zingué à chaud' : 
+                               product.finish === 'cold' ? 'Zingué à froid' : 'Brut'}
+                            </Badge>
+                          </div>
                           <p className="text-primary font-bold mt-1">{Number(product.price).toFixed(2)} ر.س</p>
                         </div>
                         <Button onClick={() => addToCart(product)} className="w-full mt-2" size="sm">
