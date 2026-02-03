@@ -154,7 +154,7 @@ export default function AdminProducts() {
     <div className="min-h-screen bg-slate-50 flex" dir="rtl">
       <Sidebar role="admin" />
       
-      <main className="flex-1 md:mr-64 p-4 md:p-8 pt-24 md:pt-8">
+      <main className="flex-1 md:mr-64 p-4 md:p-8 pt-24 md:pt-8 overflow-x-hidden">
         <div className="max-w-7xl mx-auto space-y-6">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>

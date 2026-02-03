@@ -20,7 +20,7 @@ export default function AdminDashboard() {
   const totalOrders = orders?.length || 0;
   const pendingOrders = orders?.filter(o => o.status === 'submitted' || o.status === 'processing').length || 0;
   const completedOrders = orders?.filter(o => o.status === 'completed').length || 0;
-  const totalProducts = products?.length || 0;
+  const totalProducts = products?.total || products?.products?.length || 0;
 
   const getStatusLabel = (status: string) => {
     switch(status) {
@@ -46,7 +46,7 @@ export default function AdminDashboard() {
     <div className="min-h-screen bg-slate-50 flex" dir="rtl">
       <Sidebar role="admin" />
       
-      <main className="flex-1 md:mr-64 p-4 md:p-8 pt-24 md:pt-8">
+      <main className="flex-1 md:mr-64 p-4 md:p-8 pt-24 md:pt-8 overflow-x-hidden">
         <div className="max-w-7xl mx-auto space-y-8">
           
           <div className="flex flex-col gap-2">
