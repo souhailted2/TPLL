@@ -154,15 +154,17 @@ export default function NewOrder() {
                           <Package className="h-3 w-3 shrink-0" />
                           <span>قطعة</span>
                         </Button>
-                        <Button 
-                          size="sm" 
-                          className="min-w-[70px] gap-1 text-xs"
-                          onClick={() => addToCart(product, "bag")}
-                          data-testid={`button-add-bag-${product.id}`}
-                        >
-                          <Weight className="h-3 w-3 shrink-0" />
-                          <span>شكارة</span>
-                        </Button>
+                        {!product.name.includes("Tige Filetée") && (
+                          <Button 
+                            size="sm" 
+                            className="min-w-[70px] gap-1 text-xs"
+                            onClick={() => addToCart(product, "bag")}
+                            data-testid={`button-add-bag-${product.id}`}
+                          >
+                            <Weight className="h-3 w-3 shrink-0" />
+                            <span>شكارة</span>
+                          </Button>
+                        )}
                       </div>
                     </CardContent>
                   </Card>
