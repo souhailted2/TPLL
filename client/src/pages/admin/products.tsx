@@ -146,7 +146,7 @@ export default function AdminProducts() {
     <div className="min-h-screen bg-slate-50 flex" dir="rtl">
       <Sidebar role="admin" />
       
-      <main className="flex-1 md:mr-64 p-8">
+      <main className="flex-1 md:mr-64 p-4 md:p-8 pt-24 md:pt-8">
         <div className="max-w-7xl mx-auto space-y-6">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
@@ -278,8 +278,8 @@ export default function AdminProducts() {
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-            <div className="p-4 border-b border-slate-100 bg-slate-50/50 flex items-center gap-3">
+          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-x-auto">
+            <div className="p-4 border-b border-slate-100 bg-slate-50/50 flex items-center gap-3 min-w-[800px]">
               <Search className="h-5 w-5 text-slate-400" />
               <Input 
                 placeholder="بحث عن منتج..." 
@@ -292,7 +292,8 @@ export default function AdminProducts() {
             {isLoading ? (
               <div className="p-12 flex justify-center"><Loader2 className="animate-spin text-primary" /></div>
             ) : (
-              <Table>
+              <div className="min-w-[800px]">
+                <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>المنتج</TableHead>
@@ -340,6 +341,7 @@ export default function AdminProducts() {
                   )}
                 </TableBody>
               </Table>
+            </div>
             )}
           </div>
         </div>

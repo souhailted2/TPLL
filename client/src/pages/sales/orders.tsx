@@ -30,18 +30,19 @@ export default function SalesOrders() {
   return (
     <div className="min-h-screen bg-slate-50 flex" dir="rtl">
       <Sidebar role="sales_point" />
-      <main className="flex-1 md:mr-64 p-8">
+      <main className="flex-1 md:mr-64 p-4 md:p-8 pt-24 md:pt-8">
         <div className="max-w-7xl mx-auto space-y-6">
           <div className="flex flex-col gap-2">
             <h1 className="text-3xl font-bold text-slate-900">طلباتي</h1>
             <p className="text-slate-500">سجل الطلبات المرسلة إلى المصنع وحالاتها</p>
           </div>
 
-          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-x-auto">
             {isLoading ? (
               <div className="p-12 flex justify-center"><Loader2 className="animate-spin text-primary" /></div>
             ) : (
-              <Table>
+              <div className="min-w-[700px]">
+                <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>رقم الطلب</TableHead>
@@ -81,6 +82,7 @@ export default function SalesOrders() {
                   )}
                 </TableBody>
               </Table>
+            </div>
             )}
           </div>
         </div>

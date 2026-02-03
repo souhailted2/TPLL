@@ -20,7 +20,6 @@ export default function AdminDashboard() {
   const totalRevenue = orders?.reduce((acc, order) => acc + Number(order.totalAmount), 0) || 0;
   const pendingOrders = orders?.filter(o => o.status === 'submitted' || o.status === 'processing').length || 0;
   const completedOrders = orders?.filter(o => o.status === 'completed').length || 0;
-  const lowStockProducts = products?.filter(p => p.stockQuantity < 1000).length || 0;
 
   // Chart Data Mockup (Real app would aggregate dates)
   const chartData = [
@@ -37,7 +36,7 @@ export default function AdminDashboard() {
     <div className="min-h-screen bg-slate-50 flex" dir="rtl">
       <Sidebar role="admin" />
       
-      <main className="flex-1 md:mr-64 p-8">
+      <main className="flex-1 md:mr-64 p-4 md:p-8 pt-24 md:pt-8">
         <div className="max-w-7xl mx-auto space-y-8">
           
           <div className="flex flex-col gap-2">
@@ -66,13 +65,6 @@ export default function AdminDashboard() {
               value={completedOrders}
               icon={CheckCircle2}
               color="purple"
-            />
-            <StatCard 
-              title="تنبيهات المخزون" 
-              value={lowStockProducts}
-              icon={AlertCircle}
-              color="orange"
-              className={lowStockProducts > 0 ? "border-orange-200 bg-orange-50" : ""}
             />
           </div>
 

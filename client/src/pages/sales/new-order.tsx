@@ -89,7 +89,7 @@ export default function NewOrder() {
   return (
     <div className="min-h-screen bg-slate-50 flex" dir="rtl">
       <Sidebar role="sales_point" />
-      <main className="flex-1 md:mr-64 p-8 h-screen flex flex-col">
+      <main className="flex-1 md:mr-64 p-4 md:p-8 pt-24 md:pt-8 h-screen flex flex-col">
         <div className="max-w-7xl mx-auto w-full h-full flex flex-col gap-6">
           <div className="flex justify-between items-center">
             <div>
@@ -108,9 +108,9 @@ export default function NewOrder() {
             </div>
           </div>
 
-          <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-6 min-h-0">
+          <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-6 min-h-0 overflow-hidden">
             {/* Products Grid */}
-            <div className="lg:col-span-2 overflow-y-auto pr-2">
+            <div className="lg:col-span-2 overflow-y-auto pr-2 pb-20 lg:pb-0">
               {productsLoading ? (
                 <div className="flex justify-center p-12"><Loader2 className="animate-spin" /></div>
               ) : (
@@ -152,7 +152,7 @@ export default function NewOrder() {
             </div>
 
             {/* Cart Sidebar */}
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-xl flex flex-col overflow-hidden h-full">
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-xl flex flex-col overflow-hidden h-[500px] lg:h-full">
               <div className="p-4 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <ShoppingCart className="h-5 w-5 text-primary" />
