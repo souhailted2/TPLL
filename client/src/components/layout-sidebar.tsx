@@ -49,18 +49,19 @@ export function Sidebar({ role }: SidebarProps) {
           <Button 
             variant="outline" 
             size="icon" 
-            className="bg-slate-800 text-white border-slate-700 hover:bg-slate-700" 
+            className="bg-slate-800 text-white border-slate-700 hover:bg-slate-700 min-w-[44px] min-h-[44px]" 
             onClick={() => setIsOpen(!isOpen)}
+            data-testid="button-toggle-sidebar"
           >
-            {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
           </Button>
         </div>
       </div>
 
       {/* Sidebar Container */}
       <aside className={cn(
-        "fixed inset-y-0 right-0 z-[80] w-64 bg-slate-900 text-white transition-all duration-300 ease-in-out",
-        isOpen ? "opacity-100 visible" : "opacity-0 invisible md:opacity-100 md:visible"
+        "fixed inset-y-0 right-0 z-[80] w-64 bg-slate-900 text-white transition-transform duration-300 ease-in-out",
+        isOpen ? "translate-x-0" : "translate-x-full md:translate-x-0"
       )}>
         <div className="h-full flex flex-col pt-20 md:pt-0">
           {/* Header */}

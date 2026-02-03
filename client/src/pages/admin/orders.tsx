@@ -3,7 +3,6 @@ import { useOrders, useUpdateOrderStatus } from "@/hooks/use-orders";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, ChevronDown, ChevronUp, Package } from "lucide-react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { arSA } from "date-fns/locale";
@@ -109,23 +108,20 @@ export default function AdminOrders() {
                         </TableCell>
                         <TableCell>
                           <div className="flex justify-end">
-                            <Select 
+                            <select 
                               value={order.status} 
-                              onValueChange={(val) => handleStatusChange(order.id, val)}
+                              onChange={(e) => handleStatusChange(order.id, e.target.value)}
                               disabled={updateStatus.isPending}
+                              className="w-[140px] h-8 px-2 text-sm rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring cursor-pointer"
+                              data-testid={`select-status-${order.id}`}
                               dir="rtl"
                             >
-                              <SelectTrigger className="w-[150px] h-8" data-testid={`select-status-${order.id}`}>
-                                <SelectValue placeholder="اختر الحالة" />
-                              </SelectTrigger>
-                              <SelectContent className="z-[110] min-w-[150px]" dir="rtl">
-                                <SelectItem value="submitted">في الانتظار</SelectItem>
-                                <SelectItem value="processing">قيد الانجاز</SelectItem>
-                                <SelectItem value="shipped">تم الشحن</SelectItem>
-                                <SelectItem value="completed">تم الاستلام</SelectItem>
-                                <SelectItem value="cancelled">ملغي</SelectItem>
-                              </SelectContent>
-                            </Select>
+                              <option value="submitted">في الانتظار</option>
+                              <option value="processing">قيد الانجاز</option>
+                              <option value="shipped">تم الشحن</option>
+                              <option value="completed">تم الاستلام</option>
+                              <option value="cancelled">ملغي</option>
+                            </select>
                           </div>
                         </TableCell>
                       </TableRow>
