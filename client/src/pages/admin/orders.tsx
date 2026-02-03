@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { arSA } from "date-fns/locale";
-import { useState } from "react";
+import React, { useState } from "react";
 
 export default function AdminOrders() {
   const { data: orders, isLoading } = useOrders();
@@ -78,8 +78,8 @@ export default function AdminOrders() {
                 </TableHeader>
                 <TableBody>
                   {orders?.map((order) => (
-                    <>
-                      <TableRow key={order.id}>
+                    <React.Fragment key={order.id}>
+                      <TableRow>
                         <TableCell className="font-mono font-bold">#{order.id}</TableCell>
                         <TableCell className="font-bold">{order.salesPoint?.salesPointName || order.salesPoint?.firstName}</TableCell>
                         <TableCell>
@@ -110,7 +110,7 @@ export default function AdminOrders() {
                         <TableCell>
                           <div className="flex justify-end">
                             <Select 
-                              defaultValue={order.status} 
+                              value={order.status} 
                               onValueChange={(val) => handleStatusChange(order.id, val)}
                               disabled={updateStatus.isPending}
                             >
@@ -129,7 +129,7 @@ export default function AdminOrders() {
                         </TableCell>
                       </TableRow>
                       {expandedOrders.includes(order.id) && order.items && order.items.length > 0 && (
-                        <TableRow key={`${order.id}-details`}>
+                        <TableRow>
                           <TableCell colSpan={6} className="bg-slate-50 p-4">
                             <div className="space-y-2">
                               <p className="font-bold text-sm mb-3">تفاصيل الطلب:</p>
@@ -153,7 +153,7 @@ export default function AdminOrders() {
                           </TableCell>
                         </TableRow>
                       )}
-                    </>
+                    </React.Fragment>
                   ))}
                   {orders?.length === 0 && (
                     <TableRow>
