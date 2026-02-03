@@ -10,11 +10,10 @@ import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 
 const ACCOUNTS = [
-  { id: "owner", label: "المالك (Owner)", role: "admin" },
-  { id: "factory", label: "المصنع (Factory)", role: "admin" },
-  { id: "alger", label: "نقطة الجزائر (Alger)", role: "sales" },
-  { id: "eloued", label: "نقطة الوادي (El Oued)", role: "sales" },
-  { id: "elma", label: "نقطة العلمة (Elma)", role: "sales" },
+  { id: "factory", label: "المصنع (Factory)", role: "admin", icon: "🏭" },
+  { id: "alger", label: "نقطة الجزائر (Alger)", role: "sales", icon: "📍" },
+  { id: "eloued", label: "نقطة الوادي (El Oued)", role: "sales", icon: "📍" },
+  { id: "elma", label: "نقطة العلمة (Eleulma)", role: "sales", icon: "📍" },
 ];
 
 export default function LandingPage() {
@@ -119,22 +118,32 @@ export default function LandingPage() {
                   </Label>
                   <Select value={username} onValueChange={setUsername} disabled={isLoggingIn}>
                     <SelectTrigger 
-                      className="h-12 text-lg text-right" 
+                      className="h-14 text-base text-right bg-slate-50 border-slate-200 hover:bg-slate-100 transition-colors" 
                       data-testid="select-account"
                     >
-                      <SelectValue placeholder="اضغط لاختيار حساب..." />
+                      <SelectValue placeholder="اضغط هنا لاختيار حسابك..." />
                     </SelectTrigger>
-                    <SelectContent>
-                      {ACCOUNTS.map((acc) => (
-                        <SelectItem 
-                          key={acc.id} 
-                          value={acc.id}
-                          className="text-right py-3 text-base"
-                          data-testid={`select-account-${acc.id}`}
-                        >
-                          {acc.label}
-                        </SelectItem>
-                      ))}
+                    <SelectContent className="rounded-xl shadow-xl border-slate-200">
+                      <div className="py-1">
+                        {ACCOUNTS.map((acc, index) => (
+                          <SelectItem 
+                            key={acc.id} 
+                            value={acc.id}
+                            className="text-right py-3 px-4 text-base cursor-pointer rounded-lg mx-1 my-0.5"
+                            data-testid={`select-account-${acc.id}`}
+                          >
+                            <div className="flex items-center gap-3">
+                              <span className="text-lg">{acc.icon}</span>
+                              <div className="flex flex-col items-start">
+                                <span className="font-medium">{acc.label}</span>
+                                <span className="text-xs text-muted-foreground">
+                                  {acc.role === "admin" ? "لوحة التحكم الكاملة" : "نقطة بيع"}
+                                </span>
+                              </div>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </div>
                     </SelectContent>
                   </Select>
                 </div>
