@@ -108,101 +108,99 @@ export default function NewOrder() {
             </div>
           </div>
 
-          <div className="flex-1 grid grid-cols-1 lg:grid-cols-4 gap-6 min-h-0 overflow-hidden">
-            {/* Products Grid */}
-            <div className="lg:col-span-3 overflow-y-auto pr-2 pb-20 lg:pb-0">
-              {productsLoading ? (
-                <div className="flex justify-center p-12"><Loader2 className="animate-spin" /></div>
-              ) : (
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  {filteredProducts?.map((product) => (
-                    <Card key={product.id} className="cursor-pointer hover:border-primary transition-colors group">
-                      <CardContent className="p-4 flex flex-col items-center text-center gap-3">
-                        <div className="w-full aspect-square bg-slate-100 rounded-lg flex items-center justify-center mb-2">
-                          <img 
-                            src={product.imageUrl || "https://images.unsplash.com/photo-1535295972055-1c762f4483e5?w=300&q=80"} // screw/bolt mockup
-                            alt={product.name}
-                            className="w-full h-full object-cover rounded-lg mix-blend-multiply"
-                          />
-                        </div>
-                        <div>
-                          <h3 className="font-bold text-slate-900">{product.name}</h3>
-                          <p className="text-sm text-slate-500 font-mono">{product.sku}</p>
-                          <div className="mt-1 flex justify-center gap-1">
-                            <Badge variant="outline" className="text-[10px] h-4">
-                              {product.finish === 'hot' ? 'Zingué à chaud' : 
-                               product.finish === 'cold' ? 'Zingué à froid' : 'Brut'}
+          {/* Products Grid - Full Width */}
+          <div className="flex-1 overflow-y-auto pb-32 lg:pb-0 lg:pl-80">
+            {productsLoading ? (
+              <div className="flex justify-center p-12"><Loader2 className="animate-spin" /></div>
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                {filteredProducts?.map((product) => (
+                  <Card key={product.id} className="cursor-pointer hover:border-primary transition-colors group">
+                    <CardContent className="p-4 flex flex-col items-center text-center gap-3">
+                      <div className="w-full aspect-square bg-slate-100 rounded-lg flex items-center justify-center mb-2">
+                        <img 
+                          src={product.imageUrl || "https://images.unsplash.com/photo-1535295972055-1c762f4483e5?w=300&q=80"}
+                          alt={product.name}
+                          className="w-full h-full object-cover rounded-lg mix-blend-multiply"
+                        />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-slate-900">{product.name}</h3>
+                        <p className="text-sm text-slate-500 font-mono">{product.sku}</p>
+                        <div className="mt-1 flex justify-center gap-1">
+                          <Badge variant="outline" className="text-[10px] h-4">
+                            {product.finish === 'hot' ? 'Zingué à chaud' : 
+                             product.finish === 'cold' ? 'Zingué à froid' : 'Brut'}
+                          </Badge>
+                          {product.size && (
+                            <Badge variant="secondary" className="text-[10px] h-4 bg-slate-100">
+                              {product.size}
                             </Badge>
-                            {product.size && (
-                              <Badge variant="secondary" className="text-[10px] h-4 bg-slate-100">
-                                {product.size}
-                              </Badge>
-                            )}
-                          </div>
-                          <p className="text-primary font-bold mt-1">{Number(product.price).toFixed(2)} ر.س</p>
+                          )}
                         </div>
-                        <Button onClick={() => addToCart(product)} className="w-full mt-2" size="sm">
-                          <Plus className="h-4 w-4 ml-1" /> إضافة
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  ))}
+                        <p className="text-primary font-bold mt-1">{Number(product.price).toFixed(2)} ر.س</p>
+                      </div>
+                      <Button onClick={() => addToCart(product)} className="w-full mt-2" size="sm">
+                        <Plus className="h-4 w-4 ml-1" /> إضافة
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Cart Sidebar - Fixed Position */}
+          <div className="fixed bottom-0 left-0 right-0 lg:bottom-auto lg:top-0 lg:right-auto lg:left-0 lg:w-72 lg:h-screen bg-white border-t lg:border-t-0 lg:border-l border-slate-200 shadow-xl flex flex-col z-40">
+            <div className="p-4 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <ShoppingCart className="h-5 w-5 text-primary" />
+                <span className="font-bold">سلة الطلبات</span>
+              </div>
+              <span className="bg-primary text-white text-xs px-2 py-1 rounded-full">{cart.length}</span>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-4 space-y-4 max-h-48 lg:max-h-none">
+              {cart.length === 0 ? (
+                <div className="h-full flex flex-col items-center justify-center text-slate-400 gap-2 py-8 lg:py-0">
+                  <ShoppingCart className="h-12 w-12 opacity-20" />
+                  <p>السلة فارغة</p>
                 </div>
+              ) : (
+                cart.map((item) => (
+                  <div key={item.productId} className="flex items-center gap-3 bg-slate-50 p-3 rounded-lg">
+                    <div className="flex-1">
+                      <p className="font-bold text-sm text-slate-900">{item.productName}</p>
+                      <p className="text-xs text-slate-500">{(item.price * item.quantity).toFixed(2)} ر.س</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Input 
+                        type="number" 
+                        className="w-16 h-8 text-center px-1" 
+                        value={item.quantity}
+                        onChange={(e) => updateQuantity(item.productId, parseInt(e.target.value))}
+                      />
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500" onClick={() => removeFromCart(item.productId)}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))
               )}
             </div>
 
-            {/* Cart Sidebar */}
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-xl flex flex-col overflow-hidden h-[500px] lg:h-full">
-              <div className="p-4 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <ShoppingCart className="h-5 w-5 text-primary" />
-                  <span className="font-bold">سلة الطلبات</span>
-                </div>
-                <span className="bg-primary text-white text-xs px-2 py-1 rounded-full">{cart.length}</span>
+            <div className="p-4 border-t border-slate-100 bg-slate-50 space-y-3">
+              <div className="flex justify-between items-center text-lg font-bold">
+                <span>الإجمالي</span>
+                <span className="text-primary">{totalAmount.toFixed(2)} ر.س</span>
               </div>
-
-              <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                {cart.length === 0 ? (
-                  <div className="h-full flex flex-col items-center justify-center text-slate-400 gap-2">
-                    <ShoppingCart className="h-12 w-12 opacity-20" />
-                    <p>السلة فارغة</p>
-                  </div>
-                ) : (
-                  cart.map((item) => (
-                    <div key={item.productId} className="flex items-center gap-3 bg-slate-50 p-3 rounded-lg">
-                      <div className="flex-1">
-                        <p className="font-bold text-sm text-slate-900">{item.productName}</p>
-                        <p className="text-xs text-slate-500">{(item.price * item.quantity).toFixed(2)} ر.س</p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Input 
-                          type="number" 
-                          className="w-16 h-8 text-center px-1" 
-                          value={item.quantity}
-                          onChange={(e) => updateQuantity(item.productId, parseInt(e.target.value))}
-                        />
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500" onClick={() => removeFromCart(item.productId)}>
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-
-              <div className="p-4 border-t border-slate-100 bg-slate-50 space-y-4">
-                <div className="flex justify-between items-center text-lg font-bold">
-                  <span>الإجمالي</span>
-                  <span className="text-primary">{totalAmount.toFixed(2)} ر.س</span>
-                </div>
-                <Button 
-                  onClick={handleSubmitOrder} 
-                  className="w-full py-6 text-lg shadow-lg shadow-primary/20"
-                  disabled={cart.length === 0 || isSubmitting}
-                >
-                  {isSubmitting ? <Loader2 className="animate-spin" /> : "إرسال الطلب للمصنع"}
-                </Button>
-              </div>
+              <Button 
+                onClick={handleSubmitOrder} 
+                className="w-full py-4 text-base shadow-lg shadow-primary/20"
+                disabled={cart.length === 0 || isSubmitting}
+              >
+                {isSubmitting ? <Loader2 className="animate-spin" /> : "إرسال الطلب للمصنع"}
+              </Button>
             </div>
           </div>
         </div>
