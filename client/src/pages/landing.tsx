@@ -123,7 +123,7 @@ export default function LandingPage() {
                     >
                       <SelectValue placeholder="اضغط هنا لاختيار حسابك..." />
                     </SelectTrigger>
-                    <SelectContent className="rounded-xl shadow-xl border-slate-200">
+                    <SelectContent className="rounded-xl shadow-xl border-slate-200 bg-white">
                       <div className="py-1">
                         {ACCOUNTS.map((acc, index) => (
                           <SelectItem 
