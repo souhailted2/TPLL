@@ -112,7 +112,7 @@ export const isAuthenticated: RequestHandler = (req, res, next) => {
 
 export async function seedUsers() {
   const defaultUsers = [
-    { username: "factory", password: "1111", firstName: "موظف المصنع", role: "admin" },
+    { username: "factory", password: "1111", firstName: "موظف المصنع", role: "admin", salesPointName: null },
     { username: "alger", password: "0000", firstName: "نقطة بيع الجزائر", role: "sales_point", salesPointName: "الجزائر" },
     { username: "eloued", password: "0000", firstName: "نقطة بيع الوادي", role: "sales_point", salesPointName: "الوادي" },
     { username: "elma", password: "0000", firstName: "نقطة بيع العلمة", role: "sales_point", salesPointName: "العلمة" },
@@ -123,6 +123,7 @@ export async function seedUsers() {
     const hashedPassword = await bcrypt.hash(userData.password, 10);
     
     if (!existing) {
+      // Create new user
       const [newUser] = await db.insert(users).values({
         username: userData.username,
         password: hashedPassword,
@@ -132,11 +133,26 @@ export async function seedUsers() {
       await db.insert(userRoles).values({
         userId: newUser.id,
         role: userData.role,
-        salesPointName: userData.salesPointName || null,
+        salesPointName: userData.salesPointName,
       }).onConflictDoNothing();
     } else {
       // Update password for existing user
       await db.update(users).set({ password: hashedPassword }).where(eq(users.username, userData.username));
+      
+      // Ensure role is correctly set (update or insert)
+      await db.insert(userRoles).values({
+        userId: existing.id,
+        role: userData.role,
+        salesPointName: userData.salesPointName,
+      }).onConflictDoUpdate({
+        target: userRoles.userId,
+        set: {
+          role: userData.role,
+          salesPointName: userData.salesPointName,
+        },
+      });
     }
   }
+  
+  console.log("Users seeded with correct roles.");
 }
