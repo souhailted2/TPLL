@@ -65,8 +65,23 @@ export class DatabaseStorage implements IStorage {
     const [countResult] = await countQuery;
     const total = Number(countResult?.count || 0);
     
-    // @ts-ignore
-    const productList = await baseQuery.orderBy(products.name).limit(limit).offset(offset);
+    // @ts-ignore - Sort by numeric values extracted from size (e.g., "10x12" -> 10, 12)
+    // Handle different size formats: "10x12", "M6", "6mm - 1m"
+    const productList = await baseQuery
+      .orderBy(
+        sql`CASE 
+          WHEN ${products.size} ~ '^[0-9]+x[0-9]+$' THEN SPLIT_PART(${products.size}, 'x', 1)::int 
+          WHEN ${products.size} ~ '^M[0-9]+$' THEN SUBSTRING(${products.size} FROM 2)::int
+          WHEN ${products.size} ~ '^[0-9]+mm' THEN SPLIT_PART(${products.size}, 'mm', 1)::int
+          ELSE 9999
+        END`,
+        sql`CASE 
+          WHEN ${products.size} ~ '^[0-9]+x[0-9]+$' THEN SPLIT_PART(${products.size}, 'x', 2)::int 
+          ELSE 0
+        END`,
+        products.name
+      )
+      .limit(limit).offset(offset);
     
     return { products: productList, total };
   }
