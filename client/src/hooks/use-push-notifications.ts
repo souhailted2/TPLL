@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { requestNotificationPermission, onForegroundMessage, getFirebaseMessaging } from '@/lib/firebase';
+import { requestNotificationPermission, onForegroundMessage } from '@/lib/firebase';
 import { useToast } from './use-toast';
 import { useAuth } from './use-auth';
 
