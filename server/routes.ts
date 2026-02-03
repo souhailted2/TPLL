@@ -294,43 +294,108 @@ export async function registerRoutes(
 async function seedDatabase() {
   const { products: existingProducts } = await storage.getProducts();
   
-  if (existingProducts.length < 100) {
+  if (existingProducts.length < 1000) {
     console.log("Seeding products database...");
     
-    const diameters = [6, 8, 10, 12, 14, 16];
     const lengths = [12, 16, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200];
     const finishes = [
-      { code: "none", name: "Brut", prefix: "BB" },
-      { code: "cold", name: "Zingué", prefix: "BZ" },
-      { code: "hot", name: "Zingué à chaud", prefix: "BZC" },
-      { code: "acier", name: "Acier", prefix: "BA" },
+      { code: "none", name: "Brut", suffix: "B" },
+      { code: "cold", name: "Zingué", suffix: "Z" },
+      { code: "hot", name: "Zingué à chaud", suffix: "ZC" },
+      { code: "acier", name: "Acier", suffix: "A" },
     ];
 
     const existingSkus = new Set(existingProducts.map(p => p.sku));
     let addedCount = 0;
 
-    for (const diameter of diameters) {
-      for (const length of lengths) {
-        for (const finish of finishes) {
-          const size = `${diameter}x${length}`;
-          const sku = `${finish.prefix}${diameter}${length}`;
-          
-          if (!existingSkus.has(sku)) {
-            try {
-              await storage.createProduct({
-                name: `Boulon ${finish.name} ${size}`,
-                sku,
-                size,
-                finish: finish.code as any,
-              });
-              addedCount++;
-            } catch (err: any) {
-              if (err.code !== '23505') {
-                console.error(`Error adding product ${sku}:`, err.message);
-              }
-            }
+    const addProduct = async (name: string, sku: string, size: string, finishCode: string) => {
+      if (!existingSkus.has(sku)) {
+        try {
+          await storage.createProduct({
+            name,
+            sku,
+            size,
+            finish: finishCode as any,
+          });
+          addedCount++;
+        } catch (err: any) {
+          if (err.code !== '23505') {
+            console.error(`Error adding product ${sku}:`, err.message);
           }
         }
+      }
+    };
+
+    // Boulon Standard - 14 diameters × 28 lengths × 4 finishes = 1568
+    const boulonDiameters = [4, 5, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 27, 30];
+    for (const d of boulonDiameters) {
+      for (const l of lengths) {
+        for (const f of finishes) {
+          const size = `${d}x${l}`;
+          await addProduct(`Boulon ${f.name} ${size}`, `B${f.suffix}${d}${l}`, size, f.code);
+        }
+      }
+    }
+
+    // Boulon Demi Filetage - 9 diameters × 28 lengths × 4 finishes = 1008
+    const demiFiletageDiameters = [12, 14, 16, 18, 20, 22, 24, 27, 30];
+    for (const d of demiFiletageDiameters) {
+      for (const l of lengths) {
+        for (const f of finishes) {
+          const size = `${d}x${l}`;
+          await addProduct(`Boulon Demi Filetage ${f.name} ${size}`, `BDF${f.suffix}${d}${l}`, size, f.code);
+        }
+      }
+    }
+
+    // Boulon Poelier - smaller diameters (4-12) × 23 lengths × 4 finishes
+    const poelierDiameters = [4, 5, 6, 8, 10, 12];
+    const poelierLengths = [12, 16, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 100, 110, 120, 130, 140, 150];
+    for (const d of poelierDiameters) {
+      for (const l of poelierLengths) {
+        for (const f of finishes) {
+          const size = `${d}x${l}`;
+          await addProduct(`Boulon Poelier ${f.name} ${size}`, `BP${f.suffix}${d}${l}`, size, f.code);
+        }
+      }
+    }
+
+    // Boulon Tête Fraisée - smaller diameters (4-12) × 23 lengths × 4 finishes
+    for (const d of poelierDiameters) {
+      for (const l of poelierLengths) {
+        for (const f of finishes) {
+          const size = `${d}x${l}`;
+          await addProduct(`Boulon Tête Fraisée ${f.name} ${size}`, `BTF${f.suffix}${d}${l}`, size, f.code);
+        }
+      }
+    }
+
+    // Rivet - 9 diameters × 28 lengths × 4 finishes = 1008
+    const rivetDiameters = [12, 14, 16, 18, 20, 22, 24, 27, 30];
+    for (const d of rivetDiameters) {
+      for (const l of lengths) {
+        for (const f of finishes) {
+          const size = `${d}x${l}`;
+          await addProduct(`Rivet ${f.name} ${size}`, `R${f.suffix}${d}${l}`, size, f.code);
+        }
+      }
+    }
+
+    // Tige Filetée - 12 diameters × 4 finishes = 48
+    const tigeDiameters = [6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 27, 30];
+    for (const d of tigeDiameters) {
+      for (const f of finishes) {
+        const size = `${d}mm - 1m`;
+        await addProduct(`Tige Filetée ${f.name} ${size}`, `TF${f.suffix}${d}`, size, f.code);
+      }
+    }
+
+    // Ecrou - 13 M sizes × 4 finishes = 52
+    const ecrouSizes = [6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 27, 30, 36];
+    for (const m of ecrouSizes) {
+      for (const f of finishes) {
+        const size = `M${m}`;
+        await addProduct(`Ecrou ${f.name} ${size}`, `E${f.suffix}${m}`, size, f.code);
       }
     }
 
