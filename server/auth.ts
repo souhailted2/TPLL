@@ -112,19 +112,17 @@ export const isAuthenticated: RequestHandler = (req, res, next) => {
 
 export async function seedUsers() {
   const defaultUsers = [
-    { username: "owner", password: "owner123", firstName: "المالك", role: "admin" },
-    { username: "factory", password: "factory123", firstName: "موظف المصنع", role: "admin" },
-    { username: "alger", password: "alger123", firstName: "نقطة بيع الجزائر", role: "sales_point", salesPointName: "الجزائر" },
-    { username: "eloued", password: "eloued123", firstName: "نقطة بيع الوادي", role: "sales_point", salesPointName: "الوادي" },
-    { username: "elma", password: "elma123", firstName: "نقطة بيع العلمة", role: "sales_point", salesPointName: "العلمة" },
+    { username: "factory", password: "1111", firstName: "موظف المصنع", role: "admin" },
+    { username: "alger", password: "0000", firstName: "نقطة بيع الجزائر", role: "sales_point", salesPointName: "الجزائر" },
+    { username: "eloued", password: "0000", firstName: "نقطة بيع الوادي", role: "sales_point", salesPointName: "الوادي" },
+    { username: "elma", password: "0000", firstName: "نقطة بيع العلمة", role: "sales_point", salesPointName: "العلمة" },
   ];
 
   for (const userData of defaultUsers) {
     const [existing] = await db.select().from(users).where(eq(users.username, userData.username));
+    const hashedPassword = await bcrypt.hash(userData.password, 10);
     
     if (!existing) {
-      const hashedPassword = await bcrypt.hash(userData.password, 10);
-      
       const [newUser] = await db.insert(users).values({
         username: userData.username,
         password: hashedPassword,
@@ -136,6 +134,9 @@ export async function seedUsers() {
         role: userData.role,
         salesPointName: userData.salesPointName || null,
       }).onConflictDoNothing();
+    } else {
+      // Update password for existing user
+      await db.update(users).set({ password: hashedPassword }).where(eq(users.username, userData.username));
     }
   }
 }
