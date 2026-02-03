@@ -25,8 +25,8 @@ export function Sidebar({ role }: SidebarProps) {
 
   const adminLinks = [
     { href: "/admin", label: "لوحة التحكم", icon: LayoutDashboard },
-    { href: "/admin/products", label: "المنتجات", icon: Package },
     { href: "/admin/orders", label: "الطلبات", icon: ClipboardList },
+    { href: "/admin/products", label: "المنتجات", icon: Package },
   ];
 
   const salesLinks = [

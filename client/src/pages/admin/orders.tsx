@@ -17,19 +17,21 @@ export default function AdminOrders() {
 
   const getStatusColor = (status: string) => {
     switch(status) {
-      case 'completed': return 'bg-green-100 text-green-800 hover:bg-green-100';
+      case 'completed': return 'bg-emerald-100 text-emerald-800 hover:bg-emerald-100';
       case 'processing': return 'bg-blue-100 text-blue-800 hover:bg-blue-100';
+      case 'shipped': return 'bg-purple-100 text-purple-800 hover:bg-purple-100';
       case 'cancelled': return 'bg-red-100 text-red-800 hover:bg-red-100';
-      default: return 'bg-orange-100 text-orange-800 hover:bg-orange-100';
+      default: return 'bg-amber-100 text-orange-800 hover:bg-orange-100';
     }
   };
 
   const getStatusLabel = (status: string) => {
     switch(status) {
-      case 'completed': return 'مكتمل';
-      case 'processing': return 'قيد التنفيذ';
+      case 'completed': return 'تم الاستلام';
+      case 'processing': return 'قيد الانجاز';
+      case 'shipped': return 'تم الشحن';
       case 'cancelled': return 'ملغي';
-      default: return 'جديد';
+      default: return 'في الانتظار';
     }
   };
 
@@ -83,9 +85,10 @@ export default function AdminOrders() {
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="submitted">جديد</SelectItem>
-                              <SelectItem value="processing">قيد التنفيذ</SelectItem>
-                              <SelectItem value="completed">مكتمل</SelectItem>
+                              <SelectItem value="submitted">في الانتظار</SelectItem>
+                              <SelectItem value="processing">قيد الانجاز</SelectItem>
+                              <SelectItem value="shipped">تم الشحن</SelectItem>
+                              <SelectItem value="completed">تم الاستلام</SelectItem>
                               <SelectItem value="cancelled">ملغي</SelectItem>
                             </SelectContent>
                           </Select>
