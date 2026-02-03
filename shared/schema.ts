@@ -12,7 +12,6 @@ export const products = pgTable("products", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   sku: text("sku").notNull().unique(),
-  price: numeric("price", { precision: 10, scale: 2 }).notNull(),
   finish: text("finish").notNull().default("none"), // none (brut), cold (zingue a froid), hot (zingue a chaud)
   size: text("size"),
   description: text("description"),
@@ -23,7 +22,6 @@ export const orders = pgTable("orders", {
   id: serial("id").primaryKey(),
   salesPointId: varchar("sales_point_id").notNull().references(() => users.id),
   status: text("status").notNull().default("submitted"), // submitted, processing, completed, cancelled
-  totalAmount: numeric("total_amount", { precision: 10, scale: 2 }).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -32,7 +30,7 @@ export const orderItems = pgTable("order_items", {
   orderId: integer("order_id").notNull().references(() => orders.id),
   productId: integer("product_id").notNull().references(() => products.id),
   quantity: integer("quantity").notNull(),
-  priceAtTime: numeric("price_at_time", { precision: 10, scale: 2 }).notNull(), // Price snapshot
+  unit: text("unit").notNull().default("piece"), // "piece" (قطعة) or "bag" (شكارة 25 كغ)
 });
 
 // === RELATIONS ===
@@ -63,8 +61,8 @@ export const orderItemsRelations = relations(orderItems, ({ one }) => ({
 // === BASE SCHEMAS ===
 
 export const insertProductSchema = createInsertSchema(products).omit({ id: true });
-export const insertOrderSchema = createInsertSchema(orders).omit({ id: true, createdAt: true, totalAmount: true }); // Total calculated server-side
-export const insertOrderItemSchema = createInsertSchema(orderItems).omit({ id: true, orderId: true, priceAtTime: true });
+export const insertOrderSchema = createInsertSchema(orders).omit({ id: true, createdAt: true });
+export const insertOrderItemSchema = createInsertSchema(orderItems).omit({ id: true, orderId: true });
 
 // === EXPLICIT API CONTRACT TYPES ===
 

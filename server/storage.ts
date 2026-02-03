@@ -124,32 +124,20 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createOrder(salesPointId: string, orderRequest: CreateOrderRequest): Promise<Order> {
-    let totalAmount = 0;
-    const itemsToInsert = [];
+    const [newOrder] = await db.insert(orders).values({
+      salesPointId,
+      status: 'submitted'
+    }).returning();
 
     for (const item of orderRequest.items) {
       const product = await this.getProduct(item.productId);
       if (!product) throw new Error(`Product ${item.productId} not found`);
       
-      const price = Number(product.price);
-      totalAmount += price * item.quantity;
-      itemsToInsert.push({
-        productId: item.productId,
-        quantity: item.quantity,
-        priceAtTime: product.price.toString()
-      });
-    }
-
-    const [newOrder] = await db.insert(orders).values({
-      salesPointId,
-      totalAmount: totalAmount.toFixed(2),
-      status: 'submitted'
-    }).returning();
-
-    for (const item of itemsToInsert) {
       await db.insert(orderItems).values({
         orderId: newOrder.id,
-        ...item
+        productId: item.productId,
+        quantity: item.quantity,
+        unit: item.unit || 'piece'
       });
     }
 

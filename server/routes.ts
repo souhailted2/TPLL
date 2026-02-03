@@ -162,7 +162,6 @@ export async function registerRoutes(
         await storage.createProduct({
           name: item.name,
           sku: item.sku,
-          price: item.price.toString(),
           description: item.description || null,
           imageUrl: null
         });
@@ -237,35 +236,30 @@ async function seedDatabase() {
     await storage.createProduct({
       name: "Boulon M10 (Brut)",
       sku: "BLT-M10-BRT",
-      price: "0.50",
       description: "Boulon en acier sans revêtement (Brut)",
       imageUrl: "https://placehold.co/400x400?text=Boulon+Brut"
     });
     await storage.createProduct({
       name: "Boulon M10 (Zingue a froid)",
       sku: "BLT-M10-ZAF",
-      price: "0.60",
       description: "Boulon avec zingage électrolytique (à froid)",
       imageUrl: "https://placehold.co/400x400?text=Zingue+Froid"
     });
     await storage.createProduct({
       name: "Boulon M10 (Zingue a chaud)",
       sku: "BLT-M10-ZAC",
-      price: "0.75",
       description: "Boulon avec galvanisation à chaud (au trempé)",
       imageUrl: "https://placehold.co/400x400?text=Zingue+Chaud"
     });
     await storage.createProduct({
       name: "صامولة 10مم (Nut 10mm)",
       sku: "NUT-010",
-      price: "0.20",
       description: "صامولة سداسية الشكل (Hexagonal nut)",
       imageUrl: "https://placehold.co/400x400?text=Nut+10mm"
     });
     await storage.createProduct({
       name: "رنديلة (Washer)",
       sku: "WSH-010",
-      price: "0.05",
       description: "رنديلة معدنية (Metal washer)",
       imageUrl: "https://placehold.co/400x400?text=Washer"
     });

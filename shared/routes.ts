@@ -80,6 +80,7 @@ export const api = {
         items: z.array(z.object({
           productId: z.number(),
           quantity: z.number().min(1),
+          unit: z.enum(['piece', 'bag']).default('piece'),
         })),
       }),
       responses: {

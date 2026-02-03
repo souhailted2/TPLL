@@ -5,16 +5,19 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Plus, ShoppingCart, Trash2, Search, X, ChevronLeft } from "lucide-react";
+import { Loader2, Plus, ShoppingCart, Trash2, Search, X, Package, Weight } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
+type UnitType = "piece" | "bag";
+
 interface CartItem {
   productId: number;
   productName: string;
-  price: number;
+  productSku: string;
   quantity: number;
+  unit: UnitType;
 }
 
 export default function NewOrder() {
@@ -28,36 +31,37 @@ export default function NewOrder() {
 
   const filteredProducts = products?.filter(p => 
     p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    p.sku.includes(searchTerm)
+    p.sku.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const addToCart = (product: any) => {
+  const addToCart = (product: any, unit: UnitType = "piece") => {
     setCart(prev => {
-      const existing = prev.find(item => item.productId === product.id);
+      const existing = prev.find(item => item.productId === product.id && item.unit === unit);
       if (existing) {
         return prev.map(item => 
-          item.productId === product.id 
+          (item.productId === product.id && item.unit === unit)
             ? { ...item, quantity: item.quantity + 1 } 
             : item
         );
       }
       return [...prev, { 
         productId: product.id, 
-        productName: product.name, 
-        price: Number(product.price), 
-        quantity: 1 
+        productName: product.name,
+        productSku: product.sku,
+        quantity: 1,
+        unit
       }];
     });
   };
 
-  const removeFromCart = (productId: number) => {
-    setCart(prev => prev.filter(item => item.productId !== productId));
+  const removeFromCart = (productId: number, unit: UnitType) => {
+    setCart(prev => prev.filter(item => !(item.productId === productId && item.unit === unit)));
   };
 
-  const updateQuantity = (productId: number, qty: number) => {
+  const updateQuantity = (productId: number, unit: UnitType, qty: number) => {
     if (qty < 1) return;
     setCart(prev => prev.map(item => 
-      item.productId === productId ? { ...item, quantity: qty } : item
+      (item.productId === productId && item.unit === unit) ? { ...item, quantity: qty } : item
     ));
   };
 
@@ -68,7 +72,8 @@ export default function NewOrder() {
       await createOrder({
         items: cart.map(item => ({
           productId: item.productId,
-          quantity: item.quantity
+          quantity: item.quantity,
+          unit: item.unit
         }))
       });
       
@@ -77,6 +82,7 @@ export default function NewOrder() {
         description: "تم إرسال طلبك إلى المصنع بنجاح",
       });
       setCart([]);
+      setCartOpen(false);
     } catch (error) {
       toast({
         title: "خطأ",
@@ -86,26 +92,27 @@ export default function NewOrder() {
     }
   };
 
-  const totalAmount = cart.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+  const totalItems = cart.reduce((acc, item) => acc + item.quantity, 0);
 
   return (
     <div className="min-h-screen bg-slate-50 flex" dir="rtl">
       <Sidebar role="sales_point" />
       <main className="flex-1 md:mr-64 p-4 md:p-8 pt-24 md:pt-8 h-screen flex flex-col">
         <div className="max-w-7xl mx-auto w-full h-full flex flex-col gap-6">
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
               <h1 className="text-3xl font-bold text-slate-900">طلب جديد</h1>
               <p className="text-slate-500">اختر المنتجات وأضفها للسلة</p>
             </div>
             
-            <div className="relative w-72">
+            <div className="relative w-full sm:w-72">
               <Search className="absolute right-3 top-3 h-4 w-4 text-slate-400" />
               <Input 
-                placeholder="بحث عن منتج..." 
+                placeholder="بحث بالاسم أو الكود..." 
                 className="pr-9"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
+                data-testid="input-search-product"
               />
             </div>
           </div>
@@ -115,18 +122,41 @@ export default function NewOrder() {
             {productsLoading ? (
               <div className="flex justify-center p-12"><Loader2 className="animate-spin" /></div>
             ) : (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {filteredProducts?.map((product) => (
                   <Card 
                     key={product.id} 
-                    className="cursor-pointer hover:border-primary transition-colors group"
-                    onClick={() => addToCart(product)}
+                    className="hover:border-primary transition-colors"
+                    data-testid={`card-product-${product.id}`}
                   >
-                    <CardContent className="p-3 flex items-center justify-between gap-2">
-                      <h3 className="font-medium text-slate-900 text-sm">{product.name}</h3>
-                      <Button size="icon" variant="ghost" className="h-7 w-7 shrink-0">
-                        <Plus className="h-4 w-4" />
-                      </Button>
+                    <CardContent className="p-4 space-y-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <h3 className="font-bold text-slate-900">{product.name}</h3>
+                          <p className="text-xs text-slate-400">{product.sku}</p>
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          className="flex-1 gap-1"
+                          onClick={() => addToCart(product, "piece")}
+                          data-testid={`button-add-piece-${product.id}`}
+                        >
+                          <Package className="h-3 w-3" />
+                          قطعة
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          className="flex-1 gap-1"
+                          onClick={() => addToCart(product, "bag")}
+                          data-testid={`button-add-bag-${product.id}`}
+                        >
+                          <Weight className="h-3 w-3" />
+                          شكارة
+                        </Button>
+                      </div>
                     </CardContent>
                   </Card>
                 ))}
@@ -162,7 +192,7 @@ export default function NewOrder() {
 
           {/* Cart Sidebar - Fixed Position */}
           <div className={cn(
-            "fixed top-0 left-0 w-72 h-screen bg-white border-l border-slate-200 shadow-xl flex flex-col z-50 transition-all duration-300",
+            "fixed top-0 left-0 w-80 h-screen bg-white border-l border-slate-200 shadow-xl flex flex-col z-50 transition-all duration-300",
             cartOpen ? "opacity-100 visible" : "opacity-0 invisible lg:opacity-100 lg:visible"
           )}>
             <div className="p-4 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
@@ -171,7 +201,7 @@ export default function NewOrder() {
                 <span className="font-bold">سلة الطلبات</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="bg-primary text-white text-xs px-2 py-1 rounded-full">{cart.length}</span>
+                <Badge variant="secondary">{cart.length} منتج</Badge>
                 <Button 
                   variant="ghost" 
                   size="icon" 
@@ -184,7 +214,7 @@ export default function NewOrder() {
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            <div className="flex-1 overflow-y-auto p-4 space-y-3">
               {cart.length === 0 ? (
                 <div className="h-full flex flex-col items-center justify-center text-slate-400 gap-2 py-8">
                   <ShoppingCart className="h-12 w-12 opacity-20" />
@@ -192,19 +222,49 @@ export default function NewOrder() {
                 </div>
               ) : (
                 cart.map((item) => (
-                  <div key={item.productId} className="flex items-center gap-3 bg-slate-50 p-3 rounded-lg">
-                    <div className="flex-1">
-                      <p className="font-bold text-sm text-slate-900">{item.productName}</p>
-                      <p className="text-xs text-slate-500">{(item.price * item.quantity).toFixed(2)} ر.س</p>
+                  <div key={`${item.productId}-${item.unit}`} className="bg-slate-50 p-3 rounded-lg space-y-2">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex-1">
+                        <p className="font-bold text-sm text-slate-900">{item.productName}</p>
+                        <p className="text-xs text-slate-400">{item.productSku}</p>
+                      </div>
+                      <Badge variant={item.unit === "bag" ? "default" : "outline"} className="text-xs">
+                        {item.unit === "bag" ? "شكارة 25 كغ" : "قطعة"}
+                      </Badge>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Input 
-                        type="number" 
-                        className="w-16 h-8 text-center px-1" 
-                        value={item.quantity}
-                        onChange={(e) => updateQuantity(item.productId, parseInt(e.target.value))}
-                      />
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500" onClick={() => removeFromCart(item.productId)}>
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <Button 
+                          variant="outline" 
+                          size="icon" 
+                          className="h-7 w-7"
+                          onClick={() => updateQuantity(item.productId, item.unit, item.quantity - 1)}
+                        >
+                          -
+                        </Button>
+                        <Input 
+                          type="number" 
+                          className="w-14 h-7 text-center px-1" 
+                          value={item.quantity}
+                          onChange={(e) => updateQuantity(item.productId, item.unit, parseInt(e.target.value) || 1)}
+                          data-testid={`input-quantity-${item.productId}-${item.unit}`}
+                        />
+                        <Button 
+                          variant="outline" 
+                          size="icon" 
+                          className="h-7 w-7"
+                          onClick={() => updateQuantity(item.productId, item.unit, item.quantity + 1)}
+                        >
+                          +
+                        </Button>
+                      </div>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-7 w-7 text-red-500 hover:text-red-600 hover:bg-red-50" 
+                        onClick={() => removeFromCart(item.productId, item.unit)}
+                        data-testid={`button-remove-${item.productId}-${item.unit}`}
+                      >
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
@@ -214,9 +274,9 @@ export default function NewOrder() {
             </div>
 
             <div className="p-4 border-t border-slate-100 bg-slate-50 space-y-3">
-              <div className="flex justify-between items-center text-lg font-bold">
-                <span>الإجمالي</span>
-                <span className="text-primary">{totalAmount.toFixed(2)} ر.س</span>
+              <div className="flex justify-between items-center text-sm text-slate-600">
+                <span>إجمالي المنتجات</span>
+                <span className="font-bold">{totalItems} وحدة</span>
               </div>
               <Button 
                 onClick={handleSubmitOrder} 
