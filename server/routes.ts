@@ -282,9 +282,11 @@ export async function registerRoutes(
     }
   });
 
-  // Seed Data and Users
-  await seedDatabase();
+  // Seed Users (must complete before server is ready)
   await seedUsers();
+  
+  // Seed Products in background (don't block server startup)
+  seedDatabase().catch(err => console.error("Background seeding error:", err));
 
   return httpServer;
 }
