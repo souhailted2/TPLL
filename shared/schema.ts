@@ -14,6 +14,7 @@ export const products = pgTable("products", {
   sku: text("sku").notNull().unique(),
   price: numeric("price", { precision: 10, scale: 2 }).notNull(),
   finish: text("finish").notNull().default("none"), // none (brut), cold (zingue a froid), hot (zingue a chaud)
+  size: text("size"),
   description: text("description"),
   imageUrl: text("image_url"),
 });

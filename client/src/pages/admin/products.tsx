@@ -62,6 +62,7 @@ export default function AdminProducts() {
         sku: row["sku"] || row["SKU"] || row["رمز المنتج"] || "",
         price: parseFloat(row["price"] || row["السعر"] || 0),
         finish: row["finish"] || row["النوع"] || "none",
+        size: row["size"] || row["المقاس"] || "",
         description: row["description"] || row["الوصف"] || "",
       }));
 
@@ -78,6 +79,7 @@ export default function AdminProducts() {
       sku: "",
       price: "0",
       finish: "none",
+      size: "",
       description: "",
       imageUrl: "",
     },
@@ -112,6 +114,7 @@ export default function AdminProducts() {
       sku: product.sku,
       price: product.price.toString(),
       finish: product.finish || "none",
+      size: product.size || "",
       description: product.description || "",
       imageUrl: product.imageUrl || "",
     });
@@ -125,6 +128,7 @@ export default function AdminProducts() {
       sku: "",
       price: "0",
       finish: "none",
+      size: "",
       description: "",
       imageUrl: "",
     });
@@ -229,6 +233,17 @@ export default function AdminProducts() {
                           </FormItem>
                         )}
                       />
+                      <FormField
+                        control={form.control}
+                        name="size"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>المقاس (Size)</FormLabel>
+                            <FormControl><Input {...field} value={field.value || ""} placeholder="مثال: 6, M10, 30" /></FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
                     </div>
                     <FormField
                       control={form.control}
@@ -281,6 +296,7 @@ export default function AdminProducts() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>المنتج</TableHead>
+                    <TableHead>المقاس</TableHead>
                     <TableHead>النوع</TableHead>
                     <TableHead>SKU</TableHead>
                     <TableHead>السعر</TableHead>
@@ -296,6 +312,7 @@ export default function AdminProducts() {
                         </div>
                         {product.name}
                       </TableCell>
+                      <TableCell className="font-bold">{product.size || '-'}</TableCell>
                       <TableCell>
                         {product.finish === 'hot' ? 'غلفنة على الساخن' : 
                          product.finish === 'cold' ? 'غلفنة على البارد' : 'بدون (Brut)'}

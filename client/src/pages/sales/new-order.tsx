@@ -128,11 +128,16 @@ export default function NewOrder() {
                         <div>
                           <h3 className="font-bold text-slate-900">{product.name}</h3>
                           <p className="text-sm text-slate-500 font-mono">{product.sku}</p>
-                          <div className="mt-1 flex justify-center">
+                          <div className="mt-1 flex justify-center gap-1">
                             <Badge variant="outline" className="text-[10px] h-4">
                               {product.finish === 'hot' ? 'Zingué à chaud' : 
                                product.finish === 'cold' ? 'Zingué à froid' : 'Brut'}
                             </Badge>
+                            {product.size && (
+                              <Badge variant="secondary" className="text-[10px] h-4 bg-slate-100">
+                                {product.size}
+                              </Badge>
+                            )}
                           </div>
                           <p className="text-primary font-bold mt-1">{Number(product.price).toFixed(2)} ر.س</p>
                         </div>
