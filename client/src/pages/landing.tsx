@@ -2,12 +2,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/hooks/use-auth";
-import { Loader2, ShieldCheck, BarChart3, Globe, LogIn, User, Lock, Check } from "lucide-react";
+import { Loader2, ShieldCheck, BarChart3, Globe, LogIn, User, Lock, ChevronDown } from "lucide-react";
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { cn } from "@/lib/utils";
 
 const ACCOUNTS = [
   { id: "owner", label: "المالك (Owner)", role: "admin" },
@@ -112,34 +112,31 @@ export default function LandingPage() {
             </CardHeader>
             <CardContent>
               <form onSubmit={handleLogin} className="space-y-6">
-                <div className="space-y-3">
+                <div className="space-y-2">
                   <Label className="flex items-center gap-2 text-base">
                     <User className="h-4 w-4" />
                     اختر الحساب
                   </Label>
-                  <div className="grid grid-cols-1 gap-2 max-h-[200px] overflow-y-auto p-1">
-                    {ACCOUNTS.map((acc) => (
-                      <button
-                        key={acc.id}
-                        type="button"
-                        onClick={() => setUsername(acc.id)}
-                        className={cn(
-                          "flex items-center justify-between px-4 py-3 rounded-lg border transition-all text-right",
-                          username === acc.id
-                            ? "border-primary bg-primary/5 ring-1 ring-primary"
-                            : "border-slate-200 hover:border-slate-300 hover:bg-slate-50"
-                        )}
-                      >
-                        <span className={cn(
-                          "font-medium",
-                          username === acc.id ? "text-primary" : "text-slate-700"
-                        )}>
+                  <Select value={username} onValueChange={setUsername} disabled={isLoggingIn}>
+                    <SelectTrigger 
+                      className="h-12 text-lg text-right" 
+                      data-testid="select-account"
+                    >
+                      <SelectValue placeholder="اضغط لاختيار حساب..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {ACCOUNTS.map((acc) => (
+                        <SelectItem 
+                          key={acc.id} 
+                          value={acc.id}
+                          className="text-right py-3 text-base"
+                          data-testid={`select-account-${acc.id}`}
+                        >
                           {acc.label}
-                        </span>
-                        {username === acc.id && <Check className="h-4 w-4 text-primary" />}
-                      </button>
-                    ))}
-                  </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div className="space-y-2">
