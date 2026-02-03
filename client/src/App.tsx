@@ -23,7 +23,8 @@ function Router() {
   const { data: userRole, isLoading: roleLoading } = useUserRole();
 
   // Handle global loading state (auth + role check)
-  if (authLoading || (user && roleLoading)) {
+  // Wait for both auth and role data to be fully loaded
+  if (authLoading || (user && (roleLoading || userRole === undefined))) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
         <Loader2 className="h-10 w-10 animate-spin text-primary" />
