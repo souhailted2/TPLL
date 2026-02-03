@@ -60,7 +60,9 @@ export function useAuth() {
     mutationFn: logout,
     onSuccess: () => {
       queryClient.setQueryData(["/api/auth/user"], null);
-      queryClient.invalidateQueries();
+      queryClient.setQueryData(["/api/user-role"], null);
+      queryClient.clear();
+      window.location.href = "/";
     },
   });
 
