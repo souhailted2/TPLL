@@ -41,18 +41,8 @@ function Router() {
     );
   }
 
-  // Authenticated but no role assigned -> Onboarding
-  if (!userRole) {
-    return (
-      <Switch>
-        <Route path="/" component={Onboarding} />
-        <Route path="/:rest*" component={() => <Redirect to="/" />} />
-      </Switch>
-    );
-  }
-
   // Role Routing
-  const role = userRole.role;
+  const role = userRole?.role || 'sales_point'; // Default to sales_point if not set
 
   return (
     <Switch>
