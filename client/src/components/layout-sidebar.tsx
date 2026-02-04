@@ -136,10 +136,15 @@ export function Sidebar({ role }: SidebarProps) {
             )}
             
             {isEnabled && (
-              <div className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-green-500/20 text-green-400 border border-green-500/30 mb-2">
+              <button 
+                onClick={() => enableNotifications()}
+                disabled={isLoading}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-green-500/20 text-green-400 hover:bg-green-500/30 transition-colors border border-green-500/30 mb-2"
+                data-testid="button-refresh-notifications"
+              >
                 <BellRing className="h-4 w-4" />
-                <span>الإشعارات مفعّلة</span>
-              </div>
+                <span>{isLoading ? 'جاري التحديث...' : 'الإشعارات مفعّلة ✓'}</span>
+              </button>
             )}
             
             <button 

@@ -7,6 +7,7 @@ export function usePushNotifications() {
   const [isSupported, setIsSupported] = useState(false);
   const [isEnabled, setIsEnabled] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [tokenSaved, setTokenSaved] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -26,6 +27,39 @@ export function usePushNotifications() {
     
     checkSupport();
   }, []);
+
+  useEffect(() => {
+    if (!isEnabled || !user || tokenSaved) return;
+
+    const registerToken = async () => {
+      try {
+        console.log('Auto-registering FCM token for user:', user.id);
+        const token = await requestNotificationPermission();
+        
+        if (token) {
+          const response = await fetch('/api/push-token', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ token }),
+          });
+
+          if (response.ok) {
+            console.log('FCM token saved successfully');
+            setTokenSaved(true);
+          } else {
+            console.error('Failed to save FCM token:', response.status);
+          }
+        } else {
+          console.log('No FCM token received');
+        }
+      } catch (error) {
+        console.error('Error auto-registering FCM token:', error);
+      }
+    };
+
+    registerToken();
+  }, [isEnabled, user, tokenSaved]);
 
   useEffect(() => {
     if (!isEnabled || !user) return;
@@ -55,9 +89,11 @@ export function usePushNotifications() {
     setIsLoading(true);
 
     try {
+      console.log('Requesting notification permission...');
       const token = await requestNotificationPermission();
       
       if (!token) {
+        console.log('No token received - permission denied or error');
         toast({
           title: 'تم الرفض',
           description: 'يرجى السماح بالإشعارات من إعدادات المتصفح',
@@ -67,6 +103,7 @@ export function usePushNotifications() {
         return false;
       }
 
+      console.log('Got FCM token, saving to server...');
       const response = await fetch('/api/push-token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -75,10 +112,14 @@ export function usePushNotifications() {
       });
 
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Failed to save token:', response.status, errorText);
         throw new Error('Failed to save token');
       }
 
+      console.log('Token saved successfully!');
       setIsEnabled(true);
+      setTokenSaved(true);
       toast({
         title: 'تم التفعيل',
         description: 'ستتلقى إشعارات عند وصول طلبات جديدة',
@@ -89,7 +130,7 @@ export function usePushNotifications() {
       console.error('Error enabling notifications:', error);
       toast({
         title: 'خطأ',
-        description: 'فشل تفعيل الإشعارات',
+        description: 'فشل تفعيل الإشعارات - تحقق من اتصال الإنترنت',
         variant: 'destructive',
       });
       setIsLoading(false);
