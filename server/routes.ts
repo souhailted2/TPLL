@@ -5,6 +5,7 @@ import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
 import { initializeFirebaseAdmin, sendPushToMultipleTokens } from "./firebase";
+import { startAlertChecker } from "./alert-checker";
 
 export async function registerRoutes(
   httpServer: Server,
@@ -12,6 +13,8 @@ export async function registerRoutes(
 ): Promise<Server> {
   // Initialize Firebase Admin
   initializeFirebaseAdmin();
+  
+  startAlertChecker();
   
   // Auth setup
   await setupAuth(app);

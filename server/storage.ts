@@ -270,7 +270,7 @@ export class DatabaseStorage implements IStorage {
     if (updated) {
       await db
         .update(orders)
-        .set({ alertDismissed: false })
+        .set({ alertDismissed: false, alertNotificationSentAt: null })
         .where(eq(orders.id, updated.orderId));
     }
     

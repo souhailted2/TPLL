@@ -21,10 +21,14 @@ function getOrderAlertInfo(order: any) {
   const alerts: { type: 'incomplete' | 'exceeded'; itemName: string; completed: number; requested: number }[] = [];
 
   for (const item of order.items) {
-    if (!item.lastCompletedUpdate) continue;
+    if (item.completedQuantity === item.quantity) continue;
 
-    const lastUpdate = new Date(item.lastCompletedUpdate);
-    const daysSince = (now.getTime() - lastUpdate.getTime()) / (1000 * 60 * 60 * 24);
+    const referenceDate = item.lastCompletedUpdate
+      ? new Date(item.lastCompletedUpdate)
+      : (order.createdAt ? new Date(order.createdAt) : null);
+
+    if (!referenceDate) continue;
+    const daysSince = (now.getTime() - referenceDate.getTime()) / (1000 * 60 * 60 * 24);
 
     if (daysSince >= ALERT_DAYS) {
       if (item.completedQuantity < item.quantity) {
@@ -336,8 +340,9 @@ export default function ReceptionOrders() {
                                   <p className="font-bold text-sm mb-3">تفاصيل الطلب:</p>
                                   <div className="grid gap-2">
                                     {order.items.map((item: any, idx: number) => {
-                                      const itemHasIssue = item.lastCompletedUpdate && 
-                                        ((new Date().getTime() - new Date(item.lastCompletedUpdate).getTime()) / (1000 * 60 * 60 * 24) >= ALERT_DAYS) &&
+                                      const itemRefDate = item.lastCompletedUpdate ? new Date(item.lastCompletedUpdate) : (order.createdAt ? new Date(order.createdAt) : null);
+                                      const itemHasIssue = itemRefDate && 
+                                        ((new Date().getTime() - itemRefDate.getTime()) / (1000 * 60 * 60 * 24) >= ALERT_DAYS) &&
                                         item.completedQuantity !== item.quantity && !order.alertDismissed;
                                       
                                       return (
