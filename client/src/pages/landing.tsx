@@ -2,18 +2,21 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup, SelectLabel } from "@/components/ui/select";
 import { useAuth } from "@/hooks/use-auth";
-import { Loader2, ShieldCheck, BarChart3, Globe, LogIn, User, Lock, ChevronDown } from "lucide-react";
+import { Loader2, ShieldCheck, BarChart3, Globe, LogIn, User, Lock, Factory, MapPin, Truck } from "lucide-react";
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 
 const ACCOUNTS = [
-  { id: "factory", label: "المصنع (Factory)", role: "admin", icon: "🏭" },
-  { id: "alger", label: "نقطة الجزائر (Alger)", role: "sales", icon: "📍" },
-  { id: "eloued", label: "نقطة الوادي (El Oued)", role: "sales", icon: "📍" },
-  { id: "elma", label: "نقطة العلمة (Eleulma)", role: "sales", icon: "📍" },
+  { id: "reception1", label: "استقبال 1", role: "reception", group: "factory" },
+  { id: "reception2", label: "استقبال 2", role: "reception", group: "factory" },
+  { id: "reception3", label: "استقبال 3", role: "reception", group: "factory" },
+  { id: "shipping", label: "الشحن", role: "shipping", group: "factory" },
+  { id: "alger", label: "نقطة الجزائر", role: "sales", group: "sales" },
+  { id: "eloued", label: "نقطة الوادي", role: "sales", group: "sales" },
+  { id: "elma", label: "نقطة العلمة", role: "sales", group: "sales" },
 ];
 
 export default function LandingPage() {
@@ -124,8 +127,12 @@ export default function LandingPage() {
                       <SelectValue placeholder="اضغط هنا لاختيار حسابك..." />
                     </SelectTrigger>
                     <SelectContent className="rounded-xl shadow-xl border-slate-200 bg-white">
-                      <div className="py-1">
-                        {ACCOUNTS.map((acc, index) => (
+                      <SelectGroup>
+                        <SelectLabel className="text-xs text-slate-400 px-4 py-2 flex items-center gap-2">
+                          <Factory className="h-3 w-3" />
+                          المصنع
+                        </SelectLabel>
+                        {ACCOUNTS.filter(a => a.group === "factory").map((acc) => (
                           <SelectItem 
                             key={acc.id} 
                             value={acc.id}
@@ -133,17 +140,39 @@ export default function LandingPage() {
                             data-testid={`select-account-${acc.id}`}
                           >
                             <div className="flex items-center gap-3">
-                              <span className="text-lg">{acc.icon}</span>
+                              {acc.role === "shipping" ? <Truck className="h-4 w-4 text-purple-500" /> : <Factory className="h-4 w-4 text-blue-500" />}
                               <div className="flex flex-col items-start">
                                 <span className="font-medium">{acc.label}</span>
                                 <span className="text-xs text-muted-foreground">
-                                  {acc.role === "admin" ? "لوحة التحكم الكاملة" : "نقطة بيع"}
+                                  {acc.role === "reception" ? "فريق استقبال الطلبات" : "فريق الشحن"}
                                 </span>
                               </div>
                             </div>
                           </SelectItem>
                         ))}
-                      </div>
+                      </SelectGroup>
+                      <SelectGroup>
+                        <SelectLabel className="text-xs text-slate-400 px-4 py-2 flex items-center gap-2 border-t border-slate-100 mt-1 pt-3">
+                          <MapPin className="h-3 w-3" />
+                          نقاط البيع
+                        </SelectLabel>
+                        {ACCOUNTS.filter(a => a.group === "sales").map((acc) => (
+                          <SelectItem 
+                            key={acc.id} 
+                            value={acc.id}
+                            className="text-right py-3 px-4 text-base cursor-pointer rounded-lg mx-1 my-0.5"
+                            data-testid={`select-account-${acc.id}`}
+                          >
+                            <div className="flex items-center gap-3">
+                              <MapPin className="h-4 w-4 text-green-500" />
+                              <div className="flex flex-col items-start">
+                                <span className="font-medium">{acc.label}</span>
+                                <span className="text-xs text-muted-foreground">نقطة بيع</span>
+                              </div>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
                     </SelectContent>
                   </Select>
                 </div>

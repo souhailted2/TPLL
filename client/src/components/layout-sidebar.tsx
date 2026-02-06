@@ -9,7 +9,8 @@ import {
   Menu,
   X,
   Bell,
-  BellRing
+  BellRing,
+  Truck
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useState } from "react";
@@ -18,7 +19,7 @@ import { NotificationDropdown } from "./notification-dropdown";
 import { usePushNotifications } from "@/hooks/use-push-notifications";
 
 interface SidebarProps {
-  role: 'admin' | 'sales_point';
+  role: 'admin' | 'reception' | 'shipping' | 'sales_point';
 }
 
 export function Sidebar({ role }: SidebarProps) {
@@ -27,10 +28,13 @@ export function Sidebar({ role }: SidebarProps) {
   const [isOpen, setIsOpen] = useState(false);
   const { isSupported, isEnabled, isLoading, enableNotifications } = usePushNotifications();
 
-  const adminLinks = [
-    { href: "/admin", label: "لوحة التحكم", icon: LayoutDashboard },
-    { href: "/admin/orders", label: "الطلبات", icon: ClipboardList },
-    { href: "/admin/products", label: "المنتجات", icon: Package },
+  const receptionLinks = [
+    { href: "/reception/orders", label: "الطلبات", icon: ClipboardList },
+    { href: "/reception/products", label: "المنتجات", icon: Package },
+  ];
+
+  const shippingLinks = [
+    { href: "/shipping/orders", label: "طلبات جاهزة للشحن", icon: Truck },
   ];
 
   const salesLinks = [
@@ -39,11 +43,36 @@ export function Sidebar({ role }: SidebarProps) {
     { href: "/sales/history", label: "سجل الطلبات", icon: Package },
   ];
 
-  const links = role === 'admin' ? adminLinks : salesLinks;
+  const adminLinks = [
+    { href: "/admin", label: "لوحة التحكم", icon: LayoutDashboard },
+    { href: "/admin/orders", label: "الطلبات", icon: ClipboardList },
+    { href: "/admin/products", label: "المنتجات", icon: Package },
+  ];
+
+  const linksMap: Record<string, typeof adminLinks> = {
+    admin: adminLinks,
+    reception: receptionLinks,
+    shipping: shippingLinks,
+    sales_point: salesLinks,
+  };
+  const links = linksMap[role] || salesLinks;
+
+  const roleLabels: Record<string, string> = {
+    admin: 'المدير',
+    reception: 'فريق الاستقبال',
+    shipping: 'فريق الشحن',
+    sales_point: 'نقطة بيع',
+  };
+
+  const roleAbbreviations: Record<string, string> = {
+    admin: 'AD',
+    reception: 'RC',
+    shipping: 'SH',
+    sales_point: 'SP',
+  };
 
   return (
     <>
-      {/* Mobile Toggle */}
       <div className="md:hidden fixed top-0 right-0 left-0 z-[70] p-4 bg-slate-900 backdrop-blur-md border-b border-slate-700 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <img src="/images/logo.png" alt="TPL Logo" className="h-8 w-8 object-contain" />
@@ -63,13 +92,11 @@ export function Sidebar({ role }: SidebarProps) {
         </div>
       </div>
 
-      {/* Sidebar Container */}
       <aside className={cn(
         "fixed inset-y-0 right-0 z-[80] w-64 bg-slate-900 text-white transition-transform duration-300 ease-in-out",
         isOpen ? "translate-x-0" : "translate-x-full md:translate-x-0"
       )}>
         <div className="h-full flex flex-col pt-20 md:pt-0">
-          {/* Header */}
           <div className="p-6 border-b border-slate-700 hidden md:block">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -83,7 +110,6 @@ export function Sidebar({ role }: SidebarProps) {
             </div>
           </div>
 
-          {/* Navigation */}
           <nav className="flex-1 p-4 space-y-2 overflow-y-auto" onClick={() => setIsOpen(false)}>
             <div className="md:hidden flex items-center gap-3 mb-6 px-2 pb-6 border-b border-slate-700">
               <img src="/images/logo.png" alt="TPL Logo" className="h-10 w-10 object-contain rounded-lg" />
@@ -112,14 +138,13 @@ export function Sidebar({ role }: SidebarProps) {
             })}
           </nav>
 
-          {/* Footer / User Info */}
           <div className="p-4 border-t border-slate-700 bg-slate-900/50">
             <div className="flex items-center gap-3 mb-4 px-2">
               <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-xs font-bold">
-                {role === 'admin' ? 'AD' : 'SP'}
+                {roleAbbreviations[role] || 'SP'}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">{role === 'admin' ? 'المدير' : 'نقطة بيع'}</p>
+                <p className="text-sm font-medium truncate">{roleLabels[role] || 'نقطة بيع'}</p>
               </div>
             </div>
             
@@ -143,13 +168,14 @@ export function Sidebar({ role }: SidebarProps) {
                 data-testid="button-refresh-notifications"
               >
                 <BellRing className="h-4 w-4" />
-                <span>{isLoading ? 'جاري التحديث...' : 'الإشعارات مفعّلة ✓'}</span>
+                <span>{isLoading ? 'جاري التحديث...' : 'الإشعارات مفعّلة'}</span>
               </button>
             )}
             
             <button 
               onClick={() => logout()}
               className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-slate-800 text-slate-300 hover:bg-red-500/10 hover:text-red-400 transition-colors border border-slate-700 hover:border-red-500/50"
+              data-testid="button-logout"
             >
               <LogOut className="h-4 w-4" />
               <span>تسجيل الخروج</span>
@@ -158,7 +184,6 @@ export function Sidebar({ role }: SidebarProps) {
         </div>
       </aside>
 
-      {/* Overlay for mobile */}
       {isOpen && (
         <div 
           className="fixed inset-0 bg-black/60 z-[75] md:hidden backdrop-blur-sm transition-opacity"

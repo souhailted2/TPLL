@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { api, buildUrl, type CreateProductRequest, type UpdateProductRequest } from "@shared/routes";
+import { api, buildUrl } from "@shared/routes";
 
 interface UseProductsOptions {
   search?: string;
@@ -43,7 +43,7 @@ export function useProduct(id: number) {
 export function useCreateProduct() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (data: CreateProductRequest) => {
+    mutationFn: async (data: any) => {
       const res = await fetch(api.products.create.path, {
         method: api.products.create.method,
         headers: { 'Content-Type': 'application/json' },
@@ -62,7 +62,7 @@ export function useCreateProduct() {
 export function useUpdateProduct() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, ...updates }: { id: number } & UpdateProductRequest) => {
+    mutationFn: async ({ id, ...updates }: { id: number; [key: string]: any }) => {
       const url = buildUrl(api.products.update.path, { id });
       const res = await fetch(url, {
         method: api.products.update.method,

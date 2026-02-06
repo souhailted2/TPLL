@@ -139,7 +139,7 @@ export const api = {
       method: 'POST' as const,
       path: '/api/user-role',
       input: z.object({
-        role: z.enum(['admin', 'sales_point']),
+        role: z.enum(['admin', 'reception', 'shipping', 'sales_point']),
         salesPointName: z.string().optional(),
       }),
       responses: {

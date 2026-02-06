@@ -10,10 +10,12 @@ import NotFound from "@/pages/not-found";
 
 // Pages
 import LandingPage from "@/pages/landing";
-import Onboarding from "@/pages/onboarding";
 import AdminDashboard from "@/pages/admin/dashboard";
 import AdminProducts from "@/pages/admin/products";
 import AdminOrders from "@/pages/admin/orders";
+import ReceptionOrders from "@/pages/reception/orders";
+import ReceptionProducts from "@/pages/reception/products";
+import ShippingOrders from "@/pages/shipping/orders";
 import SalesNewOrder from "@/pages/sales/new-order";
 import SalesOrders from "@/pages/sales/orders";
 import SalesOrderHistory from "@/pages/sales/history";
@@ -23,8 +25,6 @@ function Router() {
   const { user, isLoading: authLoading } = useAuth();
   const { data: userRole, isLoading: roleLoading } = useUserRole();
 
-  // Handle global loading state (auth + role check)
-  // Wait for both auth and role data to be fully loaded
   if (authLoading || (user && (roleLoading || userRole === undefined))) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
@@ -33,7 +33,6 @@ function Router() {
     );
   }
 
-  // Not authenticated -> Landing Page
   if (!user) {
     return (
       <Switch>
@@ -43,17 +42,21 @@ function Router() {
     );
   }
 
-  // Role Routing
-  const role = userRole?.role || 'sales_point'; // Default to sales_point if not set
+  const role = userRole?.role || 'sales_point';
+
+  const homeRoutes: Record<string, string> = {
+    admin: '/admin',
+    reception: '/reception/orders',
+    shipping: '/shipping/orders',
+    sales_point: '/sales/new-order',
+  };
 
   return (
     <Switch>
-      {/* Root Redirect based on role */}
       <Route path="/">
-        {role === 'admin' ? <Redirect to="/admin" /> : <Redirect to="/sales/new-order" />}
+        <Redirect to={homeRoutes[role] || '/sales/new-order'} />
       </Route>
 
-      {/* Admin Routes */}
       {role === 'admin' && (
         <>
           <Route path="/admin" component={AdminDashboard} />
@@ -62,7 +65,19 @@ function Router() {
         </>
       )}
 
-      {/* Sales Point Routes */}
+      {role === 'reception' && (
+        <>
+          <Route path="/reception/orders" component={ReceptionOrders} />
+          <Route path="/reception/products" component={ReceptionProducts} />
+        </>
+      )}
+
+      {role === 'shipping' && (
+        <>
+          <Route path="/shipping/orders" component={ShippingOrders} />
+        </>
+      )}
+
       {role === 'sales_point' && (
         <>
           <Route path="/sales/new-order" component={SalesNewOrder} />
@@ -71,14 +86,12 @@ function Router() {
         </>
       )}
 
-      {/* Catch-all for 404 */}
       <Route component={NotFound} />
     </Switch>
   );
 }
 
 function App() {
-  // Force RTL on mount
   useEffect(() => {
     document.documentElement.dir = 'rtl';
     document.documentElement.lang = 'ar';

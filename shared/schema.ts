@@ -21,7 +21,7 @@ export const products = pgTable("products", {
 export const orders = pgTable("orders", {
   id: serial("id").primaryKey(),
   salesPointId: varchar("sales_point_id").notNull().references(() => users.id),
-  status: text("status").notNull().default("submitted"), // submitted, processing, completed, cancelled
+  status: text("status").notNull().default("submitted"), // submitted, accepted, rejected, in_progress, completed, shipped, received
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -30,6 +30,7 @@ export const orderItems = pgTable("order_items", {
   orderId: integer("order_id").notNull().references(() => orders.id),
   productId: integer("product_id").notNull().references(() => products.id),
   quantity: integer("quantity").notNull(),
+  completedQuantity: integer("completed_quantity").notNull().default(0),
   unit: text("unit").notNull().default("piece"), // "piece" (قطعة) or "bag" (شكارة 25 كغ)
 });
 

@@ -28,8 +28,18 @@ export async function registerRoutes(
     if (!req.session.userId) return res.status(401).json({ message: "Unauthorized" });
     const userId = req.session.userId;
     const role = await storage.getUserRole(userId);
-    if (role?.role !== 'admin') {
+    if (role?.role !== 'admin' && role?.role !== 'reception') {
       return res.status(403).json({ message: "Forbidden: Admins only" });
+    }
+    next();
+  };
+
+  const requireFactory = async (req: any, res: any, next: any) => {
+    if (!req.session.userId) return res.status(401).json({ message: "Unauthorized" });
+    const userId = req.session.userId;
+    const role = await storage.getUserRole(userId);
+    if (!['admin', 'reception', 'shipping'].includes(role?.role || '')) {
+      return res.status(403).json({ message: "Forbidden: Factory staff only" });
     }
     next();
   };
@@ -57,7 +67,7 @@ export async function registerRoutes(
     res.json(product);
   });
 
-  app.post(api.products.create.path, requireAdmin, async (req, res) => {
+  app.post(api.products.create.path, requireAuth, async (req, res) => {
     try {
       const input = api.products.create.input.parse(req.body);
       const product = await storage.createProduct(input);
@@ -95,8 +105,9 @@ export async function registerRoutes(
     const userId = req.session.userId;
     const role = await storage.getUserRole(userId);
     
-    // If admin, see all. If sales point, see own.
-    const salesPointId = role?.role === 'admin' ? undefined : userId;
+    // Factory staff (admin, reception, shipping) see all orders. Sales points see own only.
+    const isFactory = ['admin', 'reception', 'shipping'].includes(role?.role || '');
+    const salesPointId = isFactory ? undefined : userId;
     const orders = await storage.getOrders(salesPointId);
     res.json(orders);
   });
@@ -107,14 +118,16 @@ export async function registerRoutes(
       const userId = req.session.userId;
       const order = await storage.createOrder(userId, input);
       
-      // Notify all admins about the new order
+      // Notify reception team and admins about the new order
       const userRole = await storage.getUserRole(userId);
       const salesPointName = userRole?.salesPointName || "نقطة بيع";
       const adminIds = await storage.getAdminUserIds();
+      const receptionIds = await storage.getUserIdsByRole('reception');
+      const notifyIds = [...new Set([...adminIds, ...receptionIds])];
       
-      for (const adminId of adminIds) {
+      for (const notifyId of notifyIds) {
         await storage.createNotification({
-          userId: adminId,
+          userId: notifyId,
           type: "new_order",
           title: "طلب جديد",
           message: `طلب جديد #${order.id} من ${salesPointName}`,
@@ -123,17 +136,16 @@ export async function registerRoutes(
         });
       }
       
-      // Send push notifications to admins
-      const adminTokens = await storage.getPushTokensByUserIds(adminIds);
-      if (adminTokens.length > 0) {
-        const tokens = adminTokens.map(t => t.token);
+      // Send push notifications
+      const notifyTokens = await storage.getPushTokensByUserIds(notifyIds);
+      if (notifyTokens.length > 0) {
+        const tokens = notifyTokens.map(t => t.token);
         const invalidTokens = await sendPushToMultipleTokens(
           tokens,
           "طلب جديد",
           `طلب جديد #${order.id} من ${salesPointName}`,
           { orderId: String(order.id), type: "new_order" }
         );
-        // Remove invalid tokens
         for (const invalidToken of invalidTokens) {
           await storage.deletePushToken(invalidToken);
         }
@@ -148,53 +160,138 @@ export async function registerRoutes(
     }
   });
 
-  app.patch(api.orders.updateStatus.path, requireAdmin, async (req, res) => {
+  app.patch(api.orders.updateStatus.path, requireAuth, async (req: any, res) => {
     try {
       const { status } = req.body;
       const orderId = Number(req.params.id);
+      const userId = req.session.userId;
+      const userRole = await storage.getUserRole(userId);
+      const role = userRole?.role;
       
       // Get order details before update
       const existingOrder = await storage.getOrder(orderId);
       if (!existingOrder) return res.status(404).json({ message: "Order not found" });
+
+      // Role-based status change validation
+      const allowedTransitions: Record<string, Record<string, string[]>> = {
+        reception: {
+          submitted: ['accepted', 'rejected'],
+          accepted: ['in_progress'],
+          in_progress: ['completed'],
+        },
+        shipping: {
+          completed: ['shipped'],
+        },
+        sales_point: {
+          shipped: ['received'],
+        },
+        admin: {
+          submitted: ['accepted', 'rejected'],
+          accepted: ['in_progress'],
+          in_progress: ['completed'],
+          completed: ['shipped'],
+          shipped: ['received'],
+        },
+      };
+
+      const transitions = allowedTransitions[role || ''];
+      if (!transitions) {
+        return res.status(403).json({ message: "ليس لديك صلاحية لتغيير حالة الطلب" });
+      }
+
+      const allowed = transitions[existingOrder.status];
+      if (!allowed || !allowed.includes(status)) {
+        return res.status(400).json({ message: `لا يمكن تغيير الحالة من ${existingOrder.status} إلى ${status}` });
+      }
+
+      // For sales_point, verify they own the order
+      if (role === 'sales_point' && existingOrder.salesPointId !== userId) {
+        return res.status(403).json({ message: "لا يمكنك تعديل طلب ليس لك" });
+      }
       
       const order = await storage.updateOrderStatus(orderId, status);
       if (!order) return res.status(404).json({ message: "Order not found" });
       
-      // Notify the sales point about the status change
       const statusLabels: Record<string, string> = {
-        submitted: "قيد الانتظار",
-        processing: "قيد المعالجة",
-        completed: "مكتمل",
-        cancelled: "ملغي"
+        submitted: "في الانتظار",
+        accepted: "مقبول",
+        rejected: "مرفوض",
+        in_progress: "قيد الإنجاز",
+        completed: "منجز",
+        shipped: "تم الشحن",
+        received: "تم الاستلام",
       };
       
-      await storage.createNotification({
-        userId: order.salesPointId,
-        type: "status_change",
-        title: "تحديث حالة الطلب",
-        message: `تم تغيير حالة الطلب #${order.id} إلى: ${statusLabels[status] || status}`,
-        orderId: order.id,
-        isRead: false
-      });
-      
-      // Send push notification to sales point
-      const salesPointTokens = await storage.getPushTokens(order.salesPointId);
-      if (salesPointTokens.length > 0) {
-        const tokens = salesPointTokens.map(t => t.token);
-        const invalidTokens = await sendPushToMultipleTokens(
-          tokens,
-          "تحديث حالة الطلب",
-          `تم تغيير حالة الطلب #${order.id} إلى: ${statusLabels[status] || status}`,
-          { orderId: String(order.id), type: "status_change" }
-        );
-        for (const invalidToken of invalidTokens) {
-          await storage.deletePushToken(invalidToken);
+      // Notify the sales point about status changes (except when sales_point changes their own)
+      if (role !== 'sales_point') {
+        await storage.createNotification({
+          userId: order.salesPointId,
+          type: "status_change",
+          title: "تحديث حالة الطلب",
+          message: `تم تغيير حالة الطلب #${order.id} إلى: ${statusLabels[status] || status}`,
+          orderId: order.id,
+          isRead: false
+        });
+        
+        const salesPointTokens = await storage.getPushTokens(order.salesPointId);
+        if (salesPointTokens.length > 0) {
+          const tokens = salesPointTokens.map(t => t.token);
+          const invalidTokens = await sendPushToMultipleTokens(
+            tokens,
+            "تحديث حالة الطلب",
+            `تم تغيير حالة الطلب #${order.id} إلى: ${statusLabels[status] || status}`,
+            { orderId: String(order.id), type: "status_change" }
+          );
+          for (const invalidToken of invalidTokens) {
+            await storage.deletePushToken(invalidToken);
+          }
+        }
+      }
+
+      // Notify shipping team when order is completed
+      if (status === 'completed') {
+        const shippingIds = await storage.getUserIdsByRole('shipping');
+        for (const shippingId of shippingIds) {
+          await storage.createNotification({
+            userId: shippingId,
+            type: "status_change",
+            title: "طلب جاهز للشحن",
+            message: `الطلب #${order.id} جاهز للشحن`,
+            orderId: order.id,
+            isRead: false
+          });
+        }
+        const shippingTokens = await storage.getPushTokensByUserIds(shippingIds);
+        if (shippingTokens.length > 0) {
+          const tokens = shippingTokens.map(t => t.token);
+          const invalidTokens = await sendPushToMultipleTokens(tokens, "طلب جاهز للشحن", `الطلب #${order.id} جاهز للشحن`, { orderId: String(order.id), type: "status_change" });
+          for (const t of invalidTokens) await storage.deletePushToken(t);
         }
       }
       
       res.json(order);
     } catch (err) {
+      console.error("Error updating status:", err);
       res.status(500).json({ message: "Failed to update status" });
+    }
+  });
+
+  // Update completed quantity for order items
+  app.patch("/api/order-items/:id/completed", requireAdmin, async (req: any, res) => {
+    try {
+      const itemId = Number(req.params.id);
+      const { completedQuantity } = req.body;
+      
+      if (typeof completedQuantity !== 'number' || completedQuantity < 0) {
+        return res.status(400).json({ message: "الكمية المنجزة غير صالحة" });
+      }
+      
+      const updated = await storage.updateOrderItemCompletedQuantity(itemId, completedQuantity);
+      if (!updated) return res.status(404).json({ message: "Item not found" });
+      
+      res.json(updated);
+    } catch (err) {
+      res.status(500).json({ message: "Failed to update completed quantity" });
     }
   });
 

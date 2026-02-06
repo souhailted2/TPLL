@@ -112,7 +112,10 @@ export const isAuthenticated: RequestHandler = (req, res, next) => {
 
 export async function seedUsers() {
   const defaultUsers = [
-    { username: "factory", password: "1111", firstName: "موظف المصنع", role: "admin", salesPointName: null },
+    { username: "reception1", password: "1111", firstName: "فريق الاستقبال 1", role: "reception", salesPointName: null },
+    { username: "reception2", password: "1111", firstName: "فريق الاستقبال 2", role: "reception", salesPointName: null },
+    { username: "reception3", password: "1111", firstName: "فريق الاستقبال 3", role: "reception", salesPointName: null },
+    { username: "shipping", password: "1111", firstName: "فريق الشحن", role: "shipping", salesPointName: null },
     { username: "alger", password: "0000", firstName: "نقطة بيع الجزائر", role: "sales_point", salesPointName: "الجزائر" },
     { username: "eloued", password: "0000", firstName: "نقطة بيع الوادي", role: "sales_point", salesPointName: "الوادي" },
     { username: "elma", password: "0000", firstName: "نقطة بيع العلمة", role: "sales_point", salesPointName: "العلمة" },

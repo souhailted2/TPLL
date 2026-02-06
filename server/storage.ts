@@ -23,6 +23,7 @@ export interface IStorage {
   getOrder(id: number): Promise<(Order & { items: (OrderItem & { product: Product })[] }) | undefined>;
   createOrder(salesPointId: string, order: CreateOrderRequest): Promise<Order>;
   updateOrderStatus(id: number, status: string): Promise<Order | undefined>;
+  updateOrderItemCompletedQuantity(itemId: number, completedQuantity: number): Promise<OrderItem | undefined>;
 
   // User Roles
   getUserRole(userId: string): Promise<UserRole | undefined>;
@@ -34,6 +35,7 @@ export interface IStorage {
   markNotificationAsRead(id: number, userId: string): Promise<Notification | undefined>;
   markAllNotificationsAsRead(userId: string): Promise<void>;
   getAdminUserIds(): Promise<string[]>;
+  getUserIdsByRole(role: string): Promise<string[]>;
 
   // Push Tokens
   savePushToken(userId: string, token: string): Promise<PushToken>;
@@ -120,12 +122,14 @@ export class DatabaseStorage implements IStorage {
       order: orders,
       item: orderItems,
       product: products,
-      salesPoint: users
+      salesPoint: users,
+      salesPointRole: userRoles,
     })
     .from(orders)
     .leftJoin(orderItems, eq(orders.id, orderItems.orderId))
     .leftJoin(products, eq(orderItems.productId, products.id))
     .leftJoin(users, eq(orders.salesPointId, users.id))
+    .leftJoin(userRoles, eq(orders.salesPointId, userRoles.userId))
     .orderBy(desc(orders.createdAt));
 
     let rows;
@@ -140,7 +144,8 @@ export class DatabaseStorage implements IStorage {
     
     for (const row of rows) {
       if (!result.has(row.order.id)) {
-        result.set(row.order.id, { ...row.order, items: [], salesPoint: row.salesPoint });
+        const sp = row.salesPoint ? { ...row.salesPoint, salesPointName: row.salesPointRole?.salesPointName } : null;
+        result.set(row.order.id, { ...row.order, items: [], salesPoint: sp });
       }
       if (row.item && row.product) {
         result.get(row.order.id)!.items.push({ ...row.item, product: row.product });
@@ -249,12 +254,29 @@ export class DatabaseStorage implements IStorage {
       .where(eq(notifications.userId, userId));
   }
 
+  async updateOrderItemCompletedQuantity(itemId: number, completedQuantity: number): Promise<OrderItem | undefined> {
+    const [updated] = await db
+      .update(orderItems)
+      .set({ completedQuantity })
+      .where(eq(orderItems.id, itemId))
+      .returning();
+    return updated;
+  }
+
   async getAdminUserIds(): Promise<string[]> {
     const admins = await db
       .select({ userId: userRoles.userId })
       .from(userRoles)
-      .where(eq(userRoles.role, 'admin'));
+      .where(or(eq(userRoles.role, 'admin'), eq(userRoles.role, 'reception')));
     return admins.map(a => a.userId);
+  }
+
+  async getUserIdsByRole(role: string): Promise<string[]> {
+    const users = await db
+      .select({ userId: userRoles.userId })
+      .from(userRoles)
+      .where(eq(userRoles.role, role));
+    return users.map(u => u.userId);
   }
 
   // Push Tokens
