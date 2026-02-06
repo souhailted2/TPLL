@@ -6,6 +6,8 @@ export function useNotifications() {
   return useQuery<Notification[]>({
     queryKey: ["/api/notifications"],
     refetchInterval: 30000,
+    retry: 1,
+    staleTime: 10000,
   });
 }
 

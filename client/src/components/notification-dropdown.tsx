@@ -16,7 +16,7 @@ import { formatDistanceToNow } from "date-fns";
 import { ar } from "date-fns/locale";
 
 export function NotificationDropdown() {
-  const { data: notifications, isLoading, refetch } = useNotifications();
+  const { data: notifications, isLoading, isError, refetch } = useNotifications();
   const markReadMutation = useMarkNotificationRead();
   const markAllReadMutation = useMarkAllNotificationsRead();
   const [open, setOpen] = useState(false);
@@ -43,10 +43,10 @@ export function NotificationDropdown() {
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative" data-testid="button-notifications">
+        <Button variant="ghost" size="icon" className="relative text-slate-300 hover:text-white hover:bg-slate-700" data-testid="button-notifications">
           <Bell className="h-5 w-5" />
           {unreadCount > 0 && (
-            <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center font-bold">
+            <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center font-bold animate-pulse">
               {unreadCount > 9 ? "9+" : unreadCount}
             </span>
           )}
@@ -79,7 +79,15 @@ export function NotificationDropdown() {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         
-        {isLoading ? (
+        {isError ? (
+          <div className="p-4 text-center text-muted-foreground">
+            <p>تعذر تحميل الإشعارات</p>
+            <Button variant="ghost" size="sm" onClick={() => refetch()} className="mt-2">
+              <RefreshCw className="h-4 w-4 ml-1" />
+              إعادة المحاولة
+            </Button>
+          </div>
+        ) : isLoading ? (
           <div className="p-4 text-center text-muted-foreground">
             جاري التحميل...
           </div>
