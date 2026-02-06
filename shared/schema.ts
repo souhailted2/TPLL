@@ -26,6 +26,7 @@ export const orders = pgTable("orders", {
   statusChangedAt: timestamp("status_changed_at"),
   alertDismissed: boolean("alert_dismissed").notNull().default(false),
   alertDismissedAt: timestamp("alert_dismissed_at"),
+  alertNotificationSentAt: timestamp("alert_notification_sent_at"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
