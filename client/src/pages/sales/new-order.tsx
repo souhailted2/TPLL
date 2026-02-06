@@ -106,17 +106,19 @@ export default function NewOrder() {
       <Sidebar role="sales_point" />
       <main className="flex-1 md:mr-64 p-4 md:p-8 pt-24 md:pt-8 h-screen flex flex-col">
         <div className="max-w-7xl mx-auto w-full h-full flex flex-col gap-6">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div>
-              <h1 className="text-3xl font-bold text-slate-900">طلب جديد</h1>
-              <p className="text-slate-500">اختر المنتجات وأضفها للسلة</p>
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-row flex-wrap justify-between items-center gap-2">
+              <div>
+                <h1 className="text-3xl font-bold text-slate-900">طلب جديد</h1>
+                <p className="text-slate-500">اختر المنتجات وأضفها للسلة</p>
+              </div>
             </div>
             
-            <div className="relative w-full sm:w-72">
+            <div className="relative w-full z-10">
               <Search className="absolute right-3 top-3 h-4 w-4 text-slate-400" />
               <Input 
                 placeholder="بحث بالاسم أو الكود..." 
-                className="pr-9"
+                className="pr-9 bg-white border-slate-300 shadow-sm text-base h-11"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 data-testid="input-search-product"
