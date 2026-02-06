@@ -10,6 +10,7 @@ import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 
 const ACCOUNTS = [
+  { id: "المدير العام", label: "المدير العام", role: "admin", group: "admin" },
   { id: "reception1", label: "طارق", role: "reception", group: "factory" },
   { id: "reception2", label: "العيد", role: "reception", group: "factory" },
   { id: "reception3", label: "وليد", role: "reception", group: "factory" },
@@ -129,6 +130,28 @@ export default function LandingPage() {
                     <SelectContent className="rounded-xl shadow-xl border-slate-200 bg-white">
                       <SelectGroup>
                         <SelectLabel className="text-xs text-slate-400 px-4 py-2 flex items-center gap-2">
+                          <ShieldCheck className="h-3 w-3" />
+                          الإدارة
+                        </SelectLabel>
+                        {ACCOUNTS.filter(a => a.group === "admin").map((acc) => (
+                          <SelectItem 
+                            key={acc.id} 
+                            value={acc.id}
+                            className="text-right py-3 px-4 text-base cursor-pointer rounded-lg mx-1 my-0.5"
+                            data-testid={`select-account-${acc.id}`}
+                          >
+                            <div className="flex items-center gap-3">
+                              <ShieldCheck className="h-4 w-4 text-amber-500" />
+                              <div className="flex flex-col items-start">
+                                <span className="font-medium">{acc.label}</span>
+                                <span className="text-xs text-muted-foreground">المدير العام</span>
+                              </div>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
+                      <SelectGroup>
+                        <SelectLabel className="text-xs text-slate-400 px-4 py-2 flex items-center gap-2 border-t border-slate-100 mt-1 pt-3">
                           <Factory className="h-3 w-3" />
                           المصنع
                         </SelectLabel>
