@@ -92,10 +92,12 @@ export function Sidebar({ role }: SidebarProps) {
         </div>
       </div>
 
-      <aside className={cn(
-        "fixed inset-y-0 right-0 z-[80] w-64 bg-slate-900 text-white transition-transform duration-300 ease-in-out",
-        isOpen ? "translate-x-0" : "translate-x-full md:translate-x-0"
-      )}>
+      <aside
+        className={cn(
+          "fixed inset-y-0 right-0 z-[80] w-64 bg-slate-900 text-white transition-all duration-300 ease-in-out",
+          !isOpen && "max-md:invisible max-md:opacity-0 max-md:pointer-events-none"
+        )}
+      >
         <div className="h-full flex flex-col pt-20 md:pt-0">
           <div className="p-6 border-b border-slate-700 hidden md:block">
             <div className="flex items-center justify-between">
