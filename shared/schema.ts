@@ -24,6 +24,8 @@ export const orders = pgTable("orders", {
   status: text("status").notNull().default("submitted"), // submitted, accepted, rejected, in_progress, completed, shipped, received
   statusChangedBy: varchar("status_changed_by").references(() => users.id),
   statusChangedAt: timestamp("status_changed_at"),
+  alertDismissed: boolean("alert_dismissed").notNull().default(false),
+  alertDismissedAt: timestamp("alert_dismissed_at"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -34,6 +36,7 @@ export const orderItems = pgTable("order_items", {
   quantity: integer("quantity").notNull(),
   completedQuantity: integer("completed_quantity").notNull().default(0),
   unit: text("unit").notNull().default("piece"), // "piece" (قطعة) or "bag" (شكارة 25 كغ)
+  lastCompletedUpdate: timestamp("last_completed_update"),
 });
 
 // === RELATIONS ===
