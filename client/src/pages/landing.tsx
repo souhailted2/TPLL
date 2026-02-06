@@ -10,9 +10,9 @@ import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 
 const ACCOUNTS = [
-  { id: "reception1", label: "استقبال 1", role: "reception", group: "factory" },
-  { id: "reception2", label: "استقبال 2", role: "reception", group: "factory" },
-  { id: "reception3", label: "استقبال 3", role: "reception", group: "factory" },
+  { id: "reception1", label: "طارق", role: "reception", group: "factory" },
+  { id: "reception2", label: "العيد", role: "reception", group: "factory" },
+  { id: "reception3", label: "وليد", role: "reception", group: "factory" },
   { id: "shipping", label: "الشحن", role: "shipping", group: "factory" },
   { id: "alger", label: "نقطة الجزائر", role: "sales", group: "sales" },
   { id: "eloued", label: "نقطة الوادي", role: "sales", group: "sales" },

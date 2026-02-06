@@ -112,9 +112,9 @@ export const isAuthenticated: RequestHandler = (req, res, next) => {
 
 export async function seedUsers() {
   const defaultUsers = [
-    { username: "reception1", password: "1111", firstName: "فريق الاستقبال 1", role: "reception", salesPointName: null },
-    { username: "reception2", password: "1111", firstName: "فريق الاستقبال 2", role: "reception", salesPointName: null },
-    { username: "reception3", password: "1111", firstName: "فريق الاستقبال 3", role: "reception", salesPointName: null },
+    { username: "reception1", password: "1111", firstName: "طارق", role: "reception", salesPointName: null },
+    { username: "reception2", password: "1111", firstName: "العيد", role: "reception", salesPointName: null },
+    { username: "reception3", password: "1111", firstName: "وليد", role: "reception", salesPointName: null },
     { username: "shipping", password: "1111", firstName: "فريق الشحن", role: "shipping", salesPointName: null },
     { username: "alger", password: "0000", firstName: "نقطة بيع الجزائر", role: "sales_point", salesPointName: "الجزائر" },
     { username: "eloued", password: "0000", firstName: "نقطة بيع الوادي", role: "sales_point", salesPointName: "الوادي" },
@@ -139,8 +139,8 @@ export async function seedUsers() {
         salesPointName: userData.salesPointName,
       }).onConflictDoNothing();
     } else {
-      // Update password for existing user
-      await db.update(users).set({ password: hashedPassword }).where(eq(users.username, userData.username));
+      // Update password and name for existing user
+      await db.update(users).set({ password: hashedPassword, firstName: userData.firstName }).where(eq(users.username, userData.username));
       
       // Ensure role is correctly set (update or insert)
       await db.insert(userRoles).values({

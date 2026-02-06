@@ -123,7 +123,7 @@ export async function registerRoutes(
       const salesPointName = userRole?.salesPointName || "نقطة بيع";
       const adminIds = await storage.getAdminUserIds();
       const receptionIds = await storage.getUserIdsByRole('reception');
-      const notifyIds = [...new Set([...adminIds, ...receptionIds])];
+      const notifyIds = Array.from(new Set([...adminIds, ...receptionIds]));
       
       for (const notifyId of notifyIds) {
         await storage.createNotification({
@@ -209,7 +209,7 @@ export async function registerRoutes(
         return res.status(403).json({ message: "لا يمكنك تعديل طلب ليس لك" });
       }
       
-      const order = await storage.updateOrderStatus(orderId, status);
+      const order = await storage.updateOrderStatus(orderId, status, userId);
       if (!order) return res.status(404).json({ message: "Order not found" });
       
       const statusLabels: Record<string, string> = {

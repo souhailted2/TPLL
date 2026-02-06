@@ -8,7 +8,7 @@ import {
   type PushToken, type InsertPushToken,
   users
 } from "@shared/schema";
-import { eq, desc, and, or, ilike, sql } from "drizzle-orm";
+import { eq, desc, and, or, ilike, sql, aliasedTable } from "drizzle-orm";
 
 export interface IStorage {
   // Products
@@ -22,7 +22,7 @@ export interface IStorage {
   getOrders(salesPointId?: string): Promise<(Order & { items: (OrderItem & { product: Product })[], salesPoint: any })[]>;
   getOrder(id: number): Promise<(Order & { items: (OrderItem & { product: Product })[] }) | undefined>;
   createOrder(salesPointId: string, order: CreateOrderRequest): Promise<Order>;
-  updateOrderStatus(id: number, status: string): Promise<Order | undefined>;
+  updateOrderStatus(id: number, status: string, changedByUserId?: string): Promise<Order | undefined>;
   updateOrderItemCompletedQuantity(itemId: number, completedQuantity: number): Promise<OrderItem | undefined>;
 
   // User Roles
@@ -117,19 +117,23 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Orders
-  async getOrders(salesPointId?: string): Promise<(Order & { items: (OrderItem & { product: Product })[], salesPoint: any })[]> {
+  async getOrders(salesPointId?: string): Promise<(Order & { items: (OrderItem & { product: Product })[], salesPoint: any, statusChanger?: any })[]> {
+    const changerUsers = aliasedTable(users, 'changer_users');
+    
     const baseQuery = db.select({
       order: orders,
       item: orderItems,
       product: products,
       salesPoint: users,
       salesPointRole: userRoles,
+      statusChanger: changerUsers,
     })
     .from(orders)
     .leftJoin(orderItems, eq(orders.id, orderItems.orderId))
     .leftJoin(products, eq(orderItems.productId, products.id))
     .leftJoin(users, eq(orders.salesPointId, users.id))
     .leftJoin(userRoles, eq(orders.salesPointId, userRoles.userId))
+    .leftJoin(changerUsers, eq(orders.statusChangedBy, changerUsers.id))
     .orderBy(desc(orders.createdAt));
 
     let rows;
@@ -140,12 +144,13 @@ export class DatabaseStorage implements IStorage {
     }
     
     // Group by order
-    const result = new Map<number, Order & { items: (OrderItem & { product: Product })[], salesPoint: any }>();
+    const result = new Map<number, Order & { items: (OrderItem & { product: Product })[], salesPoint: any, statusChanger?: any }>();
     
     for (const row of rows) {
       if (!result.has(row.order.id)) {
         const sp = row.salesPoint ? { ...row.salesPoint, salesPointName: row.salesPointRole?.salesPointName } : null;
-        result.set(row.order.id, { ...row.order, items: [], salesPoint: sp });
+        const changer = row.statusChanger ? { firstName: row.statusChanger.firstName } : null;
+        result.set(row.order.id, { ...row.order, items: [], salesPoint: sp, statusChanger: changer });
       }
       if (row.item && row.product) {
         result.get(row.order.id)!.items.push({ ...row.item, product: row.product });
@@ -197,10 +202,10 @@ export class DatabaseStorage implements IStorage {
     return newOrder;
   }
 
-  async updateOrderStatus(id: number, status: string): Promise<Order | undefined> {
+  async updateOrderStatus(id: number, status: string, changedByUserId?: string): Promise<Order | undefined> {
     const [updatedOrder] = await db
       .update(orders)
-      .set({ status })
+      .set({ status, statusChangedBy: changedByUserId || null, statusChangedAt: new Date() })
       .where(eq(orders.id, id))
       .returning();
     return updatedOrder;

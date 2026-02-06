@@ -22,6 +22,8 @@ export const orders = pgTable("orders", {
   id: serial("id").primaryKey(),
   salesPointId: varchar("sales_point_id").notNull().references(() => users.id),
   status: text("status").notNull().default("submitted"), // submitted, accepted, rejected, in_progress, completed, shipped, received
+  statusChangedBy: varchar("status_changed_by").references(() => users.id),
+  statusChangedAt: timestamp("status_changed_at"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
