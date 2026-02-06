@@ -131,25 +131,23 @@ export default function NewOrder() {
             {productsLoading ? (
               <div className="flex justify-center p-12"><Loader2 className="animate-spin" /></div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 gap-2">
                 {products?.map((product) => (
                   <Card 
                     key={product.id} 
                     className="hover:border-primary transition-colors"
                     data-testid={`card-product-${product.id}`}
                   >
-                    <CardContent className="p-4 space-y-3">
-                      <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <h3 className="font-bold text-slate-900">{product.name}</h3>
-                          <p className="text-xs text-slate-400">{product.sku}</p>
-                        </div>
+                    <CardContent className="p-3 flex items-center justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-bold text-slate-900 text-sm truncate">{product.name}</h3>
+                        <p className="text-xs text-slate-400">{product.sku}</p>
                       </div>
-                      <div className="flex flex-wrap gap-2">
+                      <div className="flex items-center gap-2 shrink-0">
                         <Button 
                           size="sm" 
                           variant="outline"
-                          className="min-w-[70px] gap-1 text-xs"
+                          className="gap-1 text-xs"
                           onClick={() => addToCart(product, "piece")}
                           data-testid={`button-add-piece-${product.id}`}
                         >
@@ -159,7 +157,7 @@ export default function NewOrder() {
                         {!product.name.includes("Tige Filetée") && (
                           <Button 
                             size="sm" 
-                            className="min-w-[70px] gap-1 text-xs"
+                            className="gap-1 text-xs"
                             onClick={() => addToCart(product, "bag")}
                             data-testid={`button-add-bag-${product.id}`}
                           >
