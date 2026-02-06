@@ -1,8 +1,8 @@
 import { Sidebar } from "@/components/layout-sidebar";
-import { useOrders, useUpdateOrderStatus, useUpdateCompletedQuantity } from "@/hooks/use-orders";
+import { useOrders, useUpdateOrderStatus, useUpdateCompletedQuantity, useDismissOrderAlert } from "@/hooks/use-orders";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, ChevronDown, ChevronUp, Package, Check, X as XIcon } from "lucide-react";
+import { Loader2, ChevronDown, ChevronUp, Package, Check, X as XIcon, AlertTriangle, BellOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
@@ -10,10 +10,49 @@ import { arSA } from "date-fns/locale";
 import { useState, useMemo } from "react";
 import { useToast } from "@/hooks/use-toast";
 
+const ALERT_DAYS = 15;
+
+function getOrderAlertInfo(order: any) {
+  if (!order.items || order.items.length === 0) return null;
+  if (order.alertDismissed) return null;
+  if (order.status === 'shipped' || order.status === 'received' || order.status === 'rejected' || order.status === 'submitted') return null;
+
+  const now = new Date();
+  const alerts: { type: 'incomplete' | 'exceeded'; itemName: string; completed: number; requested: number }[] = [];
+
+  for (const item of order.items) {
+    if (!item.lastCompletedUpdate) continue;
+
+    const lastUpdate = new Date(item.lastCompletedUpdate);
+    const daysSince = (now.getTime() - lastUpdate.getTime()) / (1000 * 60 * 60 * 24);
+
+    if (daysSince >= ALERT_DAYS) {
+      if (item.completedQuantity < item.quantity) {
+        alerts.push({
+          type: 'incomplete',
+          itemName: item.product?.name || '',
+          completed: item.completedQuantity,
+          requested: item.quantity,
+        });
+      } else if (item.completedQuantity > item.quantity) {
+        alerts.push({
+          type: 'exceeded',
+          itemName: item.product?.name || '',
+          completed: item.completedQuantity,
+          requested: item.quantity,
+        });
+      }
+    }
+  }
+
+  return alerts.length > 0 ? alerts : null;
+}
+
 export default function ReceptionOrders() {
   const { data: orders, isLoading } = useOrders();
   const updateStatus = useUpdateOrderStatus();
   const updateCompleted = useUpdateCompletedQuantity();
+  const dismissAlert = useDismissOrderAlert();
   const [expandedOrders, setExpandedOrders] = useState<number[]>([]);
   const [activeFilter, setActiveFilter] = useState<string>('pending');
   const [completedQuantities, setCompletedQuantities] = useState<Record<number, number>>({});
@@ -30,10 +69,17 @@ export default function ReceptionOrders() {
         return orders.filter((o: any) => o.status === 'completed');
       case 'rejected':
         return orders.filter((o: any) => o.status === 'rejected');
+      case 'alerts':
+        return orders.filter((o: any) => getOrderAlertInfo(o) !== null);
       default:
         return orders;
     }
   }, [orders, activeFilter]);
+
+  const alertCount = useMemo(() => {
+    if (!orders) return 0;
+    return orders.filter((o: any) => getOrderAlertInfo(o) !== null).length;
+  }, [orders]);
 
   const toggleOrder = (orderId: number) => {
     setExpandedOrders(prev => 
@@ -54,6 +100,15 @@ export default function ReceptionOrders() {
     try {
       await updateCompleted.mutateAsync({ itemId, completedQuantity: quantity });
       toast({ title: "تم التحديث", description: "تم تحديث الكمية المنجزة" });
+    } catch (err: any) {
+      toast({ title: "خطأ", description: err.message, variant: "destructive" });
+    }
+  };
+
+  const handleDismissAlert = async (orderId: number) => {
+    try {
+      await dismissAlert.mutateAsync(orderId);
+      toast({ title: "تم الإبطال", description: "تم إبطال الإنذار بنجاح" });
     } catch (err: any) {
       toast({ title: "خطأ", description: err.message, variant: "destructive" });
     }
@@ -115,6 +170,18 @@ export default function ReceptionOrders() {
                 {f.label} ({f.count})
               </Button>
             ))}
+            {alertCount > 0 && (
+              <Button
+                variant={activeFilter === 'alerts' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setActiveFilter('alerts')}
+                className={activeFilter !== 'alerts' ? 'border-red-300 text-red-600 hover:bg-red-50' : 'bg-red-600 hover:bg-red-700'}
+                data-testid="filter-alerts"
+              >
+                <AlertTriangle className="h-4 w-4 ml-1" />
+                إنذارات ({alertCount})
+              </Button>
+            )}
           </div>
 
           <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-x-auto">
@@ -134,130 +201,190 @@ export default function ReceptionOrders() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredOrders?.map((order: any) => (
-                      <>
-                        <TableRow key={order.id}>
-                          <TableCell className="font-mono font-bold" data-testid={`text-order-id-${order.id}`}>#{order.id}</TableCell>
-                          <TableCell className="font-bold" data-testid={`text-sales-point-${order.id}`}>
-                            {order.salesPoint?.salesPointName || order.salesPoint?.firstName}
-                          </TableCell>
-                          <TableCell>
-                            {order.createdAt && format(new Date(order.createdAt), 'PP p', { locale: arSA })}
-                          </TableCell>
-                          <TableCell>
-                            <Button 
-                              variant="ghost" size="sm" className="gap-2"
-                              onClick={() => toggleOrder(order.id)}
-                              data-testid={`button-toggle-order-${order.id}`}
-                            >
-                              <Package className="h-4 w-4" />
-                              {order.items?.length || 0} صنف
-                              {expandedOrders.includes(order.id) ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                            </Button>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="secondary" className={getStatusColor(order.status)}>
-                              {getStatusLabel(order.status)}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex gap-2 justify-end flex-wrap">
-                              {order.status === 'submitted' && (
-                                <>
+                    {filteredOrders?.map((order: any) => {
+                      const alerts = getOrderAlertInfo(order);
+                      const hasAlert = alerts !== null;
+                      
+                      return (
+                        <>
+                          <TableRow key={order.id} className={hasAlert ? 'alert-glow-row' : ''}>
+                            <TableCell className="font-mono font-bold" data-testid={`text-order-id-${order.id}`}>
+                              <div className="flex items-center gap-2">
+                                {hasAlert && <AlertTriangle className="h-5 w-5 text-red-500 alert-pulse-badge" />}
+                                #{order.id}
+                              </div>
+                            </TableCell>
+                            <TableCell className="font-bold" data-testid={`text-sales-point-${order.id}`}>
+                              {order.salesPoint?.salesPointName || order.salesPoint?.firstName}
+                            </TableCell>
+                            <TableCell>
+                              {order.createdAt && format(new Date(order.createdAt), 'PP p', { locale: arSA })}
+                            </TableCell>
+                            <TableCell>
+                              <Button 
+                                variant="ghost" size="sm" className="gap-2"
+                                onClick={() => toggleOrder(order.id)}
+                                data-testid={`button-toggle-order-${order.id}`}
+                              >
+                                <Package className="h-4 w-4" />
+                                {order.items?.length || 0} صنف
+                                {expandedOrders.includes(order.id) ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                              </Button>
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant="secondary" className={getStatusColor(order.status)}>
+                                {getStatusLabel(order.status)}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex gap-2 justify-end flex-wrap">
+                                {hasAlert && (
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="border-red-300 text-red-600 hover:bg-red-50 gap-1"
+                                    onClick={() => handleDismissAlert(order.id)}
+                                    disabled={dismissAlert.isPending}
+                                    data-testid={`button-dismiss-alert-${order.id}`}
+                                  >
+                                    <BellOff className="h-4 w-4" />
+                                    إبطال الإنذار
+                                  </Button>
+                                )}
+                                {order.status === 'submitted' && (
+                                  <>
+                                    <Button 
+                                      size="sm" variant="default"
+                                      onClick={() => handleStatusChange(order.id, 'accepted')}
+                                      disabled={updateStatus.isPending}
+                                      data-testid={`button-accept-${order.id}`}
+                                    >
+                                      <Check className="h-4 w-4 ml-1" />
+                                      قبول
+                                    </Button>
+                                    <Button 
+                                      size="sm" variant="destructive"
+                                      onClick={() => handleStatusChange(order.id, 'rejected')}
+                                      disabled={updateStatus.isPending}
+                                      data-testid={`button-reject-${order.id}`}
+                                    >
+                                      <XIcon className="h-4 w-4 ml-1" />
+                                      رفض
+                                    </Button>
+                                  </>
+                                )}
+                                {order.status === 'accepted' && (
+                                  <Button 
+                                    size="sm"
+                                    onClick={() => handleStatusChange(order.id, 'in_progress')}
+                                    disabled={updateStatus.isPending}
+                                    data-testid={`button-start-${order.id}`}
+                                  >
+                                    بدء الإنجاز
+                                  </Button>
+                                )}
+                                {order.status === 'in_progress' && (
                                   <Button 
                                     size="sm" variant="default"
-                                    onClick={() => handleStatusChange(order.id, 'accepted')}
+                                    onClick={() => handleStatusChange(order.id, 'completed')}
                                     disabled={updateStatus.isPending}
-                                    data-testid={`button-accept-${order.id}`}
+                                    data-testid={`button-complete-${order.id}`}
                                   >
                                     <Check className="h-4 w-4 ml-1" />
-                                    قبول
+                                    تم الإنجاز
                                   </Button>
-                                  <Button 
-                                    size="sm" variant="destructive"
-                                    onClick={() => handleStatusChange(order.id, 'rejected')}
-                                    disabled={updateStatus.isPending}
-                                    data-testid={`button-reject-${order.id}`}
-                                  >
-                                    <XIcon className="h-4 w-4 ml-1" />
-                                    رفض
-                                  </Button>
-                                </>
-                              )}
-                              {order.status === 'accepted' && (
-                                <Button 
-                                  size="sm"
-                                  onClick={() => handleStatusChange(order.id, 'in_progress')}
-                                  disabled={updateStatus.isPending}
-                                  data-testid={`button-start-${order.id}`}
-                                >
-                                  بدء الإنجاز
-                                </Button>
-                              )}
-                              {order.status === 'in_progress' && (
-                                <Button 
-                                  size="sm" variant="default"
-                                  onClick={() => handleStatusChange(order.id, 'completed')}
-                                  disabled={updateStatus.isPending}
-                                  data-testid={`button-complete-${order.id}`}
-                                >
-                                  <Check className="h-4 w-4 ml-1" />
-                                  تم الإنجاز
-                                </Button>
-                              )}
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                        {expandedOrders.includes(order.id) && order.items && order.items.length > 0 && (
-                          <TableRow key={`${order.id}-details`}>
-                            <TableCell colSpan={6} className="bg-slate-50 p-4">
-                              <div className="space-y-2">
-                                <p className="font-bold text-sm mb-3">تفاصيل الطلب:</p>
-                                <div className="grid gap-2">
-                                  {order.items.map((item: any, idx: number) => (
-                                    <div key={idx} className="flex items-center justify-between bg-white p-3 rounded-lg border gap-4">
-                                      <div className="flex-1">
-                                        <p className="font-medium">{item.product?.name}</p>
-                                        <p className="text-xs text-slate-400">{item.product?.sku}</p>
-                                      </div>
-                                      <div className="flex items-center gap-3">
-                                        <Badge variant={item.unit === 'bag' ? 'default' : 'outline'}>
-                                          {getUnitLabel(item.unit || 'piece')}
-                                        </Badge>
-                                        <span className="font-bold text-primary text-lg">{item.quantity}</span>
-                                        {(order.status === 'in_progress' || order.status === 'completed') && (
-                                          <div className="flex items-center gap-2 border-r pr-3">
-                                            <span className="text-xs text-slate-500">منجز:</span>
-                                            <Input
-                                              type="number"
-                                              min={0}
-                                              max={item.quantity}
-                                              value={completedQuantities[item.id] ?? item.completedQuantity ?? 0}
-                                              onChange={(e) => setCompletedQuantities(prev => ({ ...prev, [item.id]: Number(e.target.value) }))}
-                                              className="w-20 h-8 text-center"
-                                              data-testid={`input-completed-${item.id}`}
-                                            />
-                                            <Button
-                                              size="sm"
-                                              variant="outline"
-                                              onClick={() => handleCompletedQuantity(item.id, completedQuantities[item.id] ?? item.completedQuantity ?? 0)}
-                                              disabled={updateCompleted.isPending}
-                                              data-testid={`button-save-completed-${item.id}`}
-                                            >
-                                              حفظ
-                                            </Button>
-                                          </div>
-                                        )}
-                                      </div>
-                                    </div>
-                                  ))}
-                                </div>
+                                )}
                               </div>
                             </TableCell>
                           </TableRow>
-                        )}
-                      </>
-                    ))}
+                          {/* Alert details banner */}
+                          {hasAlert && (
+                            <TableRow key={`${order.id}-alert`}>
+                              <TableCell colSpan={6} className="p-0">
+                                <div className="bg-red-50 border-b-2 border-red-200 px-4 py-3">
+                                  <div className="flex items-start gap-3">
+                                    <AlertTriangle className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
+                                    <div className="flex-1 space-y-1">
+                                      <p className="font-bold text-red-800 text-sm">تنبيه: مشاكل في الإنجاز</p>
+                                      {alerts.map((alert, idx) => (
+                                        <div key={idx} className="flex items-center gap-2 text-sm">
+                                          <Badge variant="secondary" className={alert.type === 'incomplete' ? 'bg-orange-100 text-orange-800' : 'bg-red-100 text-red-800'}>
+                                            {alert.type === 'incomplete' ? 'غير مكتمل' : 'تجاوز الكمية'}
+                                          </Badge>
+                                          <span className="text-red-700">
+                                            <span className="font-medium">{alert.itemName}</span>
+                                            {' — '}
+                                            منجز: <span className="font-bold">{alert.completed}</span>
+                                            {' / '}
+                                            مطلوب: <span className="font-bold">{alert.requested}</span>
+                                          </span>
+                                        </div>
+                                      ))}
+                                      <p className="text-xs text-red-500 mt-1">
+                                        مر أكثر من {ALERT_DAYS} يوم منذ آخر تحديث
+                                      </p>
+                                    </div>
+                                  </div>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          )}
+                          {expandedOrders.includes(order.id) && order.items && order.items.length > 0 && (
+                            <TableRow key={`${order.id}-details`}>
+                              <TableCell colSpan={6} className="bg-slate-50 p-4">
+                                <div className="space-y-2">
+                                  <p className="font-bold text-sm mb-3">تفاصيل الطلب:</p>
+                                  <div className="grid gap-2">
+                                    {order.items.map((item: any, idx: number) => {
+                                      const itemHasIssue = item.lastCompletedUpdate && 
+                                        ((new Date().getTime() - new Date(item.lastCompletedUpdate).getTime()) / (1000 * 60 * 60 * 24) >= ALERT_DAYS) &&
+                                        item.completedQuantity !== item.quantity && !order.alertDismissed;
+                                      
+                                      return (
+                                        <div key={idx} className={`flex items-center justify-between p-3 rounded-lg border gap-4 ${itemHasIssue ? 'bg-red-50 border-red-200' : 'bg-white'}`}>
+                                          <div className="flex-1">
+                                            <p className="font-medium">{item.product?.name}</p>
+                                            <p className="text-xs text-slate-400">{item.product?.sku}</p>
+                                          </div>
+                                          <div className="flex items-center gap-3">
+                                            <Badge variant={item.unit === 'bag' ? 'default' : 'outline'}>
+                                              {getUnitLabel(item.unit || 'piece')}
+                                            </Badge>
+                                            <span className="font-bold text-primary text-lg">{item.quantity}</span>
+                                            {(order.status === 'in_progress' || order.status === 'completed') && (
+                                              <div className="flex items-center gap-2 border-r pr-3">
+                                                <span className="text-xs text-slate-500">منجز:</span>
+                                                <Input
+                                                  type="number"
+                                                  min={0}
+                                                  value={completedQuantities[item.id] ?? item.completedQuantity ?? 0}
+                                                  onChange={(e) => setCompletedQuantities(prev => ({ ...prev, [item.id]: Number(e.target.value) }))}
+                                                  className={`w-20 h-8 text-center ${itemHasIssue ? 'border-red-300' : ''}`}
+                                                  data-testid={`input-completed-${item.id}`}
+                                                />
+                                                <Button
+                                                  size="sm"
+                                                  variant="outline"
+                                                  onClick={() => handleCompletedQuantity(item.id, completedQuantities[item.id] ?? item.completedQuantity ?? 0)}
+                                                  disabled={updateCompleted.isPending}
+                                                  data-testid={`button-save-completed-${item.id}`}
+                                                >
+                                                  حفظ
+                                                </Button>
+                                              </div>
+                                            )}
+                                          </div>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          )}
+                        </>
+                      );
+                    })}
                     {filteredOrders?.length === 0 && (
                       <TableRow>
                         <TableCell colSpan={6} className="text-center py-12 text-slate-400">

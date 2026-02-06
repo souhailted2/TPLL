@@ -24,6 +24,7 @@ export interface IStorage {
   createOrder(salesPointId: string, order: CreateOrderRequest): Promise<Order>;
   updateOrderStatus(id: number, status: string, changedByUserId?: string): Promise<Order | undefined>;
   updateOrderItemCompletedQuantity(itemId: number, completedQuantity: number): Promise<OrderItem | undefined>;
+  dismissOrderAlert(orderId: number): Promise<Order | undefined>;
 
   // User Roles
   getUserRole(userId: string): Promise<UserRole | undefined>;
@@ -262,8 +263,25 @@ export class DatabaseStorage implements IStorage {
   async updateOrderItemCompletedQuantity(itemId: number, completedQuantity: number): Promise<OrderItem | undefined> {
     const [updated] = await db
       .update(orderItems)
-      .set({ completedQuantity })
+      .set({ completedQuantity, lastCompletedUpdate: new Date() })
       .where(eq(orderItems.id, itemId))
+      .returning();
+    
+    if (updated) {
+      await db
+        .update(orders)
+        .set({ alertDismissed: false })
+        .where(eq(orders.id, updated.orderId));
+    }
+    
+    return updated;
+  }
+
+  async dismissOrderAlert(orderId: number): Promise<Order | undefined> {
+    const [updated] = await db
+      .update(orders)
+      .set({ alertDismissed: true, alertDismissedAt: new Date() })
+      .where(eq(orders.id, orderId))
       .returning();
     return updated;
   }

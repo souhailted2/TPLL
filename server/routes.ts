@@ -295,6 +295,18 @@ export async function registerRoutes(
     }
   });
 
+  // Dismiss alert on an order
+  app.patch("/api/orders/:id/dismiss-alert", requireAuth, async (req: any, res) => {
+    try {
+      const orderId = Number(req.params.id);
+      const order = await storage.dismissOrderAlert(orderId);
+      if (!order) return res.status(404).json({ message: "Order not found" });
+      res.json(order);
+    } catch (err) {
+      res.status(500).json({ message: "Failed to dismiss alert" });
+    }
+  });
+
   app.post(api.import.products.path, requireAdmin, async (req, res) => {
     try {
       const items = api.import.products.input.parse(req.body);

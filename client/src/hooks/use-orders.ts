@@ -54,6 +54,24 @@ export function useUpdateOrderStatus() {
   });
 }
 
+export function useDismissOrderAlert() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (orderId: number) => {
+      const res = await fetch(`/api/orders/${orderId}/dismiss-alert`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("فشل إبطال الإنذار");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [api.orders.list.path] });
+    },
+  });
+}
+
 export function useUpdateCompletedQuantity() {
   const queryClient = useQueryClient();
   return useMutation({
