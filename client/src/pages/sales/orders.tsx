@@ -1,16 +1,19 @@
 import { Sidebar } from "@/components/layout-sidebar";
-import { useOrders } from "@/hooks/use-orders";
+import { useOrders, useUpdateOrderStatus } from "@/hooks/use-orders";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Package, ChevronDown, ChevronUp } from "lucide-react";
+import { Loader2, Package, ChevronDown, ChevronUp, PackageCheck } from "lucide-react";
 import { format } from "date-fns";
 import { arSA } from "date-fns/locale";
 import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 
 export default function SalesOrders() {
   const { data: orders, isLoading } = useOrders();
   const [expandedOrders, setExpandedOrders] = useState<number[]>([]);
+  const updateStatus = useUpdateOrderStatus();
+  const { toast } = useToast();
 
   const activeOrders = useMemo(() => {
     if (!orders) return [];
@@ -51,6 +54,20 @@ export default function SalesOrders() {
     return unit === 'bag' ? 'شكارة 25 كغ' : 'قطعة';
   };
 
+  const handleConfirmReceived = (orderId: number) => {
+    updateStatus.mutate(
+      { id: orderId, status: 'received' },
+      {
+        onSuccess: () => {
+          toast({ title: 'تم تأكيد الاستلام بنجاح' });
+        },
+        onError: () => {
+          toast({ title: 'خطأ', description: 'فشل تأكيد الاستلام', variant: 'destructive' });
+        },
+      }
+    );
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 flex" dir="rtl">
       <Sidebar role="sales_point" />
@@ -73,6 +90,7 @@ export default function SalesOrders() {
                     <TableHead>التاريخ</TableHead>
                     <TableHead>عدد الأصناف</TableHead>
                     <TableHead>الحالة</TableHead>
+                    <TableHead>الإجراء</TableHead>
                     <TableHead>التفاصيل</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -96,6 +114,20 @@ export default function SalesOrders() {
                           </Badge>
                         </TableCell>
                         <TableCell>
+                          {order.status === 'shipped' && (
+                            <Button
+                              size="sm"
+                              className="bg-green-600 hover:bg-green-700 text-white gap-1"
+                              onClick={() => handleConfirmReceived(order.id)}
+                              disabled={updateStatus.isPending}
+                              data-testid={`button-confirm-received-${order.id}`}
+                            >
+                              <PackageCheck className="h-4 w-4" />
+                              <span>تأكيد الاستلام</span>
+                            </Button>
+                          )}
+                        </TableCell>
+                        <TableCell>
                           <Button 
                             variant="ghost" 
                             size="sm"
@@ -112,7 +144,7 @@ export default function SalesOrders() {
                       </TableRow>
                       {expandedOrders.includes(order.id) && order.items && order.items.length > 0 && (
                         <TableRow key={`${order.id}-details`}>
-                          <TableCell colSpan={5} className="bg-slate-50 p-4">
+                          <TableCell colSpan={6} className="bg-slate-50 p-4">
                             <div className="space-y-2">
                               <p className="font-bold text-sm mb-3">تفاصيل الطلب:</p>
                               <div className="grid gap-2">
@@ -139,7 +171,7 @@ export default function SalesOrders() {
                   ))}
                   {activeOrders?.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center py-12 text-slate-400">
+                      <TableCell colSpan={6} className="text-center py-12 text-slate-400">
                         لا توجد طلبات نشطة حالياً
                       </TableCell>
                     </TableRow>
