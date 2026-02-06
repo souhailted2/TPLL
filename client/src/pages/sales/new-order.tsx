@@ -104,7 +104,7 @@ export default function NewOrder() {
   return (
     <div className="min-h-screen bg-slate-50 flex" dir="rtl">
       <Sidebar role="sales_point" />
-      <main className="flex-1 md:mr-64 p-4 md:p-8 pt-24 md:pt-8 h-screen flex flex-col">
+      <main className="flex-1 md:mr-64 p-4 md:p-8 pt-24 md:pt-8 min-h-screen flex flex-col overflow-x-hidden">
         <div className="max-w-7xl mx-auto w-full h-full flex flex-col gap-6">
           <div className="flex flex-col gap-4">
             <div className="flex flex-row flex-wrap justify-between items-center gap-2">
