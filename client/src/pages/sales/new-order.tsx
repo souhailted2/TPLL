@@ -5,8 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Plus, ShoppingCart, Trash2, Search, X, Package, Weight } from "lucide-react";
-import { useState, useEffect } from "react";
+import { Loader2, Plus, ShoppingCart, Trash2, Search, X, Package, Weight, Check } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
@@ -17,6 +17,13 @@ interface CartItem {
   productName: string;
   productSku: string;
   quantity: number;
+  unit: UnitType;
+}
+
+interface QuantityPrompt {
+  productId: number;
+  productName: string;
+  productSku: string;
   unit: UnitType;
 }
 
@@ -32,33 +39,59 @@ export default function NewOrder() {
   
   const [cart, setCart] = useState<CartItem[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
+  const [quantityPrompt, setQuantityPrompt] = useState<QuantityPrompt | null>(null);
+  const [promptQuantity, setPromptQuantity] = useState("1");
+  const quantityInputRef = useRef<HTMLInputElement>(null);
 
-  // Debounce search to avoid too many API calls
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(searchTerm), 300);
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
+  useEffect(() => {
+    if (quantityPrompt && quantityInputRef.current) {
+      quantityInputRef.current.focus();
+      quantityInputRef.current.select();
+    }
+  }, [quantityPrompt]);
+
   const products = productsData?.products || [];
 
-  const addToCart = (product: any, unit: UnitType = "piece") => {
+  const openQuantityPrompt = (product: any, unit: UnitType) => {
+    setQuantityPrompt({
+      productId: product.id,
+      productName: product.name,
+      productSku: product.sku,
+      unit,
+    });
+    setPromptQuantity("1");
+  };
+
+  const confirmAddToCart = () => {
+    if (!quantityPrompt) return;
+    const qty = parseInt(promptQuantity) || 1;
+    if (qty < 1) return;
+
     setCart(prev => {
-      const existing = prev.find(item => item.productId === product.id && item.unit === unit);
+      const existing = prev.find(item => item.productId === quantityPrompt.productId && item.unit === quantityPrompt.unit);
       if (existing) {
         return prev.map(item => 
-          (item.productId === product.id && item.unit === unit)
-            ? { ...item, quantity: item.quantity + 1 } 
+          (item.productId === quantityPrompt.productId && item.unit === quantityPrompt.unit)
+            ? { ...item, quantity: item.quantity + qty } 
             : item
         );
       }
       return [...prev, { 
-        productId: product.id, 
-        productName: product.name,
-        productSku: product.sku,
-        quantity: 1,
-        unit
+        productId: quantityPrompt.productId, 
+        productName: quantityPrompt.productName,
+        productSku: quantityPrompt.productSku,
+        quantity: qty,
+        unit: quantityPrompt.unit,
       }];
     });
+
+    toast({ title: `تمت الإضافة: ${promptQuantity} ${quantityPrompt.unit === "bag" ? "شكارة" : "قطعة"}` });
+    setQuantityPrompt(null);
   };
 
   const removeFromCart = (productId: number, unit: UnitType) => {
@@ -148,7 +181,7 @@ export default function NewOrder() {
                           size="sm" 
                           variant="outline"
                           className="min-w-[70px] gap-1 text-xs"
-                          onClick={() => addToCart(product, "piece")}
+                          onClick={() => openQuantityPrompt(product, "piece")}
                           data-testid={`button-add-piece-${product.id}`}
                         >
                           <Package className="h-3 w-3 shrink-0" />
@@ -158,7 +191,7 @@ export default function NewOrder() {
                           <Button 
                             size="sm" 
                             className="min-w-[70px] gap-1 text-xs"
-                            onClick={() => addToCart(product, "bag")}
+                            onClick={() => openQuantityPrompt(product, "bag")}
                             data-testid={`button-add-bag-${product.id}`}
                           >
                             <Weight className="h-3 w-3 shrink-0" />
@@ -298,6 +331,70 @@ export default function NewOrder() {
             </div>
           </div>
         </div>
+
+        {quantityPrompt && (
+          <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4" onClick={() => setQuantityPrompt(null)}>
+            <Card className="w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
+              <CardContent className="p-6 space-y-4">
+                <div className="text-center space-y-1">
+                  <h3 className="font-bold text-lg text-slate-900">{quantityPrompt.productName}</h3>
+                  <p className="text-xs text-slate-400">{quantityPrompt.productSku}</p>
+                  <Badge variant={quantityPrompt.unit === "bag" ? "default" : "outline"} className="mt-2">
+                    {quantityPrompt.unit === "bag" ? "شكارة 25 كغ" : "قطعة"}
+                  </Badge>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-slate-700">الكمية</label>
+                  <div className="flex items-center gap-2">
+                    <Button 
+                      variant="outline" 
+                      size="icon"
+                      onClick={() => setPromptQuantity(String(Math.max(1, (parseInt(promptQuantity) || 1) - 1)))}
+                      data-testid="button-prompt-decrease"
+                    >
+                      -
+                    </Button>
+                    <Input
+                      ref={quantityInputRef}
+                      type="number"
+                      min="1"
+                      className="text-center text-lg font-bold h-10"
+                      value={promptQuantity}
+                      onChange={(e) => setPromptQuantity(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Enter") confirmAddToCart(); }}
+                      data-testid="input-prompt-quantity"
+                    />
+                    <Button 
+                      variant="outline" 
+                      size="icon"
+                      onClick={() => setPromptQuantity(String((parseInt(promptQuantity) || 0) + 1))}
+                      data-testid="button-prompt-increase"
+                    >
+                      +
+                    </Button>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <Button 
+                    className="flex-1 gap-2"
+                    onClick={confirmAddToCart}
+                    data-testid="button-confirm-add"
+                  >
+                    <Check className="h-4 w-4" />
+                    إضافة للسلة
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    onClick={() => setQuantityPrompt(null)}
+                    data-testid="button-cancel-add"
+                  >
+                    إلغاء
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
       </main>
     </div>
   );
