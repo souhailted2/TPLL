@@ -333,7 +333,7 @@ export default function NewOrder() {
         </div>
 
         {quantityPrompt && (
-          <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4" onClick={() => setQuantityPrompt(null)}>
+          <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4" onClick={() => setQuantityPrompt(null)}>
             <Card className="w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
               <CardContent className="p-6 space-y-4">
                 <div className="text-center space-y-1">
