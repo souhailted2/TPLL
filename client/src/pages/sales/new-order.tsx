@@ -43,7 +43,7 @@ export default function NewOrder() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
   const [quantityPrompt, setQuantityPrompt] = useState<QuantityPrompt | null>(null);
-  const [promptQuantity, setPromptQuantity] = useState("1");
+  const [promptQuantity, setPromptQuantity] = useState("");
   const quantityInputRef = useRef<HTMLInputElement>(null);
   const [showAddProduct, setShowAddProduct] = useState(false);
   const [newProductName, setNewProductName] = useState("");
@@ -107,7 +107,7 @@ export default function NewOrder() {
       productSku: product.sku,
       unit,
     });
-    setPromptQuantity("1");
+    setPromptQuantity("");
   };
 
   const confirmAddToCart = () => {
@@ -341,8 +341,8 @@ export default function NewOrder() {
                         <Input 
                           type="number" 
                           className="w-14 h-7 text-center px-1" 
-                          value={item.quantity}
-                          onChange={(e) => updateQuantity(item.productId, item.unit, parseInt(e.target.value) || 1)}
+                          value={item.quantity || ''}
+                          onChange={(e) => updateQuantity(item.productId, item.unit, parseInt(e.target.value) || 0)}
                           data-testid={`input-quantity-${item.productId}-${item.unit}`}
                         />
                         <Button 
