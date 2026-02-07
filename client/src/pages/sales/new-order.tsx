@@ -8,7 +8,9 @@ import { Badge } from "@/components/ui/badge";
 import { Loader2, Plus, ShoppingCart, Trash2, Search, X, Package, Weight, Check } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
+import { api } from "@shared/routes";
 
 type UnitType = "piece" | "bag";
 
@@ -37,11 +39,17 @@ export default function NewOrder() {
   const { mutateAsync: createOrder, isPending: isSubmitting } = useCreateOrder();
   const { toast } = useToast();
   
+  const queryClient = useQueryClient();
   const [cart, setCart] = useState<CartItem[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
   const [quantityPrompt, setQuantityPrompt] = useState<QuantityPrompt | null>(null);
   const [promptQuantity, setPromptQuantity] = useState("1");
   const quantityInputRef = useRef<HTMLInputElement>(null);
+  const [showAddProduct, setShowAddProduct] = useState(false);
+  const [newProductName, setNewProductName] = useState("");
+  const [newProductSku, setNewProductSku] = useState("");
+  const [isAddingProduct, setIsAddingProduct] = useState(false);
+  const newProductNameRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(searchTerm), 300);
@@ -55,7 +63,42 @@ export default function NewOrder() {
     }
   }, [quantityPrompt]);
 
+  useEffect(() => {
+    if (showAddProduct && newProductNameRef.current) {
+      newProductNameRef.current.focus();
+    }
+  }, [showAddProduct]);
+
   const products = productsData?.products || [];
+
+  const handleAddProduct = async () => {
+    if (!newProductName.trim() || !newProductSku.trim()) {
+      toast({ title: "يرجى ملء اسم المنتج والكود", variant: "destructive" });
+      return;
+    }
+    setIsAddingProduct(true);
+    try {
+      const res = await fetch(api.products.create.path, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ name: newProductName.trim(), sku: newProductSku.trim(), finish: "none" }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || "فشل إضافة المنتج");
+      }
+      toast({ title: "تمت إضافة المنتج بنجاح" });
+      setNewProductName("");
+      setNewProductSku("");
+      setShowAddProduct(false);
+      queryClient.invalidateQueries({ queryKey: [api.products.list.path] });
+    } catch (error: any) {
+      toast({ title: "خطأ", description: error.message, variant: "destructive" });
+    } finally {
+      setIsAddingProduct(false);
+    }
+  };
 
   const openQuantityPrompt = (product: any, unit: UnitType) => {
     setQuantityPrompt({
@@ -147,15 +190,26 @@ export default function NewOrder() {
               </div>
             </div>
             
-            <div className="relative w-full z-10">
-              <Search className="absolute right-3 top-3 h-4 w-4 text-slate-400" />
-              <Input 
-                placeholder="بحث بالاسم أو الكود..." 
-                className="pr-9 bg-white border-slate-300 shadow-sm text-base h-11"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                data-testid="input-search-product"
-              />
+            <div className="flex gap-2 items-center">
+              <div className="relative flex-1 z-10">
+                <Search className="absolute right-3 top-3 h-4 w-4 text-slate-400" />
+                <Input 
+                  placeholder="بحث بالاسم أو الكود..." 
+                  className="pr-9 bg-white border-slate-300 shadow-sm text-base h-11"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  data-testid="input-search-product"
+                />
+              </div>
+              <Button 
+                variant="outline"
+                className="h-11 gap-1 shrink-0"
+                onClick={() => setShowAddProduct(true)}
+                data-testid="button-open-add-product"
+              >
+                <Plus className="h-4 w-4" />
+                <span className="hidden sm:inline">إضافة منتج</span>
+              </Button>
             </div>
           </div>
 
@@ -331,6 +385,56 @@ export default function NewOrder() {
             </div>
           </div>
         </div>
+
+        {showAddProduct && (
+          <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4" onClick={() => setShowAddProduct(false)}>
+            <Card className="w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
+              <CardContent className="p-6 space-y-4">
+                <h3 className="font-bold text-lg text-slate-900 text-center">إضافة منتج جديد</h3>
+                <div className="space-y-3">
+                  <div className="space-y-1">
+                    <label className="text-sm font-medium text-slate-700">اسم المنتج</label>
+                    <Input
+                      ref={newProductNameRef}
+                      placeholder="مثال: Vis TH M6x20"
+                      value={newProductName}
+                      onChange={(e) => setNewProductName(e.target.value)}
+                      data-testid="input-new-product-name"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-sm font-medium text-slate-700">كود المنتج (SKU)</label>
+                    <Input
+                      placeholder="مثال: VIS-TH-M6x20-BRUT"
+                      value={newProductSku}
+                      onChange={(e) => setNewProductSku(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Enter") handleAddProduct(); }}
+                      data-testid="input-new-product-sku"
+                    />
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    className="flex-1 gap-2"
+                    onClick={handleAddProduct}
+                    disabled={isAddingProduct}
+                    data-testid="button-confirm-add-product"
+                  >
+                    {isAddingProduct ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+                    إضافة
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowAddProduct(false)}
+                    data-testid="button-cancel-add-product"
+                  >
+                    إلغاء
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
         {quantityPrompt && (
           <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4" onClick={() => setQuantityPrompt(null)}>
