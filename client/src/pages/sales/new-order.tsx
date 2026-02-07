@@ -227,7 +227,7 @@ export default function NewOrder() {
                   >
                     <CardContent className="p-4 space-y-3">
                       <div>
-                        <h3 className="font-bold text-slate-900 whitespace-nowrap overflow-hidden text-ellipsis">{product.name}</h3>
+                        <h3 className="font-bold text-slate-900 text-sm leading-tight line-clamp-2" dir="ltr" style={{ textAlign: "left" }}>{product.name}</h3>
                         <p className="text-xs text-slate-400">{product.sku}</p>
                       </div>
                       <div className="flex flex-wrap gap-2">
