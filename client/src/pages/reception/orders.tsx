@@ -23,14 +23,11 @@ function getOrderAlertInfo(order: any) {
 
   for (const item of order.items) {
     if (item.completedQuantity === item.quantity) continue;
-
     const referenceDate = item.lastCompletedUpdate
       ? new Date(item.lastCompletedUpdate)
       : (order.createdAt ? new Date(order.createdAt) : null);
-
     if (!referenceDate) continue;
     const daysSince = (now.getTime() - referenceDate.getTime()) / (1000 * 60 * 60 * 24);
-
     if (daysSince >= ALERT_DAYS) {
       if (item.completedQuantity < item.quantity) {
         alerts.push({ type: 'incomplete', itemName: item.product?.name || '', completed: item.completedQuantity, requested: item.quantity });
@@ -39,7 +36,6 @@ function getOrderAlertInfo(order: any) {
       }
     }
   }
-
   return alerts.length > 0 ? alerts : null;
 }
 
@@ -178,7 +174,7 @@ export default function ReceptionOrders() {
   );
 
   const renderAlertBanner = (alerts: any[]) => (
-    <div className="bg-red-50 border border-red-200 rounded-lg px-3 py-2 mt-2">
+    <div className="bg-red-50 border border-red-200 rounded-lg px-3 py-2">
       <div className="flex items-start gap-2">
         <AlertTriangle className="h-4 w-4 text-red-600 mt-0.5 flex-shrink-0" />
         <div className="flex-1 space-y-1">
@@ -210,10 +206,10 @@ export default function ReceptionOrders() {
             item.completedQuantity !== item.quantity && !order.alertDismissed;
 
           return (
-            <div key={idx} className={`p-3 rounded-lg border space-y-2 ${itemHasIssue ? 'bg-red-50 border-red-200' : 'bg-white'}`}>
-              <div className="flex items-center justify-between gap-2">
+            <div key={idx} className={`p-2 rounded-lg border space-y-2 ${itemHasIssue ? 'bg-red-50 border-red-200' : 'bg-white'}`}>
+              <div className="flex items-start justify-between gap-2">
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium text-sm truncate">{item.product?.name}</p>
+                  <p className="font-medium text-sm break-words">{item.product?.name}</p>
                   <p className="text-[10px] text-slate-400">{item.product?.sku}</p>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
@@ -235,8 +231,7 @@ export default function ReceptionOrders() {
                     data-testid={`input-completed-${item.id}`}
                   />
                   <Button
-                    size="sm"
-                    variant="outline"
+                    size="sm" variant="outline"
                     onClick={() => handleCompletedQuantity(item.id, completedQuantities[item.id] ?? item.completedQuantity ?? 0)}
                     disabled={updateCompleted.isPending}
                     data-testid={`button-save-completed-${item.id}`}
@@ -257,7 +252,6 @@ export default function ReceptionOrders() {
       {filteredOrders?.map((order: any) => {
         const alerts = getOrderAlertInfo(order);
         const hasAlert = alerts !== null;
-        const isExpanded = expandedOrders.includes(order.id);
 
         return (
           <Card key={order.id} className={hasAlert ? 'border-red-200' : ''} data-testid={`card-order-${order.id}`}>
@@ -281,37 +275,24 @@ export default function ReceptionOrders() {
                 </span>
               </div>
 
-              <div className="flex items-center justify-between gap-2">
+              {hasAlert && (
                 <Button
-                  variant="ghost"
-                  size="sm"
-                  className="gap-1 text-xs"
-                  onClick={() => toggleOrder(order.id)}
-                  data-testid={`button-toggle-order-${order.id}`}
+                  size="sm" variant="outline"
+                  className="border-red-300 text-red-600 gap-1 text-xs"
+                  onClick={() => handleDismissAlert(order.id)}
+                  disabled={dismissAlert.isPending}
+                  data-testid={`button-dismiss-alert-${order.id}`}
                 >
-                  <Package className="h-3 w-3" />
-                  {order.items?.length || 0} صنف
-                  {isExpanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                  <BellOff className="h-3 w-3" />
+                  إبطال الإنذار
                 </Button>
-                {hasAlert && (
-                  <Button
-                    size="sm" variant="outline"
-                    className="border-red-300 text-red-600 gap-1 text-xs"
-                    onClick={() => handleDismissAlert(order.id)}
-                    disabled={dismissAlert.isPending}
-                    data-testid={`button-dismiss-alert-${order.id}`}
-                  >
-                    <BellOff className="h-3 w-3" />
-                    إبطال
-                  </Button>
-                )}
-              </div>
+              )}
 
               {renderOrderActions(order)}
 
               {hasAlert && renderAlertBanner(alerts)}
 
-              {isExpanded && order.items && order.items.length > 0 && renderOrderItems(order)}
+              {order.items && order.items.length > 0 && renderOrderItems(order)}
             </CardContent>
           </Card>
         );
@@ -375,56 +356,32 @@ export default function ReceptionOrders() {
                     <TableCell>
                       <div className="flex gap-2 justify-end flex-wrap">
                         {hasAlert && (
-                          <Button
-                            size="sm" variant="outline"
-                            className="border-red-300 text-red-600 hover:bg-red-50 gap-1"
-                            onClick={() => handleDismissAlert(order.id)}
-                            disabled={dismissAlert.isPending}
-                            data-testid={`button-dismiss-alert-${order.id}`}
-                          >
+                          <Button size="sm" variant="outline" className="border-red-300 text-red-600 hover:bg-red-50 gap-1"
+                            onClick={() => handleDismissAlert(order.id)} disabled={dismissAlert.isPending}
+                            data-testid={`button-dismiss-alert-${order.id}`}>
                             <BellOff className="h-4 w-4" />
                             إبطال الإنذار
                           </Button>
                         )}
                         {order.status === 'submitted' && (
                           <>
-                            <Button 
-                              size="sm" variant="default"
-                              onClick={() => handleStatusChange(order.id, 'accepted')}
-                              disabled={updateStatus.isPending}
-                              data-testid={`button-accept-${order.id}`}
-                            >
+                            <Button size="sm" variant="default" onClick={() => handleStatusChange(order.id, 'accepted')} disabled={updateStatus.isPending} data-testid={`button-accept-${order.id}`}>
                               <Check className="h-4 w-4 ml-1" />
                               قبول
                             </Button>
-                            <Button 
-                              size="sm" variant="destructive"
-                              onClick={() => handleStatusChange(order.id, 'rejected')}
-                              disabled={updateStatus.isPending}
-                              data-testid={`button-reject-${order.id}`}
-                            >
+                            <Button size="sm" variant="destructive" onClick={() => handleStatusChange(order.id, 'rejected')} disabled={updateStatus.isPending} data-testid={`button-reject-${order.id}`}>
                               <XIcon className="h-4 w-4 ml-1" />
                               رفض
                             </Button>
                           </>
                         )}
                         {order.status === 'accepted' && (
-                          <Button 
-                            size="sm"
-                            onClick={() => handleStatusChange(order.id, 'in_progress')}
-                            disabled={updateStatus.isPending}
-                            data-testid={`button-start-${order.id}`}
-                          >
+                          <Button size="sm" onClick={() => handleStatusChange(order.id, 'in_progress')} disabled={updateStatus.isPending} data-testid={`button-start-${order.id}`}>
                             بدء الإنجاز
                           </Button>
                         )}
                         {order.status === 'in_progress' && (
-                          <Button 
-                            size="sm" variant="default"
-                            onClick={() => handleStatusChange(order.id, 'completed')}
-                            disabled={updateStatus.isPending}
-                            data-testid={`button-complete-${order.id}`}
-                          >
+                          <Button size="sm" variant="default" onClick={() => handleStatusChange(order.id, 'completed')} disabled={updateStatus.isPending} data-testid={`button-complete-${order.id}`}>
                             <Check className="h-4 w-4 ml-1" />
                             تم الإنجاز
                           </Button>
@@ -446,8 +403,7 @@ export default function ReceptionOrders() {
                                     {alert.type === 'incomplete' ? 'غير مكتمل' : 'تجاوز الكمية'}
                                   </Badge>
                                   <span className="text-red-700">
-                                    <span className="font-medium">{alert.itemName}</span>
-                                    {' — '}منجز: <span className="font-bold">{alert.completed}</span> / مطلوب: <span className="font-bold">{alert.requested}</span>
+                                    <span className="font-medium">{alert.itemName}</span> — منجز: <span className="font-bold">{alert.completed}</span> / مطلوب: <span className="font-bold">{alert.requested}</span>
                                   </span>
                                 </div>
                               ))}
@@ -469,7 +425,6 @@ export default function ReceptionOrders() {
                               const itemHasIssue = itemRefDate && 
                                 ((new Date().getTime() - itemRefDate.getTime()) / (1000 * 60 * 60 * 24) >= ALERT_DAYS) &&
                                 item.completedQuantity !== item.quantity && !order.alertDismissed;
-                              
                               return (
                                 <div key={idx} className={`flex items-center justify-between p-3 rounded-lg border gap-4 ${itemHasIssue ? 'bg-red-50 border-red-200' : 'bg-white'}`}>
                                   <div className="flex-1">
@@ -484,20 +439,14 @@ export default function ReceptionOrders() {
                                     {(order.status === 'in_progress' || order.status === 'completed') && (
                                       <div className="flex items-center gap-2 border-r pr-3">
                                         <span className="text-xs text-slate-500">منجز:</span>
-                                        <Input
-                                          type="number"
-                                          min={0}
+                                        <Input type="number" min={0}
                                           value={completedQuantities[item.id] ?? item.completedQuantity ?? 0}
                                           onChange={(e) => setCompletedQuantities(prev => ({ ...prev, [item.id]: Number(e.target.value) }))}
                                           className={`w-20 h-8 text-center ${itemHasIssue ? 'border-red-300' : ''}`}
-                                          data-testid={`input-completed-${item.id}`}
-                                        />
-                                        <Button
-                                          size="sm" variant="outline"
+                                          data-testid={`input-completed-${item.id}`} />
+                                        <Button size="sm" variant="outline"
                                           onClick={() => handleCompletedQuantity(item.id, completedQuantities[item.id] ?? item.completedQuantity ?? 0)}
-                                          disabled={updateCompleted.isPending}
-                                          data-testid={`button-save-completed-${item.id}`}
-                                        >
+                                          disabled={updateCompleted.isPending} data-testid={`button-save-completed-${item.id}`}>
                                           حفظ
                                         </Button>
                                       </div>
@@ -516,9 +465,7 @@ export default function ReceptionOrders() {
             })}
             {filteredOrders?.length === 0 && (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-12 text-slate-400">
-                  لا توجد طلبات
-                </TableCell>
+                <TableCell colSpan={6} className="text-center py-12 text-slate-400">لا توجد طلبات</TableCell>
               </TableRow>
             )}
           </TableBody>
@@ -545,24 +492,16 @@ export default function ReceptionOrders() {
               { key: 'rejected', label: 'مرفوضة', count: orders?.filter((o: any) => o.status === 'rejected').length || 0 },
               { key: 'all', label: 'الكل', count: orders?.length || 0 },
             ].map(f => (
-              <Button 
-                key={f.key}
-                variant={activeFilter === f.key ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setActiveFilter(f.key)}
-                data-testid={`filter-${f.key}`}
-              >
+              <Button key={f.key} variant={activeFilter === f.key ? 'default' : 'outline'} size="sm"
+                onClick={() => setActiveFilter(f.key)} data-testid={`filter-${f.key}`}>
                 {f.label} ({f.count})
               </Button>
             ))}
             {alertCount > 0 && (
-              <Button
-                variant={activeFilter === 'alerts' ? 'default' : 'outline'}
-                size="sm"
+              <Button variant={activeFilter === 'alerts' ? 'default' : 'outline'} size="sm"
                 onClick={() => setActiveFilter('alerts')}
                 className={activeFilter !== 'alerts' ? 'border-red-300 text-red-600 hover:bg-red-50' : 'bg-red-600 hover:bg-red-700'}
-                data-testid="filter-alerts"
-              >
+                data-testid="filter-alerts">
                 <AlertTriangle className="h-4 w-4 ml-1" />
                 إنذارات ({alertCount})
               </Button>

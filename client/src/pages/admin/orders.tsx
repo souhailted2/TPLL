@@ -23,33 +23,19 @@ function getOrderAlertInfo(order: any) {
 
   for (const item of order.items) {
     if (item.completedQuantity === item.quantity) continue;
-
     const referenceDate = item.lastCompletedUpdate
       ? new Date(item.lastCompletedUpdate)
       : (order.createdAt ? new Date(order.createdAt) : null);
-
     if (!referenceDate) continue;
     const daysSince = (now.getTime() - referenceDate.getTime()) / (1000 * 60 * 60 * 24);
-
     if (daysSince >= ALERT_DAYS) {
       if (item.completedQuantity < item.quantity) {
-        alerts.push({
-          type: 'incomplete',
-          itemName: item.product?.name || '',
-          completed: item.completedQuantity,
-          requested: item.quantity,
-        });
+        alerts.push({ type: 'incomplete', itemName: item.product?.name || '', completed: item.completedQuantity, requested: item.quantity });
       } else if (item.completedQuantity > item.quantity) {
-        alerts.push({
-          type: 'exceeded',
-          itemName: item.product?.name || '',
-          completed: item.completedQuantity,
-          requested: item.quantity,
-        });
+        alerts.push({ type: 'exceeded', itemName: item.product?.name || '', completed: item.completedQuantity, requested: item.quantity });
       }
     }
   }
-
   return alerts.length > 0 ? alerts : null;
 }
 
@@ -74,22 +60,14 @@ export default function AdminOrders() {
   const filteredOrders = useMemo(() => {
     if (!orders) return [];
     switch (activeFilter) {
-      case 'pending':
-        return orders.filter((o: any) => o.status === 'submitted');
-      case 'in_progress':
-        return orders.filter((o: any) => o.status === 'accepted' || o.status === 'in_progress');
-      case 'completed':
-        return orders.filter((o: any) => o.status === 'completed');
-      case 'shipped':
-        return orders.filter((o: any) => o.status === 'shipped');
-      case 'received':
-        return orders.filter((o: any) => o.status === 'received');
-      case 'rejected':
-        return orders.filter((o: any) => o.status === 'rejected');
-      case 'alerts':
-        return orders.filter((o: any) => getOrderAlertInfo(o) !== null);
-      default:
-        return orders;
+      case 'pending': return orders.filter((o: any) => o.status === 'submitted');
+      case 'in_progress': return orders.filter((o: any) => o.status === 'accepted' || o.status === 'in_progress');
+      case 'completed': return orders.filter((o: any) => o.status === 'completed');
+      case 'shipped': return orders.filter((o: any) => o.status === 'shipped');
+      case 'received': return orders.filter((o: any) => o.status === 'received');
+      case 'rejected': return orders.filter((o: any) => o.status === 'rejected');
+      case 'alerts': return orders.filter((o: any) => getOrderAlertInfo(o) !== null);
+      default: return orders;
     }
   }, [orders, activeFilter]);
   
@@ -112,11 +90,7 @@ export default function AdminOrders() {
   };
 
   const toggleOrder = (orderId: number) => {
-    setExpandedOrders(prev => 
-      prev.includes(orderId) 
-        ? prev.filter(id => id !== orderId)
-        : [...prev, orderId]
-    );
+    setExpandedOrders(prev => prev.includes(orderId) ? prev.filter(id => id !== orderId) : [...prev, orderId]);
   };
 
   const getStatusColor = (status: string) => {
@@ -147,8 +121,8 @@ export default function AdminOrders() {
     return unit === 'bag' ? 'شكارة 25 كغ' : 'قطعة';
   };
 
-  const renderAlertBanner = (order: any, alerts: any[]) => (
-    <div className="bg-red-50 border border-red-200 rounded-lg px-3 py-2 mt-2">
+  const renderAlertBanner = (alerts: any[]) => (
+    <div className="bg-red-50 border border-red-200 rounded-lg px-3 py-2">
       <div className="flex items-start gap-2">
         <AlertTriangle className="h-4 w-4 text-red-600 mt-0.5 flex-shrink-0" />
         <div className="flex-1 space-y-1">
@@ -159,9 +133,7 @@ export default function AdminOrders() {
                 {alert.type === 'incomplete' ? 'غير مكتمل' : 'تجاوز'}
               </Badge>
               <span className="text-red-700">
-                <span className="font-medium">{alert.itemName}</span>
-                {' — '}
-                {alert.completed}/{alert.requested}
+                <span className="font-medium">{alert.itemName}</span> — {alert.completed}/{alert.requested}
               </span>
             </div>
           ))}
@@ -171,7 +143,7 @@ export default function AdminOrders() {
     </div>
   );
 
-  const renderOrderDetails = (order: any) => (
+  const renderOrderItems = (order: any) => (
     <div className="space-y-2 mt-3 pt-3 border-t border-slate-100">
       <p className="font-bold text-sm">تفاصيل الطلب:</p>
       <div className="grid gap-2">
@@ -182,18 +154,20 @@ export default function AdminOrders() {
             item.completedQuantity !== item.quantity && !order.alertDismissed;
 
           return (
-            <div key={idx} className={`flex items-center justify-between p-2 rounded-lg border gap-2 ${itemHasIssue ? 'bg-red-50 border-red-200' : 'bg-white'}`}>
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-sm truncate">{item.product?.name}</p>
-                <p className="text-[10px] text-slate-400">{item.product?.sku}</p>
-              </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <Badge variant={item.unit === 'bag' ? 'default' : 'outline'} className="text-[10px]">
-                  {getUnitLabel(item.unit || 'piece')}
-                </Badge>
-                <div className="text-left">
-                  <span className={`font-bold ${itemHasIssue ? 'text-red-600' : 'text-primary'}`}>{item.completedQuantity || 0}</span>
-                  <span className="text-xs text-slate-400 mr-1">/ {item.quantity}</span>
+            <div key={idx} className={`p-2 rounded-lg border ${itemHasIssue ? 'bg-red-50 border-red-200' : 'bg-white'}`}>
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-sm break-words">{item.product?.name}</p>
+                  <p className="text-[10px] text-slate-400">{item.product?.sku}</p>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <Badge variant={item.unit === 'bag' ? 'default' : 'outline'} className="text-[10px]">
+                    {getUnitLabel(item.unit || 'piece')}
+                  </Badge>
+                  <div className="text-left">
+                    <span className={`font-bold ${itemHasIssue ? 'text-red-600' : 'text-primary'}`}>{item.completedQuantity || 0}</span>
+                    <span className="text-xs text-slate-400 mr-1">/ {item.quantity}</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -208,7 +182,6 @@ export default function AdminOrders() {
       {filteredOrders?.map((order: any) => {
         const alerts = getOrderAlertInfo(order);
         const hasAlert = alerts !== null;
-        const isExpanded = expandedOrders.includes(order.id);
 
         return (
           <Card key={order.id} className={hasAlert ? 'border-red-200' : ''} data-testid={`card-order-${order.id}`}>
@@ -237,43 +210,29 @@ export default function AdminOrders() {
                   <User className="h-3 w-3" />
                   <span>تغيير: {order.statusChanger.firstName}</span>
                   {order.statusChangedAt && (
-                    <span className="text-slate-400">
-                      ({format(new Date(order.statusChangedAt), 'PP', { locale: arSA })})
-                    </span>
+                    <span className="text-slate-400">({format(new Date(order.statusChangedAt), 'PP', { locale: arSA })})</span>
                   )}
                 </div>
               )}
 
-              <div className="flex items-center justify-between gap-2 pt-1">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="gap-1 text-xs"
-                  onClick={() => toggleOrder(order.id)}
-                  data-testid={`button-toggle-order-${order.id}`}
-                >
-                  <Package className="h-3 w-3" />
-                  {order.items?.length || 0} صنف
-                  {isExpanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
-                </Button>
-                {hasAlert && (
+              {hasAlert && (
+                <div className="flex items-center gap-2">
                   <Button
-                    size="sm"
-                    variant="outline"
+                    size="sm" variant="outline"
                     className="border-red-300 text-red-600 gap-1 text-xs"
                     onClick={() => handleDismissAlert(order.id)}
                     disabled={dismissAlert.isPending}
                     data-testid={`button-dismiss-alert-${order.id}`}
                   >
                     <BellOff className="h-3 w-3" />
-                    إبطال
+                    إبطال الإنذار
                   </Button>
-                )}
-              </div>
+                </div>
+              )}
 
-              {hasAlert && renderAlertBanner(order, alerts)}
+              {hasAlert && renderAlertBanner(alerts)}
 
-              {isExpanded && order.items && order.items.length > 0 && renderOrderDetails(order)}
+              {order.items && order.items.length > 0 && renderOrderItems(order)}
             </CardContent>
           </Card>
         );
@@ -321,19 +280,13 @@ export default function AdminOrders() {
                     </TableCell>
                     <TableCell>
                       <Button 
-                        variant="ghost" 
-                        size="sm"
-                        className="gap-2"
+                        variant="ghost" size="sm" className="gap-2"
                         onClick={() => toggleOrder(order.id)}
                         data-testid={`button-toggle-order-${order.id}`}
                       >
                         <Package className="h-4 w-4" />
                         {order.items?.length || 0} صنف
-                        {expandedOrders.includes(order.id) ? (
-                          <ChevronUp className="h-4 w-4" />
-                        ) : (
-                          <ChevronDown className="h-4 w-4" />
-                        )}
+                        {expandedOrders.includes(order.id) ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                       </Button>
                     </TableCell>
                     <TableCell>
@@ -350,9 +303,7 @@ export default function AdminOrders() {
                           <div className="min-w-0">
                             <p className="text-sm font-medium text-slate-700 truncate">{order.statusChanger.firstName}</p>
                             {order.statusChangedAt && (
-                              <p className="text-xs text-slate-400">
-                                {format(new Date(order.statusChangedAt), 'PP p', { locale: arSA })}
-                              </p>
+                              <p className="text-xs text-slate-400">{format(new Date(order.statusChangedAt), 'PP p', { locale: arSA })}</p>
                             )}
                           </div>
                         </div>
@@ -363,8 +314,7 @@ export default function AdminOrders() {
                     <TableCell>
                       {hasAlert && (
                         <Button
-                          size="sm"
-                          variant="outline"
+                          size="sm" variant="outline"
                           className="border-red-300 text-red-600 hover:bg-red-50 gap-1"
                           onClick={() => handleDismissAlert(order.id)}
                           disabled={dismissAlert.isPending}
@@ -390,17 +340,11 @@ export default function AdminOrders() {
                                     {alert.type === 'incomplete' ? 'غير مكتمل' : 'تجاوز الكمية'}
                                   </Badge>
                                   <span className="text-red-700">
-                                    <span className="font-medium">{alert.itemName}</span>
-                                    {' — '}
-                                    منجز: <span className="font-bold">{alert.completed}</span>
-                                    {' / '}
-                                    مطلوب: <span className="font-bold">{alert.requested}</span>
+                                    <span className="font-medium">{alert.itemName}</span> — منجز: <span className="font-bold">{alert.completed}</span> / مطلوب: <span className="font-bold">{alert.requested}</span>
                                   </span>
                                 </div>
                               ))}
-                              <p className="text-xs text-red-500 mt-1">
-                                مر أكثر من {ALERT_DAYS} يوم منذ آخر تحديث
-                              </p>
+                              <p className="text-xs text-red-500 mt-1">مر أكثر من {ALERT_DAYS} يوم منذ آخر تحديث</p>
                             </div>
                           </div>
                         </div>
@@ -418,7 +362,6 @@ export default function AdminOrders() {
                               const itemHasIssue = itemRefDate && 
                                 ((new Date().getTime() - itemRefDate.getTime()) / (1000 * 60 * 60 * 24) >= ALERT_DAYS) &&
                                 item.completedQuantity !== item.quantity && !order.alertDismissed;
-
                               return (
                                 <div key={idx} className={`flex items-center justify-between p-3 rounded-lg border gap-4 ${itemHasIssue ? 'bg-red-50 border-red-200' : 'bg-white'}`}>
                                   <div className="flex-1">
@@ -447,9 +390,7 @@ export default function AdminOrders() {
             })}
             {filteredOrders?.length === 0 && (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-12 text-slate-400">
-                  لا توجد طلبات بعد
-                </TableCell>
+                <TableCell colSpan={7} className="text-center py-12 text-slate-400">لا توجد طلبات بعد</TableCell>
               </TableRow>
             )}
           </TableBody>

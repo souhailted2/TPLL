@@ -1,16 +1,15 @@
 import { Sidebar } from "@/components/layout-sidebar";
 import { useOrders, useUpdateOrderStatus } from "@/hooks/use-orders";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Package, ChevronDown, ChevronUp, PackageCheck } from "lucide-react";
+import { Loader2, Package, PackageCheck } from "lucide-react";
 import { format } from "date-fns";
 import { arSA } from "date-fns/locale";
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 
 export default function SalesOrders() {
   const { data: orders, isLoading } = useOrders();
-  const [expandedOrders, setExpandedOrders] = useState<number[]>([]);
   const updateStatus = useUpdateOrderStatus();
   const { toast } = useToast();
 
@@ -20,14 +19,6 @@ export default function SalesOrders() {
       order.status !== 'completed' && order.status !== 'cancelled'
     );
   }, [orders]);
-
-  const toggleOrder = (orderId: number) => {
-    setExpandedOrders(prev => 
-      prev.includes(orderId) 
-        ? prev.filter(id => id !== orderId)
-        : [...prev, orderId]
-    );
-  };
 
   const getStatusColor = (status: string) => {
     switch(status) {
@@ -87,41 +78,29 @@ export default function SalesOrders() {
             <div className="space-y-3">
               {activeOrders?.map((order: any) => (
                 <div key={order.id} className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
-                  <div 
-                    className="p-4 cursor-pointer"
-                    onClick={() => toggleOrder(order.id)}
-                    data-testid={`button-toggle-order-${order.id}`}
-                  >
+                  <div className="p-4">
                     <div className="flex items-center justify-between gap-2 mb-2">
                       <span className="font-mono font-bold text-lg" data-testid={`text-order-id-${order.id}`}>#{order.id}</span>
                       <Badge variant="secondary" className={getStatusColor(order.status)} data-testid={`badge-status-${order.id}`}>
                         {getStatusLabel(order.status)}
                       </Badge>
                     </div>
-                    <div className="flex items-center justify-between gap-2 text-sm text-slate-500">
+                    <div className="flex items-center justify-between gap-2 text-sm text-slate-500 mb-3">
                       <span>
                         {order.createdAt && format(new Date(order.createdAt), 'PPP', { locale: arSA })}
                       </span>
                       <div className="flex items-center gap-1">
                         <Package className="h-4 w-4" />
                         <span>{order.items?.length || 0} أصناف</span>
-                        {expandedOrders.includes(order.id) ? (
-                          <ChevronUp className="h-4 w-4 mr-1" />
-                        ) : (
-                          <ChevronDown className="h-4 w-4 mr-1" />
-                        )}
                       </div>
                     </div>
 
                     {order.status === 'shipped' && (
-                      <div className="mt-3">
+                      <div className="mb-3">
                         <Button
                           size="sm"
                           className="w-full bg-green-600 hover:bg-green-700 text-white gap-2"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleConfirmReceived(order.id);
-                          }}
+                          onClick={() => handleConfirmReceived(order.id)}
                           disabled={updateStatus.isPending}
                           data-testid={`button-confirm-received-${order.id}`}
                         >
@@ -130,29 +109,29 @@ export default function SalesOrders() {
                         </Button>
                       </div>
                     )}
-                  </div>
 
-                  {expandedOrders.includes(order.id) && order.items && order.items.length > 0 && (
-                    <div className="border-t border-slate-100 bg-slate-50 p-4">
-                      <p className="font-bold text-sm mb-3">تفاصيل الطلب:</p>
-                      <div className="grid gap-2">
-                        {order.items.map((item: any, idx: number) => (
-                          <div key={idx} className="flex items-center justify-between bg-white p-3 rounded-lg border gap-2">
-                            <div className="flex-1 min-w-0">
-                              <p className="font-medium text-sm truncate">{item.product?.name}</p>
-                              <p className="text-xs text-slate-400">{item.product?.sku}</p>
+                    {order.items && order.items.length > 0 && (
+                      <div className="border-t border-slate-100 pt-3 space-y-2">
+                        <p className="font-bold text-sm">تفاصيل الطلب:</p>
+                        <div className="grid gap-2">
+                          {order.items.map((item: any, idx: number) => (
+                            <div key={idx} className="flex items-start justify-between bg-slate-50 p-2 rounded-lg border gap-2">
+                              <div className="flex-1 min-w-0">
+                                <p className="font-medium text-sm break-words">{item.product?.name}</p>
+                                <p className="text-[10px] text-slate-400">{item.product?.sku}</p>
+                              </div>
+                              <div className="flex items-center gap-2 shrink-0">
+                                <Badge variant={item.unit === 'bag' ? 'default' : 'outline'} className="text-[10px]">
+                                  {getUnitLabel(item.unit || 'piece')}
+                                </Badge>
+                                <span className="font-bold text-primary">{item.quantity}</span>
+                              </div>
                             </div>
-                            <div className="flex items-center gap-2 shrink-0">
-                              <Badge variant={item.unit === 'bag' ? 'default' : 'outline'} className="text-xs">
-                                {getUnitLabel(item.unit || 'piece')}
-                              </Badge>
-                              <span className="font-bold text-primary">{item.quantity}</span>
-                            </div>
-                          </div>
-                        ))}
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
