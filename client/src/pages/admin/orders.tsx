@@ -204,7 +204,7 @@ export default function AdminOrders() {
   );
 
   const renderMobileCards = () => (
-    <div className="md:hidden space-y-3">
+    <div className="lg:hidden space-y-3">
       {filteredOrders?.map((order: any) => {
         const alerts = getOrderAlertInfo(order);
         const hasAlert = alerts !== null;
@@ -285,7 +285,7 @@ export default function AdminOrders() {
   );
 
   const renderDesktopTable = () => (
-    <div className="hidden md:block bg-white rounded-2xl border border-slate-100 shadow-sm overflow-x-auto">
+    <div className="hidden lg:block bg-white rounded-2xl border border-slate-100 shadow-sm overflow-x-auto">
       <div className="min-w-[800px]">
         <Table>
           <TableHeader>
