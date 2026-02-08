@@ -21,18 +21,6 @@ export async function registerRoutes(
   
   startAlertChecker();
 
-  // One-time cleanup: delete all old orders
-  try {
-    const existingOrders = await db.select({ id: ordersTable.id }).from(ordersTable);
-    if (existingOrders.length > 0) {
-      await db.delete(orderItems);
-      await db.delete(ordersTable);
-      console.log(`Cleaned up ${existingOrders.length} old orders`);
-    }
-  } catch (e) {
-    console.error('Error cleaning up old orders:', e);
-  }
-  
   // Auth setup
   await setupAuth(app);
 
