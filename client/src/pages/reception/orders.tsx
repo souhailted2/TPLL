@@ -258,9 +258,14 @@ export default function ReceptionOrders() {
                         <span className="text-xs text-slate-500 shrink-0">الكمية المنجزة:</span>
                         <Input
                           type="number"
-                          min={0}
+                          min={item.completedQuantity || 0}
                           value={completedQuantities[item.id] !== undefined ? (completedQuantities[item.id] === 0 ? '' : completedQuantities[item.id]) : (item.completedQuantity ? item.completedQuantity : '')}
-                          onChange={(e) => setCompletedQuantities(prev => ({ ...prev, [item.id]: e.target.value === '' ? 0 : Number(e.target.value) }))}
+                          onChange={(e) => {
+                            const val = e.target.value === '' ? 0 : Number(e.target.value);
+                            if (val >= (item.completedQuantity || 0)) {
+                              setCompletedQuantities(prev => ({ ...prev, [item.id]: val }));
+                            }
+                          }}
                           placeholder=""
                           className={`w-20 h-8 text-center ${itemHasIssue ? 'border-red-300' : ''}`}
                           data-testid={`input-completed-${item.id}`}
@@ -504,9 +509,14 @@ export default function ReceptionOrders() {
                                     {(order.status === 'in_progress' || order.status === 'completed') && remaining > 0 && (
                                       <div className="flex items-center gap-2 border-r pr-3">
                                         <span className="text-xs text-slate-500">الكمية المنجزة:</span>
-                                        <Input type="number" min={0}
+                                        <Input type="number" min={item.completedQuantity || 0}
                                           value={completedQuantities[item.id] !== undefined ? (completedQuantities[item.id] === 0 ? '' : completedQuantities[item.id]) : (item.completedQuantity ? item.completedQuantity : '')}
-                                          onChange={(e) => setCompletedQuantities(prev => ({ ...prev, [item.id]: Number(e.target.value) }))}
+                                          onChange={(e) => {
+                                            const val = e.target.value === '' ? 0 : Number(e.target.value);
+                                            if (val >= (item.completedQuantity || 0)) {
+                                              setCompletedQuantities(prev => ({ ...prev, [item.id]: val }));
+                                            }
+                                          }}
                                           className={`w-20 h-8 text-center ${itemHasIssue ? 'border-red-300' : ''}`}
                                           data-testid={`input-completed-${item.id}`} />
                                         <Button size="sm" variant="outline"

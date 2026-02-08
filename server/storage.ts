@@ -23,6 +23,7 @@ export interface IStorage {
   getOrder(id: number): Promise<(Order & { items: (OrderItem & { product: Product })[] }) | undefined>;
   createOrder(salesPointId: string, order: CreateOrderRequest): Promise<Order>;
   updateOrderStatus(id: number, status: string, changedByUserId?: string): Promise<Order | undefined>;
+  getOrderItem(itemId: number): Promise<OrderItem | undefined>;
   updateOrderItemCompletedQuantity(itemId: number, completedQuantity: number): Promise<OrderItem | undefined>;
   dismissOrderAlert(orderId: number): Promise<Order | undefined>;
 
@@ -258,6 +259,11 @@ export class DatabaseStorage implements IStorage {
       .update(notifications)
       .set({ isRead: true })
       .where(eq(notifications.userId, userId));
+  }
+
+  async getOrderItem(itemId: number): Promise<OrderItem | undefined> {
+    const [item] = await db.select().from(orderItems).where(eq(orderItems.id, itemId));
+    return item;
   }
 
   async updateOrderItemCompletedQuantity(itemId: number, completedQuantity: number): Promise<OrderItem | undefined> {

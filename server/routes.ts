@@ -288,6 +288,13 @@ export async function registerRoutes(
       if (typeof completedQuantity !== 'number' || completedQuantity < 0) {
         return res.status(400).json({ message: "الكمية المنجزة غير صالحة" });
       }
+
+      const existingItem = await storage.getOrderItem(itemId);
+      if (!existingItem) return res.status(404).json({ message: "Item not found" });
+      
+      if (completedQuantity < (existingItem.completedQuantity || 0)) {
+        return res.status(400).json({ message: "لا يمكن إدخال كمية أقل من الكمية المنجزة سابقاً" });
+      }
       
       const updated = await storage.updateOrderItemCompletedQuantity(itemId, completedQuantity);
       if (!updated) return res.status(404).json({ message: "Item not found" });
