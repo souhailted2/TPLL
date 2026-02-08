@@ -255,25 +255,32 @@ export default function ReceptionOrders() {
                     </div>
                     {isInProgress && remaining > 0 && (
                       <div className="flex items-center gap-2 pt-1 border-t border-slate-100">
-                        <span className="text-xs text-slate-500 shrink-0">الكمية المنجزة:</span>
+                        <span className="text-xs text-slate-500 shrink-0">إضافة كمية:</span>
                         <Input
                           type="number"
-                          min={item.completedQuantity || 0}
-                          value={completedQuantities[item.id] !== undefined ? (completedQuantities[item.id] === 0 ? '' : completedQuantities[item.id]) : (item.completedQuantity ? item.completedQuantity : '')}
+                          min={0}
+                          max={remaining}
+                          value={completedQuantities[item.id] !== undefined ? (completedQuantities[item.id] === 0 ? '' : completedQuantities[item.id]) : ''}
                           onChange={(e) => {
                             const val = e.target.value === '' ? 0 : Number(e.target.value);
-                            if (val >= (item.completedQuantity || 0)) {
+                            if (val >= 0 && val <= remaining) {
                               setCompletedQuantities(prev => ({ ...prev, [item.id]: val }));
                             }
                           }}
-                          placeholder=""
+                          placeholder="0"
                           className={`w-20 h-8 text-center ${itemHasIssue ? 'border-red-300' : ''}`}
                           data-testid={`input-completed-${item.id}`}
                         />
                         <Button
                           size="sm" variant="outline"
-                          onClick={() => handleCompletedQuantity(item.id, completedQuantities[item.id] !== undefined ? completedQuantities[item.id] : (item.completedQuantity ?? 0))}
-                          disabled={updateCompleted.isPending}
+                          onClick={() => {
+                            const addedQty = completedQuantities[item.id] || 0;
+                            if (addedQty > 0) {
+                              handleCompletedQuantity(item.id, (item.completedQuantity || 0) + addedQty);
+                              setCompletedQuantities(prev => ({ ...prev, [item.id]: 0 }));
+                            }
+                          }}
+                          disabled={updateCompleted.isPending || !(completedQuantities[item.id] > 0)}
                           data-testid={`button-save-completed-${item.id}`}
                         >
                           حفظ
@@ -508,20 +515,27 @@ export default function ReceptionOrders() {
                                     </div>
                                     {(order.status === 'in_progress' || order.status === 'completed') && remaining > 0 && (
                                       <div className="flex items-center gap-2 border-r pr-3">
-                                        <span className="text-xs text-slate-500">الكمية المنجزة:</span>
-                                        <Input type="number" min={item.completedQuantity || 0}
-                                          value={completedQuantities[item.id] !== undefined ? (completedQuantities[item.id] === 0 ? '' : completedQuantities[item.id]) : (item.completedQuantity ? item.completedQuantity : '')}
+                                        <span className="text-xs text-slate-500">إضافة كمية:</span>
+                                        <Input type="number" min={0} max={remaining}
+                                          value={completedQuantities[item.id] !== undefined ? (completedQuantities[item.id] === 0 ? '' : completedQuantities[item.id]) : ''}
                                           onChange={(e) => {
                                             const val = e.target.value === '' ? 0 : Number(e.target.value);
-                                            if (val >= (item.completedQuantity || 0)) {
+                                            if (val >= 0 && val <= remaining) {
                                               setCompletedQuantities(prev => ({ ...prev, [item.id]: val }));
                                             }
                                           }}
+                                          placeholder="0"
                                           className={`w-20 h-8 text-center ${itemHasIssue ? 'border-red-300' : ''}`}
                                           data-testid={`input-completed-${item.id}`} />
                                         <Button size="sm" variant="outline"
-                                          onClick={() => handleCompletedQuantity(item.id, completedQuantities[item.id] ?? item.completedQuantity ?? 0)}
-                                          disabled={updateCompleted.isPending} data-testid={`button-save-completed-${item.id}`}>
+                                          onClick={() => {
+                                            const addedQty = completedQuantities[item.id] || 0;
+                                            if (addedQty > 0) {
+                                              handleCompletedQuantity(item.id, (item.completedQuantity || 0) + addedQty);
+                                              setCompletedQuantities(prev => ({ ...prev, [item.id]: 0 }));
+                                            }
+                                          }}
+                                          disabled={updateCompleted.isPending || !(completedQuantities[item.id] > 0)} data-testid={`button-save-completed-${item.id}`}>
                                           حفظ
                                         </Button>
                                       </div>
