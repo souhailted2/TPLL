@@ -201,12 +201,31 @@ export default function ReceptionOrders() {
       return remaining > 0 || order.status === 'submitted' || order.status === 'accepted';
     });
     const completedItems = order.items.filter((item: any) => (item.completedQuantity || 0) > 0);
+    const isInProgress = order.status === 'in_progress' || order.status === 'completed';
 
     return (
       <div className="space-y-2 mt-3 pt-3 border-t border-slate-100">
+        {completedItems.length > 0 && isInProgress && (
+          <div className="mb-3">
+            <p className="font-bold text-sm text-green-700 mb-1">تم إنجاز من هذا الطلب:</p>
+            <div className="grid gap-1">
+              {completedItems.map((item: any, idx: number) => (
+                <div key={idx} className="flex items-center justify-between p-2 rounded-lg bg-green-50 border border-green-200 text-sm">
+                  <span className="break-words flex-1">{item.product?.name}</span>
+                  <div className="flex items-center gap-2 shrink-0 mr-2">
+                    <Badge variant={item.unit === 'bag' ? 'default' : 'outline'} className="text-[10px]">
+                      {getUnitLabel(item.unit || 'piece')}
+                    </Badge>
+                    <span className="font-bold text-green-700">{item.completedQuantity} / {item.quantity}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
         {remainingItems.length > 0 && (
           <>
-            <p className="font-bold text-sm">الكمية المتبقية للإنجاز:</p>
+            <p className="font-bold text-sm">{isInProgress ? 'الكمية المتبقية للإنجاز:' : 'أصناف الطلب:'}</p>
             <div className="grid gap-2">
               {remainingItems.map((item: any, idx: number) => {
                 const remaining = item.quantity - (item.completedQuantity || 0);
@@ -228,15 +247,15 @@ export default function ReceptionOrders() {
                         </Badge>
                         <div className="text-left">
                           <span className="font-bold text-primary">{order.status === 'submitted' || order.status === 'accepted' ? item.quantity : remaining}</span>
-                          {(order.status === 'in_progress' || order.status === 'completed') && (
-                            <span className="text-[10px] text-slate-400 mr-1">/ {item.quantity}</span>
+                          {isInProgress && (
+                            <span className="text-[10px] text-slate-400 mr-1">متبقي</span>
                           )}
                         </div>
                       </div>
                     </div>
-                    {(order.status === 'in_progress' || order.status === 'completed') && remaining > 0 && (
+                    {isInProgress && remaining > 0 && (
                       <div className="flex items-center gap-2 pt-1 border-t border-slate-100">
-                        <span className="text-xs text-slate-500 shrink-0">منجز:</span>
+                        <span className="text-xs text-slate-500 shrink-0">الكمية المنجزة:</span>
                         <Input
                           type="number"
                           min={0}
@@ -261,19 +280,6 @@ export default function ReceptionOrders() {
               })}
             </div>
           </>
-        )}
-        {completedItems.length > 0 && (order.status === 'in_progress' || order.status === 'completed') && (
-          <div className="mt-2">
-            <p className="font-bold text-sm text-green-700">تم تحويلها للشحن:</p>
-            <div className="grid gap-1 mt-1">
-              {completedItems.map((item: any, idx: number) => (
-                <div key={idx} className="flex items-center justify-between p-1.5 rounded bg-green-50 text-xs">
-                  <span className="break-words">{item.product?.name}</span>
-                  <span className="font-bold text-green-700 shrink-0 mr-2">{item.completedQuantity} {getUnitLabel(item.unit || 'piece')}</span>
-                </div>
-              ))}
-            </div>
-          </div>
         )}
       </div>
     );
@@ -450,7 +456,25 @@ export default function ReceptionOrders() {
                     <TableRow key={`${order.id}-details`}>
                       <TableCell colSpan={6} className="bg-slate-50 p-4">
                         <div className="space-y-3">
-                          <p className="font-bold text-sm mb-3">الكمية المتبقية للإنجاز:</p>
+                          {order.items.filter((item: any) => (item.completedQuantity || 0) > 0).length > 0 && (order.status === 'in_progress' || order.status === 'completed') && (
+                            <div className="mb-3">
+                              <p className="font-bold text-sm text-green-700 mb-2">تم إنجاز من هذا الطلب:</p>
+                              <div className="grid gap-1">
+                                {order.items.filter((item: any) => (item.completedQuantity || 0) > 0).map((item: any, idx: number) => (
+                                  <div key={idx} className="flex items-center justify-between p-2 rounded-lg bg-green-50 border border-green-200">
+                                    <span>{item.product?.name}</span>
+                                    <div className="flex items-center gap-3">
+                                      <Badge variant={item.unit === 'bag' ? 'default' : 'outline'}>
+                                        {getUnitLabel(item.unit || 'piece')}
+                                      </Badge>
+                                      <span className="font-bold text-green-700">{item.completedQuantity} / {item.quantity}</span>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          <p className="font-bold text-sm mb-3">{(order.status === 'in_progress' || order.status === 'completed') ? 'الكمية المتبقية للإنجاز:' : 'أصناف الطلب:'}</p>
                           <div className="grid gap-2">
                             {order.items.filter((item: any) => {
                               const remaining = item.quantity - (item.completedQuantity || 0);
@@ -474,12 +498,12 @@ export default function ReceptionOrders() {
                                     <div className="text-left">
                                       <span className="font-bold text-primary text-lg">{order.status === 'submitted' || order.status === 'accepted' ? item.quantity : remaining}</span>
                                       {(order.status === 'in_progress' || order.status === 'completed') && (
-                                        <span className="text-xs text-slate-400 mr-1">/ {item.quantity}</span>
+                                        <span className="text-xs text-slate-400 mr-1">متبقي</span>
                                       )}
                                     </div>
                                     {(order.status === 'in_progress' || order.status === 'completed') && remaining > 0 && (
                                       <div className="flex items-center gap-2 border-r pr-3">
-                                        <span className="text-xs text-slate-500">منجز:</span>
+                                        <span className="text-xs text-slate-500">الكمية المنجزة:</span>
                                         <Input type="number" min={0}
                                           value={completedQuantities[item.id] !== undefined ? (completedQuantities[item.id] === 0 ? '' : completedQuantities[item.id]) : (item.completedQuantity ? item.completedQuantity : '')}
                                           onChange={(e) => setCompletedQuantities(prev => ({ ...prev, [item.id]: Number(e.target.value) }))}
@@ -497,19 +521,6 @@ export default function ReceptionOrders() {
                               );
                             })}
                           </div>
-                          {order.items.filter((item: any) => (item.completedQuantity || 0) > 0).length > 0 && (order.status === 'in_progress' || order.status === 'completed') && (
-                            <div className="mt-2">
-                              <p className="font-bold text-sm text-green-700 mb-2">تم تحويلها للشحن:</p>
-                              <div className="grid gap-1">
-                                {order.items.filter((item: any) => (item.completedQuantity || 0) > 0).map((item: any, idx: number) => (
-                                  <div key={idx} className="flex items-center justify-between p-2 rounded bg-green-50 border border-green-100">
-                                    <span>{item.product?.name}</span>
-                                    <span className="font-bold text-green-700">{item.completedQuantity} {getUnitLabel(item.unit || 'piece')}</span>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          )}
                         </div>
                       </TableCell>
                     </TableRow>

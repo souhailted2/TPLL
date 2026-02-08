@@ -78,6 +78,68 @@ export default function ShippingOrders() {
     return unit === 'bag' ? 'شكارة 25 كغ' : 'قطعة';
   };
 
+  const renderOrderDetails = (order: any) => {
+    const completedItems = order.items?.filter((item: any) => (item.completedQuantity || 0) > 0) || [];
+    const isFullyCompleted = order.status === 'completed';
+    
+    if (isFullyCompleted) {
+      return (
+        <div className="space-y-2">
+          <p className="font-bold text-sm text-green-700">جاهز للشحن (مكتمل):</p>
+          <div className="grid gap-2">
+            {(order.items || []).map((item: any, idx: number) => (
+              <div key={idx} className="p-2 rounded-lg border bg-green-50 border-green-200">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm break-words">{item.product?.name}</p>
+                    <p className="text-[10px] text-slate-400">{item.product?.sku}</p>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Badge variant={item.unit === 'bag' ? 'default' : 'outline'} className="text-[10px]">
+                      {getUnitLabel(item.unit || 'piece')}
+                    </Badge>
+                    <span className="font-bold text-green-700">{item.completedQuantity || item.quantity}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+    
+    if (completedItems.length > 0) {
+      return (
+        <div className="space-y-2">
+          <p className="font-bold text-sm">الكمية الجاهزة للشحن:</p>
+          <div className="grid gap-2">
+            {completedItems.map((item: any, idx: number) => (
+              <div key={idx} className="p-2 rounded-lg border bg-slate-50">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm break-words">{item.product?.name}</p>
+                    <p className="text-[10px] text-slate-400">{item.product?.sku}</p>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Badge variant={item.unit === 'bag' ? 'default' : 'outline'} className="text-[10px]">
+                      {getUnitLabel(item.unit || 'piece')}
+                    </Badge>
+                    <div className="text-left">
+                      <span className="font-bold text-primary">{item.completedQuantity}</span>
+                      <span className="text-[10px] text-slate-400 mr-1">/ {item.quantity}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+    
+    return null;
+  };
+
   const renderMobileCards = () => (
     <div className="lg:hidden space-y-3">
       {filteredOrders?.map((order: any) => (
@@ -117,27 +179,9 @@ export default function ShippingOrders() {
               <p className="text-sm text-green-600 text-center">تم التسليم</p>
             )}
 
-            {order.items && order.items.filter((item: any) => (item.completedQuantity || 0) > 0).length > 0 && (
-              <div className="border-t border-slate-100 pt-3 space-y-2">
-                <p className="font-bold text-sm">الكمية الجاهزة للشحن:</p>
-                <div className="grid gap-2">
-                  {order.items.filter((item: any) => (item.completedQuantity || 0) > 0).map((item: any, idx: number) => (
-                    <div key={idx} className="p-2 rounded-lg border bg-slate-50">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-sm break-words">{item.product?.name}</p>
-                          <p className="text-[10px] text-slate-400">{item.product?.sku}</p>
-                        </div>
-                        <div className="flex items-center gap-2 shrink-0">
-                          <Badge variant={item.unit === 'bag' ? 'default' : 'outline'} className="text-[10px]">
-                            {getUnitLabel(item.unit || 'piece')}
-                          </Badge>
-                          <span className="font-bold text-primary">{item.completedQuantity}</span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+            {order.items && order.items.length > 0 && (
+              <div className="border-t border-slate-100 pt-3">
+                {renderOrderDetails(order)}
               </div>
             )}
           </CardContent>
@@ -200,28 +244,53 @@ export default function ShippingOrders() {
                     </div>
                   </TableCell>
                 </TableRow>
-                {expandedOrders.includes(order.id) && order.items && order.items.filter((item: any) => (item.completedQuantity || 0) > 0).length > 0 && (
+                {expandedOrders.includes(order.id) && order.items && order.items.length > 0 && (
                   <TableRow key={`${order.id}-details`}>
                     <TableCell colSpan={6} className="bg-slate-50 p-4">
-                      <div className="space-y-2">
-                        <p className="font-bold text-sm mb-3">الكمية الجاهزة للشحن:</p>
-                        <div className="grid gap-2">
-                          {order.items.filter((item: any) => (item.completedQuantity || 0) > 0).map((item: any, idx: number) => (
-                            <div key={idx} className="flex items-center justify-between bg-white p-3 rounded-lg border">
-                              <div className="flex-1">
-                                <p className="font-medium">{item.product?.name}</p>
-                                <p className="text-xs text-slate-400">{item.product?.sku}</p>
+                      {order.status === 'completed' ? (
+                        <div className="space-y-2">
+                          <p className="font-bold text-sm mb-3 text-green-700">جاهز للشحن (مكتمل):</p>
+                          <div className="grid gap-2">
+                            {order.items.map((item: any, idx: number) => (
+                              <div key={idx} className="flex items-center justify-between bg-green-50 p-3 rounded-lg border border-green-200">
+                                <div className="flex-1">
+                                  <p className="font-medium">{item.product?.name}</p>
+                                  <p className="text-xs text-slate-400">{item.product?.sku}</p>
+                                </div>
+                                <div className="flex items-center gap-4">
+                                  <Badge variant={item.unit === 'bag' ? 'default' : 'outline'}>
+                                    {getUnitLabel(item.unit || 'piece')}
+                                  </Badge>
+                                  <span className="font-bold text-green-700 text-lg">{item.completedQuantity || item.quantity}</span>
+                                </div>
                               </div>
-                              <div className="flex items-center gap-4">
-                                <Badge variant={item.unit === 'bag' ? 'default' : 'outline'}>
-                                  {getUnitLabel(item.unit || 'piece')}
-                                </Badge>
-                                <span className="font-bold text-primary text-lg">{item.completedQuantity}</span>
-                              </div>
-                            </div>
-                          ))}
+                            ))}
+                          </div>
                         </div>
-                      </div>
+                      ) : (
+                        <div className="space-y-2">
+                          <p className="font-bold text-sm mb-3">الكمية الجاهزة للشحن:</p>
+                          <div className="grid gap-2">
+                            {order.items.filter((item: any) => (item.completedQuantity || 0) > 0).map((item: any, idx: number) => (
+                              <div key={idx} className="flex items-center justify-between bg-white p-3 rounded-lg border">
+                                <div className="flex-1">
+                                  <p className="font-medium">{item.product?.name}</p>
+                                  <p className="text-xs text-slate-400">{item.product?.sku}</p>
+                                </div>
+                                <div className="flex items-center gap-4">
+                                  <Badge variant={item.unit === 'bag' ? 'default' : 'outline'}>
+                                    {getUnitLabel(item.unit || 'piece')}
+                                  </Badge>
+                                  <div className="text-left">
+                                    <span className="font-bold text-primary text-lg">{item.completedQuantity}</span>
+                                    <span className="text-xs text-slate-400 mr-1">/ {item.quantity}</span>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </TableCell>
                   </TableRow>
                 )}
