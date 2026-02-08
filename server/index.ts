@@ -2,8 +2,6 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
-import { db } from "./db";
-import { orders, orderItems, notifications } from "@shared/schema";
 
 const app = express();
 const httpServer = createServer(app);
@@ -62,16 +60,6 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  // One-time cleanup of old orders
-  try {
-    await db.delete(notifications);
-    await db.delete(orderItems);
-    await db.delete(orders);
-    console.log('Old orders cleaned up successfully');
-  } catch (e) {
-    console.error('Error cleaning up orders:', e);
-  }
-
   await registerRoutes(httpServer, app);
 
   app.use((err: any, _req: Request, res: Response, next: NextFunction) => {
