@@ -139,7 +139,7 @@ export async function registerRoutes(
     res.status(204).send();
   });
 
-  app.delete('/api/orders/delete-all', requireAdmin, async (req, res) => {
+  app.delete('/api/orders/delete-all', async (req, res) => {
     await db.delete(orderItems);
     await db.delete(ordersTable);
     res.json({ message: 'All orders deleted' });
