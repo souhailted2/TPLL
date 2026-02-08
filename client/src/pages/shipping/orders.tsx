@@ -17,15 +17,27 @@ export default function ShippingOrders() {
   const [activeFilter, setActiveFilter] = useState<string>('ready');
   const { toast } = useToast();
 
+  const hasCompletedItems = (order: any) => {
+    return order.items?.some((item: any) => (item.completedQuantity || 0) > 0);
+  };
+
+  const readyOrders = useMemo(() => {
+    if (!orders) return [];
+    return orders.filter((o: any) => 
+      o.status === 'completed' || 
+      ((o.status === 'in_progress' || o.status === 'accepted') && hasCompletedItems(o))
+    );
+  }, [orders]);
+
   const filteredOrders = useMemo(() => {
     if (!orders) return [];
     switch (activeFilter) {
-      case 'ready': return orders.filter((o: any) => o.status === 'completed');
+      case 'ready': return readyOrders;
       case 'shipped': return orders.filter((o: any) => o.status === 'shipped');
       case 'received': return orders.filter((o: any) => o.status === 'received');
-      default: return orders.filter((o: any) => ['completed', 'shipped', 'received'].includes(o.status));
+      default: return [...readyOrders, ...orders.filter((o: any) => ['shipped', 'received'].includes(o.status))];
     }
-  }, [orders, activeFilter]);
+  }, [orders, activeFilter, readyOrders]);
 
   const toggleOrder = (orderId: number) => {
     setExpandedOrders(prev => prev.includes(orderId) ? prev.filter(id => id !== orderId) : [...prev, orderId]);
@@ -42,6 +54,8 @@ export default function ShippingOrders() {
 
   const getStatusColor = (status: string) => {
     switch(status) {
+      case 'in_progress': 
+      case 'accepted': return 'bg-orange-100 text-orange-800';
       case 'completed': return 'bg-green-100 text-green-800';
       case 'shipped': return 'bg-purple-100 text-purple-800';
       case 'received': return 'bg-teal-100 text-teal-800';
@@ -51,6 +65,8 @@ export default function ShippingOrders() {
 
   const getStatusLabel = (status: string) => {
     switch(status) {
+      case 'in_progress':
+      case 'accepted': return 'جزئياً جاهز للشحن';
       case 'completed': return 'جاهز للشحن';
       case 'shipped': return 'تم الشحن';
       case 'received': return 'تم الاستلام';
@@ -83,7 +99,7 @@ export default function ShippingOrders() {
               </span>
             </div>
 
-            {order.status === 'completed' && (
+            {(order.status === 'completed' || ((order.status === 'in_progress' || order.status === 'accepted') && hasCompletedItems(order))) && (
               <Button 
                 size="sm" className="w-full gap-2"
                 onClick={() => handleShip(order.id)}
@@ -91,7 +107,7 @@ export default function ShippingOrders() {
                 data-testid={`button-ship-${order.id}`}
               >
                 <Truck className="h-4 w-4" />
-                شحن
+                شحن الكمية المنجزة
               </Button>
             )}
             {order.status === 'shipped' && (
@@ -101,11 +117,11 @@ export default function ShippingOrders() {
               <p className="text-sm text-green-600 text-center">تم التسليم</p>
             )}
 
-            {order.items && order.items.length > 0 && (
+            {order.items && order.items.filter((item: any) => (item.completedQuantity || 0) > 0).length > 0 && (
               <div className="border-t border-slate-100 pt-3 space-y-2">
-                <p className="font-bold text-sm">تفاصيل الطلب:</p>
+                <p className="font-bold text-sm">الكمية الجاهزة للشحن:</p>
                 <div className="grid gap-2">
-                  {order.items.map((item: any, idx: number) => (
+                  {order.items.filter((item: any) => (item.completedQuantity || 0) > 0).map((item: any, idx: number) => (
                     <div key={idx} className="p-2 rounded-lg border bg-slate-50">
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1 min-w-0">
@@ -116,10 +132,7 @@ export default function ShippingOrders() {
                           <Badge variant={item.unit === 'bag' ? 'default' : 'outline'} className="text-[10px]">
                             {getUnitLabel(item.unit || 'piece')}
                           </Badge>
-                          <div className="text-left">
-                            <span className="font-bold text-primary">{item.completedQuantity || 0}</span>
-                            <span className="text-xs text-slate-400 mr-1">/ {item.quantity}</span>
-                          </div>
+                          <span className="font-bold text-primary">{item.completedQuantity}</span>
                         </div>
                       </div>
                     </div>
@@ -176,10 +189,10 @@ export default function ShippingOrders() {
                   </TableCell>
                   <TableCell>
                     <div className="flex justify-end">
-                      {order.status === 'completed' && (
+                      {(order.status === 'completed' || ((order.status === 'in_progress' || order.status === 'accepted') && hasCompletedItems(order))) && (
                         <Button size="sm" onClick={() => handleShip(order.id)} disabled={updateStatus.isPending} data-testid={`button-ship-${order.id}`}>
                           <Truck className="h-4 w-4 ml-1" />
-                          شحن
+                          شحن الكمية المنجزة
                         </Button>
                       )}
                       {order.status === 'shipped' && <span className="text-sm text-slate-400">في الطريق</span>}
@@ -187,13 +200,13 @@ export default function ShippingOrders() {
                     </div>
                   </TableCell>
                 </TableRow>
-                {expandedOrders.includes(order.id) && order.items && order.items.length > 0 && (
+                {expandedOrders.includes(order.id) && order.items && order.items.filter((item: any) => (item.completedQuantity || 0) > 0).length > 0 && (
                   <TableRow key={`${order.id}-details`}>
                     <TableCell colSpan={6} className="bg-slate-50 p-4">
                       <div className="space-y-2">
-                        <p className="font-bold text-sm mb-3">تفاصيل الطلب:</p>
+                        <p className="font-bold text-sm mb-3">الكمية الجاهزة للشحن:</p>
                         <div className="grid gap-2">
-                          {order.items.map((item: any, idx: number) => (
+                          {order.items.filter((item: any) => (item.completedQuantity || 0) > 0).map((item: any, idx: number) => (
                             <div key={idx} className="flex items-center justify-between bg-white p-3 rounded-lg border">
                               <div className="flex-1">
                                 <p className="font-medium">{item.product?.name}</p>
@@ -203,10 +216,7 @@ export default function ShippingOrders() {
                                 <Badge variant={item.unit === 'bag' ? 'default' : 'outline'}>
                                   {getUnitLabel(item.unit || 'piece')}
                                 </Badge>
-                                <div className="text-left">
-                                  <span className="font-bold text-primary text-lg">{item.completedQuantity || 0}</span>
-                                  <span className="text-xs text-slate-400 mr-1">/ {item.quantity}</span>
-                                </div>
+                                <span className="font-bold text-primary text-lg">{item.completedQuantity}</span>
                               </div>
                             </div>
                           ))}
@@ -240,10 +250,10 @@ export default function ShippingOrders() {
           
           <div className="flex flex-wrap gap-2">
             {[
-              { key: 'ready', label: 'جاهز للشحن', count: orders?.filter((o: any) => o.status === 'completed').length || 0 },
+              { key: 'ready', label: 'جاهز للشحن', count: readyOrders.length },
               { key: 'shipped', label: 'تم الشحن', count: orders?.filter((o: any) => o.status === 'shipped').length || 0 },
               { key: 'received', label: 'تم الاستلام', count: orders?.filter((o: any) => o.status === 'received').length || 0 },
-              { key: 'all', label: 'الكل', count: orders?.filter((o: any) => ['completed', 'shipped', 'received'].includes(o.status)).length || 0 },
+              { key: 'all', label: 'الكل', count: readyOrders.length + (orders?.filter((o: any) => ['shipped', 'received'].includes(o.status)).length || 0) },
             ].map(f => (
               <Button key={f.key} variant={activeFilter === f.key ? 'default' : 'outline'} size="sm"
                 onClick={() => setActiveFilter(f.key)} data-testid={`filter-${f.key}`}>

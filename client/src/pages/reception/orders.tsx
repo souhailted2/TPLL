@@ -195,58 +195,89 @@ export default function ReceptionOrders() {
     </div>
   );
 
-  const renderOrderItems = (order: any) => (
-    <div className="space-y-2 mt-3 pt-3 border-t border-slate-100">
-      <p className="font-bold text-sm">تفاصيل الطلب:</p>
-      <div className="grid gap-2">
-        {order.items.map((item: any, idx: number) => {
-          const itemRefDate = item.lastCompletedUpdate ? new Date(item.lastCompletedUpdate) : (order.createdAt ? new Date(order.createdAt) : null);
-          const itemHasIssue = itemRefDate && 
-            ((new Date().getTime() - itemRefDate.getTime()) / (1000 * 60 * 60 * 24) >= ALERT_DAYS) &&
-            item.completedQuantity !== item.quantity && !order.alertDismissed;
+  const renderOrderItems = (order: any) => {
+    const remainingItems = order.items.filter((item: any) => {
+      const remaining = item.quantity - (item.completedQuantity || 0);
+      return remaining > 0 || order.status === 'submitted' || order.status === 'accepted';
+    });
+    const completedItems = order.items.filter((item: any) => (item.completedQuantity || 0) > 0);
 
-          return (
-            <div key={idx} className={`p-2 rounded-lg border space-y-2 ${itemHasIssue ? 'bg-red-50 border-red-200' : 'bg-white'}`}>
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium text-sm break-words">{item.product?.name}</p>
-                  <p className="text-[10px] text-slate-400">{item.product?.sku}</p>
-                </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  <Badge variant={item.unit === 'bag' ? 'default' : 'outline'} className="text-[10px]">
-                    {getUnitLabel(item.unit || 'piece')}
-                  </Badge>
-                  <span className="font-bold text-primary">{item.quantity}</span>
-                </div>
-              </div>
-              {(order.status === 'in_progress' || order.status === 'completed') && (
-                <div className="flex items-center gap-2 pt-1 border-t border-slate-100">
-                  <span className="text-xs text-slate-500 shrink-0">منجز:</span>
-                  <Input
-                    type="number"
-                    min={0}
-                    value={completedQuantities[item.id] !== undefined ? (completedQuantities[item.id] === 0 ? '' : completedQuantities[item.id]) : (item.completedQuantity ? item.completedQuantity : '')}
-                    onChange={(e) => setCompletedQuantities(prev => ({ ...prev, [item.id]: e.target.value === '' ? 0 : Number(e.target.value) }))}
-                    placeholder=""
-                    className={`w-20 h-8 text-center ${itemHasIssue ? 'border-red-300' : ''}`}
-                    data-testid={`input-completed-${item.id}`}
-                  />
-                  <Button
-                    size="sm" variant="outline"
-                    onClick={() => handleCompletedQuantity(item.id, completedQuantities[item.id] !== undefined ? completedQuantities[item.id] : (item.completedQuantity ?? 0))}
-                    disabled={updateCompleted.isPending}
-                    data-testid={`button-save-completed-${item.id}`}
-                  >
-                    حفظ
-                  </Button>
-                </div>
-              )}
+    return (
+      <div className="space-y-2 mt-3 pt-3 border-t border-slate-100">
+        {remainingItems.length > 0 && (
+          <>
+            <p className="font-bold text-sm">الكمية المتبقية للإنجاز:</p>
+            <div className="grid gap-2">
+              {remainingItems.map((item: any, idx: number) => {
+                const remaining = item.quantity - (item.completedQuantity || 0);
+                const itemRefDate = item.lastCompletedUpdate ? new Date(item.lastCompletedUpdate) : (order.createdAt ? new Date(order.createdAt) : null);
+                const itemHasIssue = itemRefDate && 
+                  ((new Date().getTime() - itemRefDate.getTime()) / (1000 * 60 * 60 * 24) >= ALERT_DAYS) &&
+                  item.completedQuantity !== item.quantity && !order.alertDismissed;
+
+                return (
+                  <div key={idx} className={`p-2 rounded-lg border space-y-2 ${itemHasIssue ? 'bg-red-50 border-red-200' : 'bg-white'}`}>
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm break-words">{item.product?.name}</p>
+                        <p className="text-[10px] text-slate-400">{item.product?.sku}</p>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <Badge variant={item.unit === 'bag' ? 'default' : 'outline'} className="text-[10px]">
+                          {getUnitLabel(item.unit || 'piece')}
+                        </Badge>
+                        <div className="text-left">
+                          <span className="font-bold text-primary">{order.status === 'submitted' || order.status === 'accepted' ? item.quantity : remaining}</span>
+                          {(order.status === 'in_progress' || order.status === 'completed') && (
+                            <span className="text-[10px] text-slate-400 mr-1">/ {item.quantity}</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    {(order.status === 'in_progress' || order.status === 'completed') && remaining > 0 && (
+                      <div className="flex items-center gap-2 pt-1 border-t border-slate-100">
+                        <span className="text-xs text-slate-500 shrink-0">منجز:</span>
+                        <Input
+                          type="number"
+                          min={0}
+                          value={completedQuantities[item.id] !== undefined ? (completedQuantities[item.id] === 0 ? '' : completedQuantities[item.id]) : (item.completedQuantity ? item.completedQuantity : '')}
+                          onChange={(e) => setCompletedQuantities(prev => ({ ...prev, [item.id]: e.target.value === '' ? 0 : Number(e.target.value) }))}
+                          placeholder=""
+                          className={`w-20 h-8 text-center ${itemHasIssue ? 'border-red-300' : ''}`}
+                          data-testid={`input-completed-${item.id}`}
+                        />
+                        <Button
+                          size="sm" variant="outline"
+                          onClick={() => handleCompletedQuantity(item.id, completedQuantities[item.id] !== undefined ? completedQuantities[item.id] : (item.completedQuantity ?? 0))}
+                          disabled={updateCompleted.isPending}
+                          data-testid={`button-save-completed-${item.id}`}
+                        >
+                          حفظ
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
-          );
-        })}
+          </>
+        )}
+        {completedItems.length > 0 && (order.status === 'in_progress' || order.status === 'completed') && (
+          <div className="mt-2">
+            <p className="font-bold text-sm text-green-700">تم تحويلها للشحن:</p>
+            <div className="grid gap-1 mt-1">
+              {completedItems.map((item: any, idx: number) => (
+                <div key={idx} className="flex items-center justify-between p-1.5 rounded bg-green-50 text-xs">
+                  <span className="break-words">{item.product?.name}</span>
+                  <span className="font-bold text-green-700 shrink-0 mr-2">{item.completedQuantity} {getUnitLabel(item.unit || 'piece')}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
-    </div>
-  );
+    );
+  };
 
   const renderMobileCards = () => (
     <div className="lg:hidden space-y-3">
@@ -418,10 +449,14 @@ export default function ReceptionOrders() {
                   {expandedOrders.includes(order.id) && order.items && order.items.length > 0 && (
                     <TableRow key={`${order.id}-details`}>
                       <TableCell colSpan={6} className="bg-slate-50 p-4">
-                        <div className="space-y-2">
-                          <p className="font-bold text-sm mb-3">تفاصيل الطلب:</p>
+                        <div className="space-y-3">
+                          <p className="font-bold text-sm mb-3">الكمية المتبقية للإنجاز:</p>
                           <div className="grid gap-2">
-                            {order.items.map((item: any, idx: number) => {
+                            {order.items.filter((item: any) => {
+                              const remaining = item.quantity - (item.completedQuantity || 0);
+                              return remaining > 0 || order.status === 'submitted' || order.status === 'accepted';
+                            }).map((item: any, idx: number) => {
+                              const remaining = item.quantity - (item.completedQuantity || 0);
                               const itemRefDate = item.lastCompletedUpdate ? new Date(item.lastCompletedUpdate) : (order.createdAt ? new Date(order.createdAt) : null);
                               const itemHasIssue = itemRefDate && 
                                 ((new Date().getTime() - itemRefDate.getTime()) / (1000 * 60 * 60 * 24) >= ALERT_DAYS) &&
@@ -436,8 +471,13 @@ export default function ReceptionOrders() {
                                     <Badge variant={item.unit === 'bag' ? 'default' : 'outline'}>
                                       {getUnitLabel(item.unit || 'piece')}
                                     </Badge>
-                                    <span className="font-bold text-primary text-lg">{item.quantity}</span>
-                                    {(order.status === 'in_progress' || order.status === 'completed') && (
+                                    <div className="text-left">
+                                      <span className="font-bold text-primary text-lg">{order.status === 'submitted' || order.status === 'accepted' ? item.quantity : remaining}</span>
+                                      {(order.status === 'in_progress' || order.status === 'completed') && (
+                                        <span className="text-xs text-slate-400 mr-1">/ {item.quantity}</span>
+                                      )}
+                                    </div>
+                                    {(order.status === 'in_progress' || order.status === 'completed') && remaining > 0 && (
                                       <div className="flex items-center gap-2 border-r pr-3">
                                         <span className="text-xs text-slate-500">منجز:</span>
                                         <Input type="number" min={0}
@@ -457,6 +497,19 @@ export default function ReceptionOrders() {
                               );
                             })}
                           </div>
+                          {order.items.filter((item: any) => (item.completedQuantity || 0) > 0).length > 0 && (order.status === 'in_progress' || order.status === 'completed') && (
+                            <div className="mt-2">
+                              <p className="font-bold text-sm text-green-700 mb-2">تم تحويلها للشحن:</p>
+                              <div className="grid gap-1">
+                                {order.items.filter((item: any) => (item.completedQuantity || 0) > 0).map((item: any, idx: number) => (
+                                  <div key={idx} className="flex items-center justify-between p-2 rounded bg-green-50 border border-green-100">
+                                    <span>{item.product?.name}</span>
+                                    <span className="font-bold text-green-700">{item.completedQuantity} {getUnitLabel(item.unit || 'piece')}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>

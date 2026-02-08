@@ -272,6 +272,22 @@ export class DatabaseStorage implements IStorage {
         .update(orders)
         .set({ alertDismissed: false, alertNotificationSentAt: null })
         .where(eq(orders.id, updated.orderId));
+
+      const allItems = await db
+        .select()
+        .from(orderItems)
+        .where(eq(orderItems.orderId, updated.orderId));
+      
+      const allCompleted = allItems.every(item => item.completedQuantity >= item.quantity);
+      if (allCompleted) {
+        const [order] = await db.select().from(orders).where(eq(orders.id, updated.orderId));
+        if (order && (order.status === 'in_progress' || order.status === 'accepted')) {
+          await db
+            .update(orders)
+            .set({ status: 'completed', statusChangedAt: new Date() })
+            .where(eq(orders.id, updated.orderId));
+        }
+      }
     }
     
     return updated;
