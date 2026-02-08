@@ -3,7 +3,7 @@ import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
 import { db } from "./db";
-import { orders, orderItems } from "@shared/schema";
+import { orders, orderItems, notifications } from "@shared/schema";
 
 const app = express();
 const httpServer = createServer(app);
@@ -64,6 +64,7 @@ app.use((req, res, next) => {
 (async () => {
   // One-time cleanup of old orders
   try {
+    await db.delete(notifications);
     await db.delete(orderItems);
     await db.delete(orders);
     console.log('Old orders cleaned up successfully');
