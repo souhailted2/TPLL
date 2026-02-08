@@ -6,6 +6,9 @@ import { api } from "@shared/routes";
 import { z } from "zod";
 import { initializeFirebaseAdmin, sendPushToMultipleTokens } from "./firebase";
 import { startAlertChecker } from "./alert-checker";
+import { execSync } from "child_process";
+import path from "path";
+import fs from "fs";
 
 export async function registerRoutes(
   httpServer: Server,
@@ -62,6 +65,26 @@ export async function registerRoutes(
   app.get("/api/products/export", requireAdmin, async (req, res) => {
     const result = await storage.getProducts({ limit: 100000, offset: 0 });
     res.json(result.products);
+  });
+
+  app.get("/api/download/source", requireAdmin, async (req, res) => {
+    try {
+      const tmpFile = "/tmp/tpl-website-source.tar.gz";
+      execSync(`tar czf ${tmpFile} --exclude=node_modules --exclude=.git --exclude=dist --exclude=.cache -C /home/runner/workspace .`);
+      res.download(tmpFile, "tpl-website-source.tar.gz");
+    } catch (err) {
+      res.status(500).json({ message: "فشل في إنشاء ملف المصدر" });
+    }
+  });
+
+  app.get("/api/download/database", requireAdmin, async (req, res) => {
+    try {
+      const tmpFile = "/tmp/tpl-database-backup.sql";
+      execSync(`pg_dump $DATABASE_URL > ${tmpFile}`);
+      res.download(tmpFile, "tpl-database-backup.sql");
+    } catch (err) {
+      res.status(500).json({ message: "فشل في تصدير قاعدة البيانات" });
+    }
   });
 
   app.get(api.products.get.path, requireAuth, async (req, res) => {
