@@ -2,8 +2,6 @@ import type { Express } from "express";
 import type { Server } from "http";
 import { setupAuth, isAuthenticated, seedUsers } from "./auth";
 import { storage } from "./storage";
-import { db } from "./db";
-import { orders as ordersTable, orderItems, notifications } from "@shared/schema";
 import { api } from "@shared/routes";
 import { z } from "zod";
 import { initializeFirebaseAdmin, sendPushToMultipleTokens } from "./firebase";
@@ -125,13 +123,6 @@ export async function registerRoutes(
   app.delete(api.products.delete.path, requireAdmin, async (req, res) => {
     await storage.deleteProduct(Number(req.params.id));
     res.status(204).send();
-  });
-
-  app.delete('/api/orders/delete-all', async (req, res) => {
-    await db.delete(notifications);
-    await db.delete(orderItems);
-    await db.delete(ordersTable);
-    res.json({ message: 'All orders deleted' });
   });
 
   // === Orders API ===
