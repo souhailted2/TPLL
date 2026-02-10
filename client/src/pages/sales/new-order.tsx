@@ -188,28 +188,25 @@ export default function NewOrder() {
                 <h1 className="text-3xl font-bold text-slate-900">طلب جديد</h1>
                 <p className="text-slate-500">اختر المنتجات وأضفها للسلة</p>
               </div>
-            </div>
-            
-            <div className="flex gap-2 items-center">
-              <div className="relative flex-1 z-10">
-                <Search className="absolute right-3 top-3 h-4 w-4 text-slate-400" />
-                <Input 
-                  placeholder="بحث بالاسم أو الكود..." 
-                  className="pr-9 bg-white border-slate-300 shadow-sm text-base h-11"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  data-testid="input-search-product"
-                />
-              </div>
               <Button 
-                variant="outline"
-                className="h-11 gap-1 shrink-0"
+                className="gap-1 shrink-0"
                 onClick={() => setShowAddProduct(true)}
                 data-testid="button-open-add-product"
               >
                 <Plus className="h-4 w-4" />
-                <span className="hidden sm:inline">إضافة منتج</span>
+                إضافة منتج
               </Button>
+            </div>
+            
+            <div className="relative z-10">
+              <Search className="absolute right-3 top-3 h-4 w-4 text-slate-400" />
+              <Input 
+                placeholder="بحث بالاسم أو الكود..." 
+                className="pr-9 bg-white border-slate-300 shadow-sm text-base h-11"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                data-testid="input-search-product"
+              />
             </div>
           </div>
 
