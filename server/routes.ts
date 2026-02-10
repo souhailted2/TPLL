@@ -22,6 +22,15 @@ export async function registerRoutes(
   // Auth setup
   await setupAuth(app);
 
+  app.get('/download/:filename', (req, res) => {
+    const allowed = ['tpl-factory-hetzner.tar.gz', 'db_backup.sql'];
+    const filename = req.params.filename;
+    if (!allowed.includes(filename)) return res.status(404).send('Not found');
+    const filePath = path.resolve(process.cwd(), filename);
+    if (!fs.existsSync(filePath)) return res.status(404).send('File not found');
+    res.download(filePath, filename);
+  });
+
   // Middleware to check authentication
   const requireAuth = (req: any, res: any, next: any) => {
     if (!req.session.userId) {
