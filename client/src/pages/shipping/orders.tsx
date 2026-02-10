@@ -1,10 +1,10 @@
 import { Sidebar } from "@/components/layout-sidebar";
-import { useOrders, useUpdateOrderStatus } from "@/hooks/use-orders";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { useOrders, useUpdateOrderStatus, useUpdateCompletedQuantity } from "@/hooks/use-orders";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Loader2, ChevronDown, ChevronUp, Package, Truck } from "lucide-react";
+import { Loader2, Truck, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
 import { arSA } from "date-fns/locale";
 import { useState, useMemo } from "react";
@@ -13,19 +13,24 @@ import { useToast } from "@/hooks/use-toast";
 export default function ShippingOrders() {
   const { data: orders, isLoading } = useOrders();
   const updateStatus = useUpdateOrderStatus();
-  const [expandedOrders, setExpandedOrders] = useState<number[]>([]);
+  const updateCompleted = useUpdateCompletedQuantity();
   const [activeFilter, setActiveFilter] = useState<string>('ready');
+  const [completedQuantities, setCompletedQuantities] = useState<Record<number, number>>({});
   const { toast } = useToast();
 
   const hasCompletedItems = (order: any) => {
     return order.items?.some((item: any) => (item.completedQuantity || 0) > 0);
   };
 
+  const hasAcceptedOrCompletedItems = (order: any) => {
+    return order.items?.some((item: any) => ['accepted', 'in_progress', 'completed'].includes(item.itemStatus || 'pending'));
+  };
+
   const readyOrders = useMemo(() => {
     if (!orders) return [];
-    return orders.filter((o: any) => 
-      o.status === 'completed' || 
-      ((o.status === 'in_progress' || o.status === 'accepted') && hasCompletedItems(o))
+    return orders.filter((o: any) =>
+      o.status === 'completed' ||
+      ((o.status === 'in_progress' || o.status === 'accepted') && (hasCompletedItems(o) || hasAcceptedOrCompletedItems(o)))
     );
   }, [orders]);
 
@@ -39,10 +44,6 @@ export default function ShippingOrders() {
     }
   }, [orders, activeFilter, readyOrders]);
 
-  const toggleOrder = (orderId: number) => {
-    setExpandedOrders(prev => prev.includes(orderId) ? prev.filter(id => id !== orderId) : [...prev, orderId]);
-  };
-
   const handleShip = async (orderId: number) => {
     try {
       await updateStatus.mutateAsync({ id: orderId, status: 'shipped' });
@@ -52,9 +53,19 @@ export default function ShippingOrders() {
     }
   };
 
+  const handleCompletedQuantity = async (itemId: number, quantity: number) => {
+    try {
+      await updateCompleted.mutateAsync({ itemId, completedQuantity: quantity });
+      toast({ title: "تم التحديث", description: "تم تحديث الكمية المستلمة" });
+      setCompletedQuantities(prev => ({ ...prev, [itemId]: 0 }));
+    } catch (err: any) {
+      toast({ title: "خطأ", description: err.message, variant: "destructive" });
+    }
+  };
+
   const getStatusColor = (status: string) => {
     switch(status) {
-      case 'in_progress': 
+      case 'in_progress':
       case 'accepted': return 'bg-orange-100 text-orange-800';
       case 'completed': return 'bg-green-100 text-green-800';
       case 'shipped': return 'bg-purple-100 text-purple-800';
@@ -74,237 +85,155 @@ export default function ShippingOrders() {
     }
   };
 
+  const getItemStatusLabel = (status: string) => {
+    switch(status) {
+      case 'accepted': return 'مقبول';
+      case 'in_progress': return 'قيد الإنجاز';
+      case 'completed': return 'تم الإنجاز';
+      case 'rejected': return 'مرفوض';
+      default: return 'في الانتظار';
+    }
+  };
+
+  const getItemStatusColor = (status: string) => {
+    switch(status) {
+      case 'accepted': return 'bg-emerald-100 text-emerald-800';
+      case 'in_progress': return 'bg-blue-100 text-blue-800';
+      case 'completed': return 'bg-green-100 text-green-800';
+      case 'rejected': return 'bg-red-100 text-red-800';
+      default: return 'bg-amber-100 text-orange-800';
+    }
+  };
+
   const getUnitLabel = (unit: string) => {
     return unit === 'bag' ? 'شكارة 25 كغ' : 'قطعة';
   };
 
-  const renderOrderDetails = (order: any) => {
-    const completedItems = order.items?.filter((item: any) => (item.completedQuantity || 0) > 0) || [];
-    const isFullyCompleted = order.status === 'completed';
-    
-    if (isFullyCompleted) {
-      return (
-        <div className="space-y-2">
-          <p className="font-bold text-sm text-green-700">جاهز للشحن (مكتمل):</p>
-          <div className="grid gap-2">
-            {(order.items || []).map((item: any, idx: number) => (
-              <div key={idx} className="p-2 rounded-lg border bg-green-50 border-green-200">
+  const renderOrderItems = (order: any) => {
+    const items = order.items || [];
+    const acceptedItems = items.filter((item: any) => ['accepted', 'in_progress', 'completed'].includes(item.itemStatus || 'pending'));
+    const isShippedOrReceived = order.status === 'shipped' || order.status === 'received';
+
+    return (
+      <div className="space-y-2 mt-3 pt-3 border-t border-slate-100">
+        <div className="flex items-center gap-2 mb-2">
+          <Package className="h-4 w-4 text-slate-500" />
+          <p className="font-bold text-sm">{items.length} أصناف</p>
+        </div>
+        <div className="grid gap-2">
+          {items.map((item: any, idx: number) => {
+            const itemSt = item.itemStatus || 'pending';
+            const isAccepted = ['accepted', 'in_progress', 'completed'].includes(itemSt);
+            const maxAllowed = Math.ceil(item.quantity * 1.5);
+            const currentCompleted = item.completedQuantity || 0;
+
+            return (
+              <div key={idx} className={`p-3 rounded-lg border ${isAccepted ? 'bg-white' : 'bg-slate-50 border-slate-200 opacity-60'}`} data-testid={`item-card-${item.id}`}>
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-sm break-words">{item.product?.name}</p>
                     <p className="text-[10px] text-slate-400">{item.product?.sku}</p>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
+                    <Badge variant="secondary" className={`text-[10px] ${getItemStatusColor(itemSt)}`}>
+                      {getItemStatusLabel(itemSt)}
+                    </Badge>
                     <Badge variant={item.unit === 'bag' ? 'default' : 'outline'} className="text-[10px]">
                       {getUnitLabel(item.unit || 'piece')}
                     </Badge>
-                    <span className="font-bold text-green-700">{item.completedQuantity || item.quantity}</span>
+                    <span className="font-bold text-primary">{item.quantity}</span>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      );
-    }
-    
-    if (completedItems.length > 0) {
-      return (
-        <div className="space-y-2">
-          <p className="font-bold text-sm">الكمية الجاهزة للشحن:</p>
-          <div className="grid gap-2">
-            {completedItems.map((item: any, idx: number) => (
-              <div key={idx} className="p-2 rounded-lg border bg-slate-50">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-sm break-words">{item.product?.name}</p>
-                    <p className="text-[10px] text-slate-400">{item.product?.sku}</p>
-                  </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <Badge variant={item.unit === 'bag' ? 'default' : 'outline'} className="text-[10px]">
-                      {getUnitLabel(item.unit || 'piece')}
-                    </Badge>
-                    <div className="text-left">
-                      <span className="font-bold text-primary">{item.completedQuantity}</span>
-                      <span className="text-[10px] text-slate-400 mr-1">/ {item.quantity}</span>
+
+                {isAccepted && (
+                  <div className="mt-2 pt-2 border-t border-slate-100">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-xs text-slate-500">المستلم: <span className="font-bold text-green-700">{currentCompleted}</span> / {item.quantity}</span>
+                      <span className="text-[10px] text-slate-400">(حد أقصى: {maxAllowed})</span>
                     </div>
+                    {!isShippedOrReceived && (
+                      <div className="flex items-center gap-2 mt-2">
+                        <span className="text-xs text-slate-500 shrink-0">كمية مستلمة:</span>
+                        <Input
+                          type="number"
+                          min={0}
+                          max={maxAllowed}
+                          value={completedQuantities[item.id] !== undefined ? (completedQuantities[item.id] === 0 ? '' : completedQuantities[item.id]) : ''}
+                          onChange={(e) => {
+                            const val = e.target.value === '' ? 0 : Number(e.target.value);
+                            if (val >= 0 && val <= maxAllowed) {
+                              setCompletedQuantities(prev => ({ ...prev, [item.id]: val }));
+                            }
+                          }}
+                          placeholder="0"
+                          className="w-20 h-8 text-center"
+                          data-testid={`input-completed-${item.id}`}
+                        />
+                        <Button
+                          size="sm" variant="outline"
+                          onClick={() => {
+                            const newQty = completedQuantities[item.id] || 0;
+                            if (newQty > 0) {
+                              handleCompletedQuantity(item.id, currentCompleted + newQty);
+                            }
+                          }}
+                          disabled={updateCompleted.isPending || !(completedQuantities[item.id] > 0)}
+                          data-testid={`button-save-completed-${item.id}`}
+                        >
+                          حفظ
+                        </Button>
+                      </div>
+                    )}
                   </div>
-                </div>
+                )}
               </div>
-            ))}
-          </div>
+            );
+          })}
         </div>
-      );
-    }
-    
-    return null;
+      </div>
+    );
   };
 
-  const renderMobileCards = () => (
-    <div className="lg:hidden space-y-3">
-      {filteredOrders?.map((order: any) => (
-        <Card key={order.id} data-testid={`card-order-${order.id}`}>
-          <CardContent className="p-4 space-y-3">
-            <div className="flex items-center justify-between gap-2">
-              <span className="font-mono font-bold text-lg" data-testid={`text-order-id-${order.id}`}>#{order.id}</span>
-              <Badge variant="secondary" className={getStatusColor(order.status)}>
-                {getStatusLabel(order.status)}
-              </Badge>
-            </div>
+  const renderOrderCard = (order: any) => (
+    <Card key={order.id} data-testid={`card-order-${order.id}`}>
+      <CardContent className="p-4 space-y-3">
+        <div className="flex items-center justify-between gap-2">
+          <span className="font-mono font-bold text-lg" data-testid={`text-order-id-${order.id}`}>#{order.id}</span>
+          <Badge variant="secondary" className={getStatusColor(order.status)}>
+            {getStatusLabel(order.status)}
+          </Badge>
+        </div>
 
-            <div className="flex items-center justify-between gap-2 text-sm">
-              <span className="font-bold text-slate-700" data-testid={`text-sales-point-${order.id}`}>
-                {order.salesPoint?.salesPointName || order.salesPoint?.firstName}
-              </span>
-              <span className="text-xs text-slate-400">
-                {order.createdAt && format(new Date(order.createdAt), 'PP', { locale: arSA })}
-              </span>
-            </div>
+        <div className="flex items-center justify-between gap-2 text-sm">
+          <span className="font-bold text-slate-700" data-testid={`text-sales-point-${order.id}`}>
+            {order.salesPoint?.salesPointName || order.salesPoint?.firstName}
+          </span>
+          <span className="text-xs text-slate-400">
+            {order.createdAt && format(new Date(order.createdAt), 'PP', { locale: arSA })}
+          </span>
+        </div>
 
-            {(order.status === 'completed' || ((order.status === 'in_progress' || order.status === 'accepted') && hasCompletedItems(order))) && (
-              <Button 
-                size="sm" className="w-full gap-2"
-                onClick={() => handleShip(order.id)}
-                disabled={updateStatus.isPending}
-                data-testid={`button-ship-${order.id}`}
-              >
-                <Truck className="h-4 w-4" />
-                شحن الكمية المنجزة
-              </Button>
-            )}
-            {order.status === 'shipped' && (
-              <p className="text-sm text-slate-400 text-center">في الطريق</p>
-            )}
-            {order.status === 'received' && (
-              <p className="text-sm text-green-600 text-center">تم التسليم</p>
-            )}
+        {(order.status === 'completed' || ((order.status === 'in_progress' || order.status === 'accepted') && (hasCompletedItems(order) || hasAcceptedOrCompletedItems(order)))) && (
+          <Button
+            size="sm" className="w-full gap-2"
+            onClick={() => handleShip(order.id)}
+            disabled={updateStatus.isPending}
+            data-testid={`button-ship-${order.id}`}
+          >
+            <Truck className="h-4 w-4" />
+            شحن الكمية المستلمة
+          </Button>
+        )}
+        {order.status === 'shipped' && (
+          <p className="text-sm text-slate-400 text-center">في الطريق</p>
+        )}
+        {order.status === 'received' && (
+          <p className="text-sm text-green-600 text-center">تم التسليم</p>
+        )}
 
-            {order.items && order.items.length > 0 && (
-              <div className="border-t border-slate-100 pt-3">
-                {renderOrderDetails(order)}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      ))}
-      {filteredOrders?.length === 0 && (
-        <div className="text-center py-12 text-slate-400">لا توجد طلبات</div>
-      )}
-    </div>
-  );
-
-  const renderDesktopTable = () => (
-    <div className="hidden lg:block bg-white rounded-2xl border border-slate-100 shadow-sm overflow-x-auto">
-      <div className="min-w-[600px]">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>رقم الطلب</TableHead>
-              <TableHead>نقطة البيع</TableHead>
-              <TableHead>التاريخ</TableHead>
-              <TableHead>المنتجات</TableHead>
-              <TableHead>الحالة</TableHead>
-              <TableHead className="text-left">الإجراء</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredOrders?.map((order: any) => (
-              <>
-                <TableRow key={order.id}>
-                  <TableCell className="font-mono font-bold" data-testid={`text-order-id-${order.id}`}>#{order.id}</TableCell>
-                  <TableCell className="font-bold" data-testid={`text-sales-point-${order.id}`}>
-                    {order.salesPoint?.salesPointName || order.salesPoint?.firstName}
-                  </TableCell>
-                  <TableCell>
-                    {order.createdAt && format(new Date(order.createdAt), 'PP p', { locale: arSA })}
-                  </TableCell>
-                  <TableCell>
-                    <Button variant="ghost" size="sm" className="gap-2"
-                      onClick={() => toggleOrder(order.id)} data-testid={`button-toggle-order-${order.id}`}>
-                      <Package className="h-4 w-4" />
-                      {order.items?.length || 0} صنف
-                      {expandedOrders.includes(order.id) ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                    </Button>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="secondary" className={getStatusColor(order.status)}>
-                      {getStatusLabel(order.status)}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex justify-end">
-                      {(order.status === 'completed' || ((order.status === 'in_progress' || order.status === 'accepted') && hasCompletedItems(order))) && (
-                        <Button size="sm" onClick={() => handleShip(order.id)} disabled={updateStatus.isPending} data-testid={`button-ship-${order.id}`}>
-                          <Truck className="h-4 w-4 ml-1" />
-                          شحن الكمية المنجزة
-                        </Button>
-                      )}
-                      {order.status === 'shipped' && <span className="text-sm text-slate-400">في الطريق</span>}
-                      {order.status === 'received' && <span className="text-sm text-green-600">تم التسليم</span>}
-                    </div>
-                  </TableCell>
-                </TableRow>
-                {expandedOrders.includes(order.id) && order.items && order.items.length > 0 && (
-                  <TableRow key={`${order.id}-details`}>
-                    <TableCell colSpan={6} className="bg-slate-50 p-4">
-                      {order.status === 'completed' ? (
-                        <div className="space-y-2">
-                          <p className="font-bold text-sm mb-3 text-green-700">جاهز للشحن (مكتمل):</p>
-                          <div className="grid gap-2">
-                            {order.items.map((item: any, idx: number) => (
-                              <div key={idx} className="flex items-center justify-between bg-green-50 p-3 rounded-lg border border-green-200">
-                                <div className="flex-1">
-                                  <p className="font-medium">{item.product?.name}</p>
-                                  <p className="text-xs text-slate-400">{item.product?.sku}</p>
-                                </div>
-                                <div className="flex items-center gap-4">
-                                  <Badge variant={item.unit === 'bag' ? 'default' : 'outline'}>
-                                    {getUnitLabel(item.unit || 'piece')}
-                                  </Badge>
-                                  <span className="font-bold text-green-700 text-lg">{item.completedQuantity || item.quantity}</span>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="space-y-2">
-                          <p className="font-bold text-sm mb-3">الكمية الجاهزة للشحن:</p>
-                          <div className="grid gap-2">
-                            {order.items.filter((item: any) => (item.completedQuantity || 0) > 0).map((item: any, idx: number) => (
-                              <div key={idx} className="flex items-center justify-between bg-white p-3 rounded-lg border">
-                                <div className="flex-1">
-                                  <p className="font-medium">{item.product?.name}</p>
-                                  <p className="text-xs text-slate-400">{item.product?.sku}</p>
-                                </div>
-                                <div className="flex items-center gap-4">
-                                  <Badge variant={item.unit === 'bag' ? 'default' : 'outline'}>
-                                    {getUnitLabel(item.unit || 'piece')}
-                                  </Badge>
-                                  <div className="text-left">
-                                    <span className="font-bold text-primary text-lg">{item.completedQuantity}</span>
-                                    <span className="text-xs text-slate-400 mr-1">/ {item.quantity}</span>
-                                  </div>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                )}
-              </>
-            ))}
-            {filteredOrders?.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={6} className="text-center py-12 text-slate-400">لا توجد طلبات</TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
-    </div>
+        {order.items && order.items.length > 0 && renderOrderItems(order)}
+      </CardContent>
+    </Card>
   );
 
   return (
@@ -314,9 +243,9 @@ export default function ShippingOrders() {
         <div className="max-w-7xl mx-auto space-y-6">
           <div className="flex flex-col gap-2">
             <h1 className="text-3xl font-bold text-slate-900" data-testid="text-page-title">إدارة الشحن</h1>
-            <p className="text-slate-500">شحن الطلبات المنجزة إلى نقاط البيع</p>
+            <p className="text-slate-500">استلام البضائع من المصنع وشحنها إلى نقاط البيع</p>
           </div>
-          
+
           <div className="flex flex-wrap gap-2">
             {[
               { key: 'ready', label: 'جاهز للشحن', count: readyOrders.length },
@@ -334,10 +263,12 @@ export default function ShippingOrders() {
           {isLoading ? (
             <div className="p-12 flex justify-center"><Loader2 className="animate-spin text-primary" /></div>
           ) : (
-            <>
-              {renderMobileCards()}
-              {renderDesktopTable()}
-            </>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {filteredOrders?.map((order: any) => renderOrderCard(order))}
+              {filteredOrders?.length === 0 && (
+                <div className="col-span-full text-center py-12 text-slate-400">لا توجد طلبات</div>
+              )}
+            </div>
           )}
         </div>
       </main>

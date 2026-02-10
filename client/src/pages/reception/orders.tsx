@@ -1,11 +1,9 @@
 import { Sidebar } from "@/components/layout-sidebar";
-import { useOrders, useUpdateOrderStatus, useUpdateCompletedQuantity, useDismissOrderAlert } from "@/hooks/use-orders";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { useOrders, useUpdateOrderStatus, useUpdateItemStatus, useDismissOrderAlert } from "@/hooks/use-orders";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Loader2, ChevronDown, ChevronUp, Package, Check, X as XIcon, AlertTriangle, BellOff } from "lucide-react";
+import { Loader2, Check, X as XIcon, AlertTriangle, BellOff, PlayCircle, CheckCircle2, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
 import { arSA } from "date-fns/locale";
 import { useState, useMemo } from "react";
@@ -16,7 +14,7 @@ const ALERT_DAYS = 15;
 function getOrderAlertInfo(order: any) {
   if (!order.items || order.items.length === 0) return null;
   if (order.alertDismissed) return null;
-  if (order.status === 'shipped' || order.status === 'received' || order.status === 'rejected' || order.status === 'submitted') return null;
+  if (order.status === 'shipped' || order.status === 'received' || order.status === 'rejected') return null;
 
   const now = new Date();
   const alerts: { type: 'incomplete' | 'exceeded'; itemName: string; completed: number; requested: number }[] = [];
@@ -42,11 +40,9 @@ function getOrderAlertInfo(order: any) {
 export default function ReceptionOrders() {
   const { data: orders, isLoading } = useOrders();
   const updateStatus = useUpdateOrderStatus();
-  const updateCompleted = useUpdateCompletedQuantity();
+  const updateItemStatus = useUpdateItemStatus();
   const dismissAlert = useDismissOrderAlert();
-  const [expandedOrders, setExpandedOrders] = useState<number[]>([]);
   const [activeFilter, setActiveFilter] = useState<string>('pending');
-  const [completedQuantities, setCompletedQuantities] = useState<Record<number, number>>({});
   const { toast } = useToast();
 
   const filteredOrders = useMemo(() => {
@@ -66,23 +62,16 @@ export default function ReceptionOrders() {
     return orders.filter((o: any) => getOrderAlertInfo(o) !== null).length;
   }, [orders]);
 
-  const toggleOrder = (orderId: number) => {
-    setExpandedOrders(prev => prev.includes(orderId) ? prev.filter(id => id !== orderId) : [...prev, orderId]);
-  };
-
-  const handleStatusChange = async (orderId: number, newStatus: string) => {
+  const handleItemStatusChange = async (itemId: number, newStatus: string) => {
     try {
-      await updateStatus.mutateAsync({ id: orderId, status: newStatus });
-      toast({ title: "تم التحديث", description: `تم تغيير حالة الطلب #${orderId}` });
-    } catch (err: any) {
-      toast({ title: "خطأ", description: err.message, variant: "destructive" });
-    }
-  };
-
-  const handleCompletedQuantity = async (itemId: number, quantity: number) => {
-    try {
-      await updateCompleted.mutateAsync({ itemId, completedQuantity: quantity });
-      toast({ title: "تم التحديث", description: "تم تحديث الكمية المنجزة" });
+      await updateItemStatus.mutateAsync({ itemId, itemStatus: newStatus });
+      const statusLabels: Record<string, string> = {
+        accepted: 'تم قبول الصنف',
+        rejected: 'تم رفض الصنف',
+        in_progress: 'الصنف قيد الإنجاز',
+        completed: 'تم إنجاز الصنف',
+      };
+      toast({ title: statusLabels[newStatus] || "تم التحديث" });
     } catch (err: any) {
       toast({ title: "خطأ", description: err.message, variant: "destructive" });
     }
@@ -121,57 +110,99 @@ export default function ReceptionOrders() {
     }
   };
 
+  const getItemStatusColor = (status: string) => {
+    switch(status) {
+      case 'accepted': return 'bg-emerald-100 text-emerald-800';
+      case 'in_progress': return 'bg-blue-100 text-blue-800';
+      case 'completed': return 'bg-green-100 text-green-800';
+      case 'rejected': return 'bg-red-100 text-red-800';
+      default: return 'bg-amber-100 text-orange-800';
+    }
+  };
+
+  const getItemStatusLabel = (status: string) => {
+    switch(status) {
+      case 'accepted': return 'مقبول';
+      case 'rejected': return 'مرفوض';
+      case 'in_progress': return 'قيد الإنجاز';
+      case 'completed': return 'تم الإنجاز';
+      default: return 'في الانتظار';
+    }
+  };
+
   const getUnitLabel = (unit: string) => {
     return unit === 'bag' ? 'شكارة 25 كغ' : 'قطعة';
   };
 
-  const renderOrderActions = (order: any) => (
-    <div className="flex gap-2 flex-wrap">
-      {order.status === 'submitted' && (
-        <>
-          <Button 
+  const renderItemActions = (item: any, order: any) => {
+    const status = item.itemStatus || 'pending';
+    if (order.status === 'shipped' || order.status === 'received') return null;
+
+    return (
+      <div className="flex flex-wrap gap-1 mt-2">
+        {status === 'pending' && (
+          <>
+            <Button
+              size="sm" variant="default"
+              className="text-xs gap-1"
+              onClick={() => handleItemStatusChange(item.id, 'accepted')}
+              disabled={updateItemStatus.isPending}
+              data-testid={`button-accept-item-${item.id}`}
+            >
+              <Check className="h-3 w-3" />
+              قبول
+            </Button>
+            <Button
+              size="sm" variant="destructive"
+              className="text-xs gap-1"
+              onClick={() => handleItemStatusChange(item.id, 'rejected')}
+              disabled={updateItemStatus.isPending}
+              data-testid={`button-reject-item-${item.id}`}
+            >
+              <XIcon className="h-3 w-3" />
+              رفض
+            </Button>
+          </>
+        )}
+        {status === 'accepted' && (
+          <Button
+            size="sm" variant="outline"
+            className="text-xs gap-1"
+            onClick={() => handleItemStatusChange(item.id, 'in_progress')}
+            disabled={updateItemStatus.isPending}
+            data-testid={`button-start-item-${item.id}`}
+          >
+            <PlayCircle className="h-3 w-3" />
+            بدء الإنجاز
+          </Button>
+        )}
+        {status === 'in_progress' && (
+          <Button
             size="sm" variant="default"
-            onClick={() => handleStatusChange(order.id, 'accepted')}
-            disabled={updateStatus.isPending}
-            data-testid={`button-accept-${order.id}`}
+            className="text-xs gap-1"
+            onClick={() => handleItemStatusChange(item.id, 'completed')}
+            disabled={updateItemStatus.isPending}
+            data-testid={`button-complete-item-${item.id}`}
           >
-            <Check className="h-4 w-4 ml-1" />
-            قبول
+            <CheckCircle2 className="h-3 w-3" />
+            تم الإنجاز
           </Button>
-          <Button 
-            size="sm" variant="destructive"
-            onClick={() => handleStatusChange(order.id, 'rejected')}
-            disabled={updateStatus.isPending}
-            data-testid={`button-reject-${order.id}`}
+        )}
+        {status === 'rejected' && (
+          <Button
+            size="sm" variant="outline"
+            className="text-xs gap-1"
+            onClick={() => handleItemStatusChange(item.id, 'accepted')}
+            disabled={updateItemStatus.isPending}
+            data-testid={`button-reaccept-item-${item.id}`}
           >
-            <XIcon className="h-4 w-4 ml-1" />
-            رفض
+            <Check className="h-3 w-3" />
+            إعادة القبول
           </Button>
-        </>
-      )}
-      {order.status === 'accepted' && (
-        <Button 
-          size="sm"
-          onClick={() => handleStatusChange(order.id, 'in_progress')}
-          disabled={updateStatus.isPending}
-          data-testid={`button-start-${order.id}`}
-        >
-          بدء الإنجاز
-        </Button>
-      )}
-      {order.status === 'in_progress' && (
-        <Button 
-          size="sm" variant="default"
-          onClick={() => handleStatusChange(order.id, 'completed')}
-          disabled={updateStatus.isPending}
-          data-testid={`button-complete-${order.id}`}
-        >
-          <Check className="h-4 w-4 ml-1" />
-          تم الإنجاز
-        </Button>
-      )}
-    </div>
-  );
+        )}
+      </div>
+    );
+  };
 
   const renderAlertBanner = (alerts: any[]) => (
     <div className="bg-red-50 border border-red-200 rounded-lg px-3 py-2">
@@ -195,373 +226,103 @@ export default function ReceptionOrders() {
     </div>
   );
 
-  const renderOrderItems = (order: any) => {
-    const remainingItems = order.items.filter((item: any) => {
-      const remaining = item.quantity - (item.completedQuantity || 0);
-      return remaining > 0 || order.status === 'submitted' || order.status === 'accepted';
-    });
-    const completedItems = order.items.filter((item: any) => (item.completedQuantity || 0) > 0);
-    const isInProgress = order.status === 'in_progress' || order.status === 'completed';
+  const getItemBorderColor = (status: string) => {
+    switch(status) {
+      case 'accepted': return 'border-emerald-200 bg-emerald-50';
+      case 'in_progress': return 'border-blue-200 bg-blue-50';
+      case 'completed': return 'border-green-200 bg-green-50';
+      case 'rejected': return 'border-red-200 bg-red-50';
+      default: return 'border-slate-200 bg-white';
+    }
+  };
 
+  const renderOrderItems = (order: any) => {
     return (
       <div className="space-y-2 mt-3 pt-3 border-t border-slate-100">
-        {completedItems.length > 0 && isInProgress && (
-          <div className="mb-3">
-            <p className="font-bold text-sm text-green-700 mb-1">تم إنجاز من هذا الطلب:</p>
-            <div className="grid gap-1">
-              {completedItems.map((item: any, idx: number) => (
-                <div key={idx} className="flex items-center justify-between p-2 rounded-lg bg-green-50 border border-green-200 text-sm">
-                  <span className="break-words flex-1">{item.product?.name}</span>
-                  <div className="flex items-center gap-2 shrink-0 mr-2">
+        <div className="flex items-center gap-2 mb-2">
+          <Package className="h-4 w-4 text-slate-500" />
+          <p className="font-bold text-sm">{order.items?.length || 0} أصناف</p>
+        </div>
+        <div className="grid gap-2">
+          {(order.items || []).map((item: any, idx: number) => {
+            const itemSt = item.itemStatus || 'pending';
+            return (
+              <div key={idx} className={`p-3 rounded-lg border ${getItemBorderColor(itemSt)}`} data-testid={`item-card-${item.id}`}>
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm break-words">{item.product?.name}</p>
+                    <p className="text-[10px] text-slate-400">{item.product?.sku}</p>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
                     <Badge variant={item.unit === 'bag' ? 'default' : 'outline'} className="text-[10px]">
                       {getUnitLabel(item.unit || 'piece')}
                     </Badge>
-                    <span className="font-bold text-green-700">{item.completedQuantity} / {item.quantity}</span>
+                    <span className="font-bold text-primary">{item.quantity}</span>
                   </div>
                 </div>
-              ))}
-            </div>
-          </div>
-        )}
-        {remainingItems.length > 0 && (
-          <>
-            <p className="font-bold text-sm">{isInProgress ? 'الكمية المتبقية للإنجاز:' : 'أصناف الطلب:'}</p>
-            <div className="grid gap-2">
-              {remainingItems.map((item: any, idx: number) => {
-                const remaining = item.quantity - (item.completedQuantity || 0);
-                const itemRefDate = item.lastCompletedUpdate ? new Date(item.lastCompletedUpdate) : (order.createdAt ? new Date(order.createdAt) : null);
-                const itemHasIssue = itemRefDate && 
-                  ((new Date().getTime() - itemRefDate.getTime()) / (1000 * 60 * 60 * 24) >= ALERT_DAYS) &&
-                  item.completedQuantity !== item.quantity && !order.alertDismissed;
-
-                return (
-                  <div key={idx} className={`p-2 rounded-lg border space-y-2 ${itemHasIssue ? 'bg-red-50 border-red-200' : 'bg-white'}`}>
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm break-words">{item.product?.name}</p>
-                        <p className="text-[10px] text-slate-400">{item.product?.sku}</p>
-                      </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        <Badge variant={item.unit === 'bag' ? 'default' : 'outline'} className="text-[10px]">
-                          {getUnitLabel(item.unit || 'piece')}
-                        </Badge>
-                        <div className="text-left">
-                          <span className="font-bold text-primary">{order.status === 'submitted' || order.status === 'accepted' ? item.quantity : remaining}</span>
-                          {isInProgress && (
-                            <span className="text-[10px] text-slate-400 mr-1">متبقي</span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                    {isInProgress && remaining > 0 && (
-                      <div className="flex items-center gap-2 pt-1 border-t border-slate-100">
-                        <span className="text-xs text-slate-500 shrink-0">إضافة كمية:</span>
-                        <Input
-                          type="number"
-                          min={0}
-                          max={remaining}
-                          value={completedQuantities[item.id] !== undefined ? (completedQuantities[item.id] === 0 ? '' : completedQuantities[item.id]) : ''}
-                          onChange={(e) => {
-                            const val = e.target.value === '' ? 0 : Number(e.target.value);
-                            if (val >= 0 && val <= remaining) {
-                              setCompletedQuantities(prev => ({ ...prev, [item.id]: val }));
-                            }
-                          }}
-                          placeholder="0"
-                          className={`w-20 h-8 text-center ${itemHasIssue ? 'border-red-300' : ''}`}
-                          data-testid={`input-completed-${item.id}`}
-                        />
-                        <Button
-                          size="sm" variant="outline"
-                          onClick={() => {
-                            const addedQty = completedQuantities[item.id] || 0;
-                            if (addedQty > 0) {
-                              handleCompletedQuantity(item.id, (item.completedQuantity || 0) + addedQty);
-                              setCompletedQuantities(prev => ({ ...prev, [item.id]: 0 }));
-                            }
-                          }}
-                          disabled={updateCompleted.isPending || !(completedQuantities[item.id] > 0)}
-                          data-testid={`button-save-completed-${item.id}`}
-                        >
-                          حفظ
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </>
-        )}
+                <div className="flex items-center justify-between mt-2">
+                  <Badge variant="secondary" className={`text-[10px] ${getItemStatusColor(itemSt)}`}>
+                    {getItemStatusLabel(itemSt)}
+                  </Badge>
+                  {item.completedQuantity > 0 && (
+                    <span className="text-xs text-slate-500">مستلم: <span className="font-bold">{item.completedQuantity}</span></span>
+                  )}
+                </div>
+                {renderItemActions(item, order)}
+              </div>
+            );
+          })}
+        </div>
       </div>
     );
   };
 
-  const renderMobileCards = () => (
-    <div className="lg:hidden space-y-3">
-      {filteredOrders?.map((order: any) => {
-        const alerts = getOrderAlertInfo(order);
-        const hasAlert = alerts !== null;
+  const renderOrderCard = (order: any) => {
+    const alerts = getOrderAlertInfo(order);
+    const hasAlert = alerts !== null;
 
-        return (
-          <Card key={order.id} className={hasAlert ? 'border-red-200' : ''} data-testid={`card-order-${order.id}`}>
-            <CardContent className="p-4 space-y-3">
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2">
-                  {hasAlert && <AlertTriangle className="h-4 w-4 text-red-500" />}
-                  <span className="font-mono font-bold text-lg" data-testid={`text-order-id-${order.id}`}>#{order.id}</span>
-                </div>
-                <Badge variant="secondary" className={getStatusColor(order.status)}>
-                  {getStatusLabel(order.status)}
-                </Badge>
-              </div>
+    return (
+      <Card key={order.id} className={hasAlert ? 'border-red-200' : ''} data-testid={`card-order-${order.id}`}>
+        <CardContent className="p-4 space-y-3">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              {hasAlert && <AlertTriangle className="h-4 w-4 text-red-500" />}
+              <span className="font-mono font-bold text-lg" data-testid={`text-order-id-${order.id}`}>#{order.id}</span>
+            </div>
+            <Badge variant="secondary" className={getStatusColor(order.status)}>
+              {getStatusLabel(order.status)}
+            </Badge>
+          </div>
 
-              <div className="flex items-center justify-between gap-2 text-sm">
-                <span className="font-bold text-slate-700" data-testid={`text-sales-point-${order.id}`}>
-                  {order.salesPoint?.salesPointName || order.salesPoint?.firstName}
-                </span>
-                <span className="text-xs text-slate-400">
-                  {order.createdAt && format(new Date(order.createdAt), 'PP', { locale: arSA })}
-                </span>
-              </div>
+          <div className="flex items-center justify-between gap-2 text-sm">
+            <span className="font-bold text-slate-700" data-testid={`text-sales-point-${order.id}`}>
+              {order.salesPoint?.salesPointName || order.salesPoint?.firstName}
+            </span>
+            <span className="text-xs text-slate-400">
+              {order.createdAt && format(new Date(order.createdAt), 'PP', { locale: arSA })}
+            </span>
+          </div>
 
-              {hasAlert && (
-                <Button
-                  size="sm" variant="outline"
-                  className="border-red-300 text-red-600 gap-1 text-xs"
-                  onClick={() => handleDismissAlert(order.id)}
-                  disabled={dismissAlert.isPending}
-                  data-testid={`button-dismiss-alert-${order.id}`}
-                >
-                  <BellOff className="h-3 w-3" />
-                  إبطال الإنذار
-                </Button>
-              )}
+          {hasAlert && (
+            <Button
+              size="sm" variant="outline"
+              className="border-red-300 text-red-600 gap-1 text-xs"
+              onClick={() => handleDismissAlert(order.id)}
+              disabled={dismissAlert.isPending}
+              data-testid={`button-dismiss-alert-${order.id}`}
+            >
+              <BellOff className="h-3 w-3" />
+              إبطال الإنذار
+            </Button>
+          )}
 
-              {renderOrderActions(order)}
+          {hasAlert && renderAlertBanner(alerts)}
 
-              {hasAlert && renderAlertBanner(alerts)}
-
-              {order.items && order.items.length > 0 && renderOrderItems(order)}
-            </CardContent>
-          </Card>
-        );
-      })}
-      {filteredOrders?.length === 0 && (
-        <div className="text-center py-12 text-slate-400">لا توجد طلبات</div>
-      )}
-    </div>
-  );
-
-  const renderDesktopTable = () => (
-    <div className="hidden lg:block bg-white rounded-2xl border border-slate-100 shadow-sm overflow-x-auto">
-      <div className="min-w-[700px]">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>رقم الطلب</TableHead>
-              <TableHead>نقطة البيع</TableHead>
-              <TableHead>التاريخ</TableHead>
-              <TableHead>المنتجات</TableHead>
-              <TableHead>الحالة</TableHead>
-              <TableHead className="text-left">الإجراءات</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredOrders?.map((order: any) => {
-              const alerts = getOrderAlertInfo(order);
-              const hasAlert = alerts !== null;
-              
-              return (
-                <>
-                  <TableRow key={order.id} className={hasAlert ? 'alert-glow-row' : ''}>
-                    <TableCell className="font-mono font-bold" data-testid={`text-order-id-${order.id}`}>
-                      <div className="flex items-center gap-2">
-                        {hasAlert && <AlertTriangle className="h-5 w-5 text-red-500 alert-pulse-badge" />}
-                        #{order.id}
-                      </div>
-                    </TableCell>
-                    <TableCell className="font-bold" data-testid={`text-sales-point-${order.id}`}>
-                      {order.salesPoint?.salesPointName || order.salesPoint?.firstName}
-                    </TableCell>
-                    <TableCell>
-                      {order.createdAt && format(new Date(order.createdAt), 'PP p', { locale: arSA })}
-                    </TableCell>
-                    <TableCell>
-                      <Button 
-                        variant="ghost" size="sm" className="gap-2"
-                        onClick={() => toggleOrder(order.id)}
-                        data-testid={`button-toggle-order-${order.id}`}
-                      >
-                        <Package className="h-4 w-4" />
-                        {order.items?.length || 0} صنف
-                        {expandedOrders.includes(order.id) ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                      </Button>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="secondary" className={getStatusColor(order.status)}>
-                        {getStatusLabel(order.status)}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-2 justify-end flex-wrap">
-                        {hasAlert && (
-                          <Button size="sm" variant="outline" className="border-red-300 text-red-600 hover:bg-red-50 gap-1"
-                            onClick={() => handleDismissAlert(order.id)} disabled={dismissAlert.isPending}
-                            data-testid={`button-dismiss-alert-${order.id}`}>
-                            <BellOff className="h-4 w-4" />
-                            إبطال الإنذار
-                          </Button>
-                        )}
-                        {order.status === 'submitted' && (
-                          <>
-                            <Button size="sm" variant="default" onClick={() => handleStatusChange(order.id, 'accepted')} disabled={updateStatus.isPending} data-testid={`button-accept-${order.id}`}>
-                              <Check className="h-4 w-4 ml-1" />
-                              قبول
-                            </Button>
-                            <Button size="sm" variant="destructive" onClick={() => handleStatusChange(order.id, 'rejected')} disabled={updateStatus.isPending} data-testid={`button-reject-${order.id}`}>
-                              <XIcon className="h-4 w-4 ml-1" />
-                              رفض
-                            </Button>
-                          </>
-                        )}
-                        {order.status === 'accepted' && (
-                          <Button size="sm" onClick={() => handleStatusChange(order.id, 'in_progress')} disabled={updateStatus.isPending} data-testid={`button-start-${order.id}`}>
-                            بدء الإنجاز
-                          </Button>
-                        )}
-                        {order.status === 'in_progress' && (
-                          <Button size="sm" variant="default" onClick={() => handleStatusChange(order.id, 'completed')} disabled={updateStatus.isPending} data-testid={`button-complete-${order.id}`}>
-                            <Check className="h-4 w-4 ml-1" />
-                            تم الإنجاز
-                          </Button>
-                        )}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                  {hasAlert && (
-                    <TableRow key={`${order.id}-alert`}>
-                      <TableCell colSpan={6} className="p-0">
-                        <div className="bg-red-50 border-b-2 border-red-200 px-4 py-3">
-                          <div className="flex items-start gap-3">
-                            <AlertTriangle className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
-                            <div className="flex-1 space-y-1">
-                              <p className="font-bold text-red-800 text-sm">تنبيه: مشاكل في الإنجاز</p>
-                              {alerts.map((alert, idx) => (
-                                <div key={idx} className="flex items-center gap-2 text-sm">
-                                  <Badge variant="secondary" className={alert.type === 'incomplete' ? 'bg-orange-100 text-orange-800' : 'bg-red-100 text-red-800'}>
-                                    {alert.type === 'incomplete' ? 'غير مكتمل' : 'تجاوز الكمية'}
-                                  </Badge>
-                                  <span className="text-red-700">
-                                    <span className="font-medium">{alert.itemName}</span> — منجز: <span className="font-bold">{alert.completed}</span> / مطلوب: <span className="font-bold">{alert.requested}</span>
-                                  </span>
-                                </div>
-                              ))}
-                              <p className="text-xs text-red-500 mt-1">مر أكثر من {ALERT_DAYS} يوم منذ آخر تحديث</p>
-                            </div>
-                          </div>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  )}
-                  {expandedOrders.includes(order.id) && order.items && order.items.length > 0 && (
-                    <TableRow key={`${order.id}-details`}>
-                      <TableCell colSpan={6} className="bg-slate-50 p-4">
-                        <div className="space-y-3">
-                          {order.items.filter((item: any) => (item.completedQuantity || 0) > 0).length > 0 && (order.status === 'in_progress' || order.status === 'completed') && (
-                            <div className="mb-3">
-                              <p className="font-bold text-sm text-green-700 mb-2">تم إنجاز من هذا الطلب:</p>
-                              <div className="grid gap-1">
-                                {order.items.filter((item: any) => (item.completedQuantity || 0) > 0).map((item: any, idx: number) => (
-                                  <div key={idx} className="flex items-center justify-between p-2 rounded-lg bg-green-50 border border-green-200">
-                                    <span>{item.product?.name}</span>
-                                    <div className="flex items-center gap-3">
-                                      <Badge variant={item.unit === 'bag' ? 'default' : 'outline'}>
-                                        {getUnitLabel(item.unit || 'piece')}
-                                      </Badge>
-                                      <span className="font-bold text-green-700">{item.completedQuantity} / {item.quantity}</span>
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                          <p className="font-bold text-sm mb-3">{(order.status === 'in_progress' || order.status === 'completed') ? 'الكمية المتبقية للإنجاز:' : 'أصناف الطلب:'}</p>
-                          <div className="grid gap-2">
-                            {order.items.filter((item: any) => {
-                              const remaining = item.quantity - (item.completedQuantity || 0);
-                              return remaining > 0 || order.status === 'submitted' || order.status === 'accepted';
-                            }).map((item: any, idx: number) => {
-                              const remaining = item.quantity - (item.completedQuantity || 0);
-                              const itemRefDate = item.lastCompletedUpdate ? new Date(item.lastCompletedUpdate) : (order.createdAt ? new Date(order.createdAt) : null);
-                              const itemHasIssue = itemRefDate && 
-                                ((new Date().getTime() - itemRefDate.getTime()) / (1000 * 60 * 60 * 24) >= ALERT_DAYS) &&
-                                item.completedQuantity !== item.quantity && !order.alertDismissed;
-                              return (
-                                <div key={idx} className={`flex items-center justify-between p-3 rounded-lg border gap-4 ${itemHasIssue ? 'bg-red-50 border-red-200' : 'bg-white'}`}>
-                                  <div className="flex-1">
-                                    <p className="font-medium">{item.product?.name}</p>
-                                    <p className="text-xs text-slate-400">{item.product?.sku}</p>
-                                  </div>
-                                  <div className="flex items-center gap-3">
-                                    <Badge variant={item.unit === 'bag' ? 'default' : 'outline'}>
-                                      {getUnitLabel(item.unit || 'piece')}
-                                    </Badge>
-                                    <div className="text-left">
-                                      <span className="font-bold text-primary text-lg">{order.status === 'submitted' || order.status === 'accepted' ? item.quantity : remaining}</span>
-                                      {(order.status === 'in_progress' || order.status === 'completed') && (
-                                        <span className="text-xs text-slate-400 mr-1">متبقي</span>
-                                      )}
-                                    </div>
-                                    {(order.status === 'in_progress' || order.status === 'completed') && remaining > 0 && (
-                                      <div className="flex items-center gap-2 border-r pr-3">
-                                        <span className="text-xs text-slate-500">إضافة كمية:</span>
-                                        <Input type="number" min={0} max={remaining}
-                                          value={completedQuantities[item.id] !== undefined ? (completedQuantities[item.id] === 0 ? '' : completedQuantities[item.id]) : ''}
-                                          onChange={(e) => {
-                                            const val = e.target.value === '' ? 0 : Number(e.target.value);
-                                            if (val >= 0 && val <= remaining) {
-                                              setCompletedQuantities(prev => ({ ...prev, [item.id]: val }));
-                                            }
-                                          }}
-                                          placeholder="0"
-                                          className={`w-20 h-8 text-center ${itemHasIssue ? 'border-red-300' : ''}`}
-                                          data-testid={`input-completed-${item.id}`} />
-                                        <Button size="sm" variant="outline"
-                                          onClick={() => {
-                                            const addedQty = completedQuantities[item.id] || 0;
-                                            if (addedQty > 0) {
-                                              handleCompletedQuantity(item.id, (item.completedQuantity || 0) + addedQty);
-                                              setCompletedQuantities(prev => ({ ...prev, [item.id]: 0 }));
-                                            }
-                                          }}
-                                          disabled={updateCompleted.isPending || !(completedQuantities[item.id] > 0)} data-testid={`button-save-completed-${item.id}`}>
-                                          حفظ
-                                        </Button>
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </>
-              );
-            })}
-            {filteredOrders?.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={6} className="text-center py-12 text-slate-400">لا توجد طلبات</TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
-    </div>
-  );
+          {order.items && order.items.length > 0 && renderOrderItems(order)}
+        </CardContent>
+      </Card>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-slate-50 flex" dir="rtl">
@@ -570,40 +331,35 @@ export default function ReceptionOrders() {
         <div className="max-w-7xl mx-auto space-y-6">
           <div className="flex flex-col gap-2">
             <h1 className="text-3xl font-bold text-slate-900" data-testid="text-page-title">إدارة الطلبات</h1>
-            <p className="text-slate-500">استقبال وإدارة طلبات نقاط البيع</p>
+            <p className="text-slate-500">قبول ورفض الأصناف وإدارة حالة الإنتاج</p>
           </div>
-          
+
           <div className="flex flex-wrap gap-2">
             {[
               { key: 'pending', label: 'في الانتظار', count: orders?.filter((o: any) => o.status === 'submitted').length || 0 },
               { key: 'accepted', label: 'قيد العمل', count: orders?.filter((o: any) => o.status === 'accepted' || o.status === 'in_progress').length || 0 },
-              { key: 'completed', label: 'منجزة', count: orders?.filter((o: any) => o.status === 'completed').length || 0 },
-              { key: 'rejected', label: 'مرفوضة', count: orders?.filter((o: any) => o.status === 'rejected').length || 0 },
+              { key: 'completed', label: 'منجز', count: orders?.filter((o: any) => o.status === 'completed').length || 0 },
+              { key: 'rejected', label: 'مرفوض', count: orders?.filter((o: any) => o.status === 'rejected').length || 0 },
+              ...(alertCount > 0 ? [{ key: 'alerts', label: 'تنبيهات', count: alertCount }] : []),
               { key: 'all', label: 'الكل', count: orders?.length || 0 },
             ].map(f => (
               <Button key={f.key} variant={activeFilter === f.key ? 'default' : 'outline'} size="sm"
-                onClick={() => setActiveFilter(f.key)} data-testid={`filter-${f.key}`}>
+                onClick={() => setActiveFilter(f.key)} data-testid={`filter-${f.key}`}
+                className={f.key === 'alerts' ? 'border-red-300 text-red-600' : ''}>
                 {f.label} ({f.count})
               </Button>
             ))}
-            {alertCount > 0 && (
-              <Button variant={activeFilter === 'alerts' ? 'default' : 'outline'} size="sm"
-                onClick={() => setActiveFilter('alerts')}
-                className={activeFilter !== 'alerts' ? 'border-red-300 text-red-600 hover:bg-red-50' : 'bg-red-600 hover:bg-red-700'}
-                data-testid="filter-alerts">
-                <AlertTriangle className="h-4 w-4 ml-1" />
-                إنذارات ({alertCount})
-              </Button>
-            )}
           </div>
 
           {isLoading ? (
             <div className="p-12 flex justify-center"><Loader2 className="animate-spin text-primary" /></div>
           ) : (
-            <>
-              {renderMobileCards()}
-              {renderDesktopTable()}
-            </>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {filteredOrders?.map((order: any) => renderOrderCard(order))}
+              {filteredOrders?.length === 0 && (
+                <div className="col-span-full text-center py-12 text-slate-400">لا توجد طلبات</div>
+              )}
+            </div>
           )}
         </div>
       </main>

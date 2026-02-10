@@ -24,7 +24,9 @@ export interface IStorage {
   createOrder(salesPointId: string, order: CreateOrderRequest): Promise<Order>;
   updateOrderStatus(id: number, status: string, changedByUserId?: string): Promise<Order | undefined>;
   getOrderItem(itemId: number): Promise<OrderItem | undefined>;
+  updateOrderItemStatus(itemId: number, itemStatus: string): Promise<OrderItem | undefined>;
   updateOrderItemCompletedQuantity(itemId: number, completedQuantity: number): Promise<OrderItem | undefined>;
+  syncOrderStatusFromItems(orderId: number): Promise<void>;
   dismissOrderAlert(orderId: number): Promise<Order | undefined>;
 
   // User Roles
@@ -264,6 +266,44 @@ export class DatabaseStorage implements IStorage {
   async getOrderItem(itemId: number): Promise<OrderItem | undefined> {
     const [item] = await db.select().from(orderItems).where(eq(orderItems.id, itemId));
     return item;
+  }
+
+  async updateOrderItemStatus(itemId: number, itemStatus: string): Promise<OrderItem | undefined> {
+    const [updated] = await db
+      .update(orderItems)
+      .set({ itemStatus })
+      .where(eq(orderItems.id, itemId))
+      .returning();
+    return updated;
+  }
+
+  async syncOrderStatusFromItems(orderId: number): Promise<void> {
+    const items = await db.select().from(orderItems).where(eq(orderItems.orderId, orderId));
+    if (items.length === 0) return;
+
+    const allAccepted = items.every(i => i.itemStatus === 'accepted' || i.itemStatus === 'in_progress' || i.itemStatus === 'completed');
+    const allRejected = items.every(i => i.itemStatus === 'rejected');
+    const anyInProgress = items.some(i => i.itemStatus === 'in_progress');
+    const allCompleted = items.every(i => i.itemStatus === 'completed' || i.itemStatus === 'rejected');
+    const anyAcceptedOrMore = items.some(i => ['accepted', 'in_progress', 'completed'].includes(i.itemStatus));
+
+    const [order] = await db.select().from(orders).where(eq(orders.id, orderId));
+    if (!order || order.status === 'shipped' || order.status === 'received') return;
+
+    let newStatus = order.status;
+    if (allRejected) {
+      newStatus = 'rejected';
+    } else if (allCompleted && anyAcceptedOrMore) {
+      newStatus = 'completed';
+    } else if (anyInProgress) {
+      newStatus = 'in_progress';
+    } else if (allAccepted || anyAcceptedOrMore) {
+      newStatus = 'accepted';
+    }
+
+    if (newStatus !== order.status) {
+      await db.update(orders).set({ status: newStatus, statusChangedAt: new Date() }).where(eq(orders.id, orderId));
+    }
   }
 
   async updateOrderItemCompletedQuantity(itemId: number, completedQuantity: number): Promise<OrderItem | undefined> {

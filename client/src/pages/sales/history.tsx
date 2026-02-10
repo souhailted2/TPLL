@@ -12,12 +12,13 @@ export default function SalesOrderHistory() {
   const completedOrders = useMemo(() => {
     if (!orders) return [];
     return orders.filter((order: any) => 
-      order.status === 'completed' || order.status === 'cancelled'
+      order.status === 'received' || order.status === 'completed' || order.status === 'cancelled'
     );
   }, [orders]);
 
   const getStatusColor = (status: string) => {
     switch(status) {
+      case 'received': return 'bg-teal-100 text-teal-800';
       case 'completed': return 'bg-green-100 text-green-800';
       case 'cancelled': return 'bg-red-100 text-red-800';
       default: return 'bg-slate-100 text-slate-800';
@@ -26,7 +27,8 @@ export default function SalesOrderHistory() {
 
   const getStatusLabel = (status: string) => {
     switch(status) {
-      case 'completed': return 'تم الاستلام';
+      case 'received': return 'تم الاستلام';
+      case 'completed': return 'منجز';
       case 'cancelled': return 'ملغي';
       default: return status;
     }

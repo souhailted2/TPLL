@@ -214,7 +214,7 @@ export default function NewOrder() {
           </div>
 
           {/* Products Grid - Full Width */}
-          <div className="flex-1 overflow-y-auto pl-0 lg:pl-80">
+          <div className="flex-1 overflow-y-auto pb-20 lg:pb-0 pl-0 lg:pl-80">
             {productsLoading ? (
               <div className="flex justify-center p-12"><Loader2 className="animate-spin" /></div>
             ) : (

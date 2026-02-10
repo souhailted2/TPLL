@@ -143,11 +143,32 @@ export default function AdminOrders() {
     </div>
   );
 
+  const getItemStatusColor = (status: string) => {
+    switch(status) {
+      case 'accepted': return 'bg-emerald-100 text-emerald-800';
+      case 'in_progress': return 'bg-blue-100 text-blue-800';
+      case 'completed': return 'bg-green-100 text-green-800';
+      case 'rejected': return 'bg-red-100 text-red-800';
+      default: return 'bg-amber-100 text-orange-800';
+    }
+  };
+
+  const getItemStatusLabel = (status: string) => {
+    switch(status) {
+      case 'accepted': return 'مقبول';
+      case 'in_progress': return 'قيد الإنجاز';
+      case 'completed': return 'تم الإنجاز';
+      case 'rejected': return 'مرفوض';
+      default: return 'في الانتظار';
+    }
+  };
+
   const renderOrderItems = (order: any) => (
     <div className="space-y-2 mt-3 pt-3 border-t border-slate-100">
       <p className="font-bold text-sm">تفاصيل الطلب:</p>
       <div className="grid gap-2">
         {order.items.map((item: any, idx: number) => {
+          const itemSt = item.itemStatus || 'pending';
           const itemRefDate = item.lastCompletedUpdate ? new Date(item.lastCompletedUpdate) : (order.createdAt ? new Date(order.createdAt) : null);
           const itemHasIssue = itemRefDate && 
             ((new Date().getTime() - itemRefDate.getTime()) / (1000 * 60 * 60 * 24) >= ALERT_DAYS) &&
@@ -159,6 +180,9 @@ export default function AdminOrders() {
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-sm break-words">{item.product?.name}</p>
                   <p className="text-[10px] text-slate-400">{item.product?.sku}</p>
+                  <Badge variant="secondary" className={`text-[10px] mt-1 ${getItemStatusColor(itemSt)}`}>
+                    {getItemStatusLabel(itemSt)}
+                  </Badge>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   <Badge variant={item.unit === 'bag' ? 'default' : 'outline'} className="text-[10px]">
@@ -315,7 +339,7 @@ export default function AdminOrders() {
                       {hasAlert && (
                         <Button
                           size="sm" variant="outline"
-                          className="border-red-300 text-red-600 hover:bg-red-50 gap-1"
+                          className="border-red-300 text-red-600 gap-1"
                           onClick={() => handleDismissAlert(order.id)}
                           disabled={dismissAlert.isPending}
                           data-testid={`button-dismiss-alert-${order.id}`}
@@ -358,6 +382,7 @@ export default function AdminOrders() {
                           <p className="font-bold text-sm mb-3">تفاصيل الطلب:</p>
                           <div className="grid gap-2">
                             {order.items.map((item: any, idx: number) => {
+                              const itemSt2 = item.itemStatus || 'pending';
                               const itemRefDate = item.lastCompletedUpdate ? new Date(item.lastCompletedUpdate) : (order.createdAt ? new Date(order.createdAt) : null);
                               const itemHasIssue = itemRefDate && 
                                 ((new Date().getTime() - itemRefDate.getTime()) / (1000 * 60 * 60 * 24) >= ALERT_DAYS) &&
@@ -367,6 +392,9 @@ export default function AdminOrders() {
                                   <div className="flex-1">
                                     <p className="font-medium">{item.product?.name}</p>
                                     <p className="text-xs text-slate-400">{item.product?.sku}</p>
+                                    <Badge variant="secondary" className={`text-[10px] mt-1 ${getItemStatusColor(itemSt2)}`}>
+                                      {getItemStatusLabel(itemSt2)}
+                                    </Badge>
                                   </div>
                                   <div className="flex items-center gap-4">
                                     <Badge variant={item.unit === 'bag' ? 'default' : 'outline'}>
@@ -434,7 +462,7 @@ export default function AdminOrders() {
                 variant={activeFilter === 'alerts' ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => handleFilterChange('alerts')}
-                className={activeFilter !== 'alerts' ? 'border-red-300 text-red-600 hover:bg-red-50' : 'bg-red-600 hover:bg-red-700'}
+                className={activeFilter !== 'alerts' ? 'border-red-300 text-red-600' : 'bg-red-600'}
                 data-testid="filter-alerts"
               >
                 <AlertTriangle className="h-4 w-4 ml-1" />

@@ -128,13 +128,8 @@ export async function registerRoutes(
   // === Orders API ===
 
   app.get(api.orders.list.path, requireAuth, async (req: any, res) => {
-    const userId = req.session.userId;
-    const role = await storage.getUserRole(userId);
-    
-    // Factory staff (admin, reception, shipping) see all orders. Sales points see own only.
-    const isFactory = ['admin', 'reception', 'shipping'].includes(role?.role || '');
-    const salesPointId = isFactory ? undefined : userId;
-    const orders = await storage.getOrders(salesPointId);
+    // All users see all orders
+    const orders = await storage.getOrders();
     res.json(orders);
   });
 
@@ -302,21 +297,63 @@ export async function registerRoutes(
     }
   });
 
-  // Update completed quantity for order items
-  app.patch("/api/order-items/:id/completed", requireAdmin, async (req: any, res) => {
+  // Update item status (reception team - per item accept/reject/in_progress/completed)
+  app.patch("/api/order-items/:id/status", requireFactory, async (req: any, res) => {
     try {
       const itemId = Number(req.params.id);
-      const { completedQuantity } = req.body;
+      const { itemStatus } = req.body;
+      const userId = req.session.userId;
+      const userRole = await storage.getUserRole(userId);
+      const role = userRole?.role;
       
-      if (typeof completedQuantity !== 'number' || completedQuantity < 0) {
-        return res.status(400).json({ message: "الكمية المنجزة غير صالحة" });
+      if (!['pending', 'accepted', 'rejected', 'in_progress', 'completed'].includes(itemStatus)) {
+        return res.status(400).json({ message: "حالة غير صالحة" });
+      }
+
+      if (!['admin', 'reception'].includes(role || '')) {
+        return res.status(403).json({ message: "ليس لديك صلاحية لتغيير حالة الصنف" });
       }
 
       const existingItem = await storage.getOrderItem(itemId);
       if (!existingItem) return res.status(404).json({ message: "Item not found" });
       
-      if (completedQuantity < (existingItem.completedQuantity || 0)) {
-        return res.status(400).json({ message: "لا يمكن إدخال كمية أقل من الكمية المنجزة سابقاً" });
+      const updated = await storage.updateOrderItemStatus(itemId, itemStatus);
+      if (!updated) return res.status(404).json({ message: "Item not found" });
+
+      // Auto-update order status based on item statuses
+      await storage.syncOrderStatusFromItems(updated.orderId);
+      
+      res.json(updated);
+    } catch (err) {
+      console.error("Error updating item status:", err);
+      res.status(500).json({ message: "Failed to update item status" });
+    }
+  });
+
+  // Update completed quantity for order items (shipping team)
+  app.patch("/api/order-items/:id/completed", requireFactory, async (req: any, res) => {
+    try {
+      const itemId = Number(req.params.id);
+      const { completedQuantity } = req.body;
+      const userId = req.session.userId;
+      const userRole = await storage.getUserRole(userId);
+      const role = userRole?.role;
+      
+      if (!['admin', 'shipping'].includes(role || '')) {
+        return res.status(403).json({ message: "ليس لديك صلاحية لتعديل الكمية المستلمة" });
+      }
+      
+      if (typeof completedQuantity !== 'number' || completedQuantity < 0) {
+        return res.status(400).json({ message: "الكمية المستلمة غير صالحة" });
+      }
+
+      const existingItem = await storage.getOrderItem(itemId);
+      if (!existingItem) return res.status(404).json({ message: "Item not found" });
+      
+      // Allow up to 150% of requested quantity
+      const maxAllowed = Math.ceil(existingItem.quantity * 1.5);
+      if (completedQuantity > maxAllowed) {
+        return res.status(400).json({ message: `الكمية المستلمة لا يمكن أن تتجاوز ${maxAllowed} (150% من الكمية المطلوبة)` });
       }
       
       const updated = await storage.updateOrderItemCompletedQuantity(itemId, completedQuantity);

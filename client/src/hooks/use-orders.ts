@@ -82,7 +82,32 @@ export function useUpdateCompletedQuantity() {
         body: JSON.stringify({ completedQuantity }),
         credentials: "include",
       });
-      if (!res.ok) throw new Error("فشل تحديث الكمية المنجزة");
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ message: "فشل تحديث الكمية المستلمة" }));
+        throw new Error(err.message);
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [api.orders.list.path] });
+    },
+  });
+}
+
+export function useUpdateItemStatus() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ itemId, itemStatus }: { itemId: number; itemStatus: string }) => {
+      const res = await fetch(`/api/order-items/${itemId}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ itemStatus }),
+        credentials: "include",
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ message: "فشل تحديث حالة الصنف" }));
+        throw new Error(err.message);
+      }
       return res.json();
     },
     onSuccess: () => {
