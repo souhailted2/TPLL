@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict BI3Hfg7DZeI2GyTksMTU7E6at3fVt5bfugrchYY279ib6aARpqEQ1RY1qOSwENI
+\restrict Sejyowr6zmNqDewhEx75UXF4bqzQJY19qbtRyErXl5BO8eA4ls1DbBXTHCHTsg9
 
 -- Dumped from database version 16.10
 -- Dumped by pg_dump version 16.10
@@ -18,50 +18,12 @@ SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
 
-ALTER TABLE IF EXISTS ONLY public.user_roles DROP CONSTRAINT IF EXISTS user_roles_user_id_users_id_fk;
-ALTER TABLE IF EXISTS ONLY public.push_tokens DROP CONSTRAINT IF EXISTS push_tokens_user_id_users_id_fk;
-ALTER TABLE IF EXISTS ONLY public.orders DROP CONSTRAINT IF EXISTS orders_status_changed_by_users_id_fk;
-ALTER TABLE IF EXISTS ONLY public.orders DROP CONSTRAINT IF EXISTS orders_sales_point_id_users_id_fk;
-ALTER TABLE IF EXISTS ONLY public.order_items DROP CONSTRAINT IF EXISTS order_items_product_id_products_id_fk;
-ALTER TABLE IF EXISTS ONLY public.order_items DROP CONSTRAINT IF EXISTS order_items_order_id_orders_id_fk;
-ALTER TABLE IF EXISTS ONLY public.notifications DROP CONSTRAINT IF EXISTS notifications_user_id_users_id_fk;
-ALTER TABLE IF EXISTS ONLY public.notifications DROP CONSTRAINT IF EXISTS notifications_order_id_orders_id_fk;
-DROP INDEX IF EXISTS public."IDX_session_expire";
-ALTER TABLE IF EXISTS ONLY public.users DROP CONSTRAINT IF EXISTS users_username_unique;
-ALTER TABLE IF EXISTS ONLY public.users DROP CONSTRAINT IF EXISTS users_pkey;
-ALTER TABLE IF EXISTS ONLY public.users DROP CONSTRAINT IF EXISTS users_email_unique;
-ALTER TABLE IF EXISTS ONLY public.user_roles DROP CONSTRAINT IF EXISTS user_roles_pkey;
-ALTER TABLE IF EXISTS ONLY public.sessions DROP CONSTRAINT IF EXISTS sessions_pkey;
-ALTER TABLE IF EXISTS ONLY public.push_tokens DROP CONSTRAINT IF EXISTS push_tokens_pkey;
-ALTER TABLE IF EXISTS ONLY public.products DROP CONSTRAINT IF EXISTS products_sku_unique;
-ALTER TABLE IF EXISTS ONLY public.products DROP CONSTRAINT IF EXISTS products_pkey;
-ALTER TABLE IF EXISTS ONLY public.orders DROP CONSTRAINT IF EXISTS orders_pkey;
-ALTER TABLE IF EXISTS ONLY public.order_items DROP CONSTRAINT IF EXISTS order_items_pkey;
-ALTER TABLE IF EXISTS ONLY public.notifications DROP CONSTRAINT IF EXISTS notifications_pkey;
-ALTER TABLE IF EXISTS public.push_tokens ALTER COLUMN id DROP DEFAULT;
-ALTER TABLE IF EXISTS public.products ALTER COLUMN id DROP DEFAULT;
-ALTER TABLE IF EXISTS public.orders ALTER COLUMN id DROP DEFAULT;
-ALTER TABLE IF EXISTS public.order_items ALTER COLUMN id DROP DEFAULT;
-ALTER TABLE IF EXISTS public.notifications ALTER COLUMN id DROP DEFAULT;
-DROP TABLE IF EXISTS public.users;
-DROP TABLE IF EXISTS public.user_roles;
-DROP TABLE IF EXISTS public.sessions;
-DROP SEQUENCE IF EXISTS public.push_tokens_id_seq;
-DROP TABLE IF EXISTS public.push_tokens;
-DROP SEQUENCE IF EXISTS public.products_id_seq;
-DROP TABLE IF EXISTS public.products;
-DROP SEQUENCE IF EXISTS public.orders_id_seq;
-DROP TABLE IF EXISTS public.orders;
-DROP SEQUENCE IF EXISTS public.order_items_id_seq;
-DROP TABLE IF EXISTS public.order_items;
-DROP SEQUENCE IF EXISTS public.notifications_id_seq;
-DROP TABLE IF EXISTS public.notifications;
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
 
 --
--- Name: notifications; Type: TABLE; Schema: public; Owner: -
+-- Name: notifications; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.notifications (
@@ -76,8 +38,10 @@ CREATE TABLE public.notifications (
 );
 
 
+ALTER TABLE public.notifications OWNER TO postgres;
+
 --
--- Name: notifications_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: notifications_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
 CREATE SEQUENCE public.notifications_id_seq
@@ -89,15 +53,17 @@ CREATE SEQUENCE public.notifications_id_seq
     CACHE 1;
 
 
+ALTER SEQUENCE public.notifications_id_seq OWNER TO postgres;
+
 --
--- Name: notifications_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+-- Name: notifications_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
 
 ALTER SEQUENCE public.notifications_id_seq OWNED BY public.notifications.id;
 
 
 --
--- Name: order_items; Type: TABLE; Schema: public; Owner: -
+-- Name: order_items; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.order_items (
@@ -112,8 +78,10 @@ CREATE TABLE public.order_items (
 );
 
 
+ALTER TABLE public.order_items OWNER TO postgres;
+
 --
--- Name: order_items_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: order_items_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
 CREATE SEQUENCE public.order_items_id_seq
@@ -125,15 +93,17 @@ CREATE SEQUENCE public.order_items_id_seq
     CACHE 1;
 
 
+ALTER SEQUENCE public.order_items_id_seq OWNER TO postgres;
+
 --
--- Name: order_items_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+-- Name: order_items_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
 
 ALTER SEQUENCE public.order_items_id_seq OWNED BY public.order_items.id;
 
 
 --
--- Name: orders; Type: TABLE; Schema: public; Owner: -
+-- Name: orders; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.orders (
@@ -149,8 +119,10 @@ CREATE TABLE public.orders (
 );
 
 
+ALTER TABLE public.orders OWNER TO postgres;
+
 --
--- Name: orders_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: orders_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
 CREATE SEQUENCE public.orders_id_seq
@@ -162,15 +134,17 @@ CREATE SEQUENCE public.orders_id_seq
     CACHE 1;
 
 
+ALTER SEQUENCE public.orders_id_seq OWNER TO postgres;
+
 --
--- Name: orders_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+-- Name: orders_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
 
 ALTER SEQUENCE public.orders_id_seq OWNED BY public.orders.id;
 
 
 --
--- Name: products; Type: TABLE; Schema: public; Owner: -
+-- Name: products; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.products (
@@ -184,8 +158,10 @@ CREATE TABLE public.products (
 );
 
 
+ALTER TABLE public.products OWNER TO postgres;
+
 --
--- Name: products_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: products_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
 CREATE SEQUENCE public.products_id_seq
@@ -197,15 +173,17 @@ CREATE SEQUENCE public.products_id_seq
     CACHE 1;
 
 
+ALTER SEQUENCE public.products_id_seq OWNER TO postgres;
+
 --
--- Name: products_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+-- Name: products_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
 
 ALTER SEQUENCE public.products_id_seq OWNED BY public.products.id;
 
 
 --
--- Name: push_tokens; Type: TABLE; Schema: public; Owner: -
+-- Name: push_tokens; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.push_tokens (
@@ -216,8 +194,10 @@ CREATE TABLE public.push_tokens (
 );
 
 
+ALTER TABLE public.push_tokens OWNER TO postgres;
+
 --
--- Name: push_tokens_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: push_tokens_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
 CREATE SEQUENCE public.push_tokens_id_seq
@@ -229,15 +209,17 @@ CREATE SEQUENCE public.push_tokens_id_seq
     CACHE 1;
 
 
+ALTER SEQUENCE public.push_tokens_id_seq OWNER TO postgres;
+
 --
--- Name: push_tokens_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+-- Name: push_tokens_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
 
 ALTER SEQUENCE public.push_tokens_id_seq OWNED BY public.push_tokens.id;
 
 
 --
--- Name: sessions; Type: TABLE; Schema: public; Owner: -
+-- Name: sessions; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.sessions (
@@ -247,8 +229,10 @@ CREATE TABLE public.sessions (
 );
 
 
+ALTER TABLE public.sessions OWNER TO postgres;
+
 --
--- Name: user_roles; Type: TABLE; Schema: public; Owner: -
+-- Name: user_roles; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.user_roles (
@@ -258,8 +242,10 @@ CREATE TABLE public.user_roles (
 );
 
 
+ALTER TABLE public.user_roles OWNER TO postgres;
+
 --
--- Name: users; Type: TABLE; Schema: public; Owner: -
+-- Name: users; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.users (
@@ -275,43 +261,45 @@ CREATE TABLE public.users (
 );
 
 
+ALTER TABLE public.users OWNER TO postgres;
+
 --
--- Name: notifications id; Type: DEFAULT; Schema: public; Owner: -
+-- Name: notifications id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.notifications ALTER COLUMN id SET DEFAULT nextval('public.notifications_id_seq'::regclass);
 
 
 --
--- Name: order_items id; Type: DEFAULT; Schema: public; Owner: -
+-- Name: order_items id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.order_items ALTER COLUMN id SET DEFAULT nextval('public.order_items_id_seq'::regclass);
 
 
 --
--- Name: orders id; Type: DEFAULT; Schema: public; Owner: -
+-- Name: orders id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.orders ALTER COLUMN id SET DEFAULT nextval('public.orders_id_seq'::regclass);
 
 
 --
--- Name: products id; Type: DEFAULT; Schema: public; Owner: -
+-- Name: products id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.products ALTER COLUMN id SET DEFAULT nextval('public.products_id_seq'::regclass);
 
 
 --
--- Name: push_tokens id; Type: DEFAULT; Schema: public; Owner: -
+-- Name: push_tokens id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.push_tokens ALTER COLUMN id SET DEFAULT nextval('public.push_tokens_id_seq'::regclass);
 
 
 --
--- Data for Name: notifications; Type: TABLE DATA; Schema: public; Owner: -
+-- Data for Name: notifications; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.notifications (id, user_id, type, title, message, order_id, is_read, created_at) FROM stdin;
@@ -319,7 +307,7 @@ COPY public.notifications (id, user_id, type, title, message, order_id, is_read,
 
 
 --
--- Data for Name: order_items; Type: TABLE DATA; Schema: public; Owner: -
+-- Data for Name: order_items; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.order_items (id, order_id, product_id, quantity, unit, completed_quantity, last_completed_update, item_status) FROM stdin;
@@ -327,7 +315,7 @@ COPY public.order_items (id, order_id, product_id, quantity, unit, completed_qua
 
 
 --
--- Data for Name: orders; Type: TABLE DATA; Schema: public; Owner: -
+-- Data for Name: orders; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.orders (id, sales_point_id, status, created_at, status_changed_by, status_changed_at, alert_dismissed, alert_dismissed_at, alert_notification_sent_at) FROM stdin;
@@ -335,7 +323,7 @@ COPY public.orders (id, sales_point_id, status, created_at, status_changed_by, s
 
 
 --
--- Data for Name: products; Type: TABLE DATA; Schema: public; Owner: -
+-- Data for Name: products; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.products (id, name, sku, description, image_url, finish, size) FROM stdin;
@@ -5131,7 +5119,7 @@ COPY public.products (id, name, sku, description, image_url, finish, size) FROM 
 
 
 --
--- Data for Name: push_tokens; Type: TABLE DATA; Schema: public; Owner: -
+-- Data for Name: push_tokens; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.push_tokens (id, user_id, token, created_at) FROM stdin;
@@ -5139,23 +5127,23 @@ COPY public.push_tokens (id, user_id, token, created_at) FROM stdin;
 
 
 --
--- Data for Name: sessions; Type: TABLE DATA; Schema: public; Owner: -
+-- Data for Name: sessions; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.sessions (sid, sess, expire) FROM stdin;
 8SNoazdPemlJlO-bwTOPmyMJmwoGBy1I	{"cookie": {"path": "/", "secure": false, "expires": "2026-02-10T20:19:27.313Z", "httpOnly": true, "originalMaxAge": 604800000}, "userId": "b16b9c8d-5076-4c9b-9b19-609a8d16fec0"}	2026-02-10 20:20:24
+k75KFKxCPdwo0uKCctr9Y-pp1dDDCxHh	{"cookie": {"path": "/", "secure": false, "expires": "2026-02-17T16:43:32.225Z", "httpOnly": true, "originalMaxAge": 604800000}, "userId": "c5f5033a-a7c8-4551-8ed1-9bd2ca457e97"}	2026-02-17 18:49:58
 hXNnaN_dLdJziC8ct8kAvJ5mfAS0kYdl	{"cookie": {"path": "/", "secure": false, "expires": "2026-02-13T12:36:07.762Z", "httpOnly": true, "originalMaxAge": 604800000}, "userId": "1f34adf3-dbd8-4803-8e46-713bca852f04"}	2026-02-13 12:36:39
 B8F1M4qb80jodHpEySm-FusuDnusWgSP	{"cookie": {"path": "/", "secure": true, "expires": "2026-02-09T22:17:50.458Z", "httpOnly": true, "originalMaxAge": 604800000}, "replit.com": {"code_verifier": "0NxrDnbW6vQNz4vc5UMH6snd17QXa-0yAuvHKCc3xQ0"}}	2026-02-10 23:11:51
 flkVS7-XECxQYtjiLGUTJlCnm9kNyBz5	{"cookie": {"path": "/", "secure": false, "expires": "2026-02-13T12:43:24.695Z", "httpOnly": true, "originalMaxAge": 604800000}, "userId": "e429da65-e190-470b-aac2-6f61b59910dd"}	2026-02-13 12:43:25
 YDZed62DiKjR0Fqsau5eliCSSistr8Ms	{"cookie": {"path": "/", "secure": false, "expires": "2026-02-13T11:49:00.806Z", "httpOnly": true, "originalMaxAge": 604800000}, "userId": "c5f5033a-a7c8-4551-8ed1-9bd2ca457e97"}	2026-02-13 11:49:31
-k75KFKxCPdwo0uKCctr9Y-pp1dDDCxHh	{"cookie": {"path": "/", "secure": false, "expires": "2026-02-17T16:43:32.225Z", "httpOnly": true, "originalMaxAge": 604800000}, "userId": "c5f5033a-a7c8-4551-8ed1-9bd2ca457e97"}	2026-02-17 17:31:56
 X2Rm7_r-gIlXlW8qIGf6NdXir4Kaz0eG	{"cookie": {"path": "/", "secure": false, "expires": "2026-02-10T20:22:14.543Z", "httpOnly": true, "originalMaxAge": 604800000}, "userId": "b16b9c8d-5076-4c9b-9b19-609a8d16fec0"}	2026-02-10 20:22:15
 no1LjGq1chbJpPF-JTKunTXsmpxC0-jQ	{"cookie": {"path": "/", "secure": false, "expires": "2026-02-10T21:29:34.759Z", "httpOnly": true, "originalMaxAge": 604800000}, "userId": "c5f5033a-a7c8-4551-8ed1-9bd2ca457e97"}	2026-02-10 21:30:00
 \.
 
 
 --
--- Data for Name: user_roles; Type: TABLE DATA; Schema: public; Owner: -
+-- Data for Name: user_roles; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.user_roles (user_id, role, sales_point_name) FROM stdin;
@@ -5174,61 +5162,61 @@ dbebebdb-0cd0-453e-bf53-8604423984c3	sales_point	الوادي
 
 
 --
--- Data for Name: users; Type: TABLE DATA; Schema: public; Owner: -
+-- Data for Name: users; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.users (id, email, first_name, last_name, profile_image_url, created_at, updated_at, username, password) FROM stdin;
 b16b9c8d-5076-4c9b-9b19-609a8d16fec0	\N	موظف المصنع	\N	\N	2026-02-02 22:52:31.182698	2026-02-02 22:52:31.182698	factory	$2b$10$1f9s6/CgRme0uWgZSKl3hOfIq.a1GuUl8uBOupqb0hoYKcOXdUNiq
 2430e382-c6f2-4b05-85fa-c6127c0d8fb9	\N	المالك	\N	\N	2026-02-02 22:52:31.077073	2026-02-02 22:52:31.077073	owner	$2b$10$LxPrvSMKFMJMFGd/1c79yundXoJR9o3PkkN2uHegfmJO3cGLMQA16
 54123747	souhailted2@gmail.com	souhail	tedjani	\N	2026-02-02 21:42:33.615112	2026-02-02 21:44:40.47	admin	$2a$10$D3Vdz8qQ9K8bJz6q2dJMq.E4aZ3h1pWr3sL5vN8uB7cX6jH4gF2iK
-e429da65-e190-470b-aac2-6f61b59910dd	\N	المدير العام	\N	\N	2026-02-06 12:42:46.474939	2026-02-06 12:42:46.474939	المدير العام	$2b$10$xAsQuKPh.5C0F9TZAjRufe5VJW1bogbbULlYcQrPrcwmtbLqKyw4K
-1f34adf3-dbd8-4803-8e46-713bca852f04	\N	طارق	\N	\N	2026-02-06 12:06:21.506858	2026-02-06 12:06:21.506858	reception1	$2b$10$HATXiQgHP45Kkgi7yGbyz.Gt1nfa8WFyYy9myRHqfIWLX1lwxmeNC
-f4f6bc67-0521-432c-a131-e4436979b734	\N	العيد	\N	\N	2026-02-06 12:06:21.609753	2026-02-06 12:06:21.609753	reception2	$2b$10$oi/3kH7tbrxycko8BZl6BOs43XUWKzg0zPbN8YA9LgTYUCgy66RrG
-b62f0e67-b8f7-45a6-abd0-4d1977f97dc7	\N	وليد	\N	\N	2026-02-06 12:06:21.706227	2026-02-06 12:06:21.706227	reception3	$2b$10$rjkNsbpW6dCz9X.V6O6GuO4kKqdJD83Jl5xtTzhbRuftM2XLUa.Yi
-8be44d8c-b685-4816-9d93-609a6c471413	\N	فريق الشحن	\N	\N	2026-02-06 12:06:21.805755	2026-02-06 12:06:21.805755	shipping	$2b$10$X1HKufA4ZWVYNyWes6rPq.Vu/V14h6rhtciz.owQ6BgRkuS3spimy
-c5f5033a-a7c8-4551-8ed1-9bd2ca457e97	\N	نقطة بيع الجزائر	\N	\N	2026-02-02 22:52:31.294832	2026-02-02 22:52:31.294832	alger	$2b$10$QxgqKowJ9EUGhDkymw05XOgGeKj132JDJleC77avv/AlGrP/6BixK
-dbebebdb-0cd0-453e-bf53-8604423984c3	\N	نقطة بيع الوادي	\N	\N	2026-02-02 22:52:31.41937	2026-02-02 22:52:31.41937	eloued	$2b$10$ovVMeMFG3IUAdmw3Vy8tC./nEYsZu7ikibr1GeowQzGjtzuWhM/qq
-959cf514-0c1e-4af3-825c-2f6f80c5c74b	\N	نقطة بيع العلمة	\N	\N	2026-02-02 22:52:31.547801	2026-02-02 22:52:31.547801	elma	$2b$10$tzioGI4LYqRjFOBFXZ6wHe.5bORL34lJCekFFzcMps3r8/ZJ2NyqK
+1f34adf3-dbd8-4803-8e46-713bca852f04	\N	طارق	\N	\N	2026-02-06 12:06:21.506858	2026-02-06 12:06:21.506858	reception1	$2b$10$hOkJHN5rImNZc.XtleI.7OfLhEVealEaao6JTldhZszKOUVs4ICTm
+f4f6bc67-0521-432c-a131-e4436979b734	\N	العيد	\N	\N	2026-02-06 12:06:21.609753	2026-02-06 12:06:21.609753	reception2	$2b$10$.AJDGvWxi8y8NDnohd7dXOyuwIA/LHVGw3uIi4HRvsBovtm6olXbm
+b62f0e67-b8f7-45a6-abd0-4d1977f97dc7	\N	وليد	\N	\N	2026-02-06 12:06:21.706227	2026-02-06 12:06:21.706227	reception3	$2b$10$jI2MB0J9Of.UlNiboovs1OyCb9EejQIKeZbV4Rm32fbvFO9XbAqlO
+8be44d8c-b685-4816-9d93-609a6c471413	\N	فريق الشحن	\N	\N	2026-02-06 12:06:21.805755	2026-02-06 12:06:21.805755	shipping	$2b$10$FnXpLou8h7TgKZb08tLUJe7Ri7ycP5so25tP6NwZlEvj3NQs1wuce
+c5f5033a-a7c8-4551-8ed1-9bd2ca457e97	\N	نقطة بيع الجزائر	\N	\N	2026-02-02 22:52:31.294832	2026-02-02 22:52:31.294832	alger	$2b$10$SKj43OLVEku9rXXtUEvVOO.aRjFYL7dDHoUACfT2stPPmkpmsCe4m
+dbebebdb-0cd0-453e-bf53-8604423984c3	\N	نقطة بيع الوادي	\N	\N	2026-02-02 22:52:31.41937	2026-02-02 22:52:31.41937	eloued	$2b$10$wInodX85AlpFDEGtnULZUOj9BsR.0QYQikyPQNqY31TTT5newq5sq
+959cf514-0c1e-4af3-825c-2f6f80c5c74b	\N	نقطة بيع العلمة	\N	\N	2026-02-02 22:52:31.547801	2026-02-02 22:52:31.547801	elma	$2b$10$HnpCNiwsNv3RGKuml5Q9p.GEXPy.vh9kCiBF25oLLsgoGRhSr1OQW
+e429da65-e190-470b-aac2-6f61b59910dd	\N	المدير العام	\N	\N	2026-02-06 12:42:46.474939	2026-02-06 12:42:46.474939	المدير العام	$2b$10$hdvt31MuJG4hroSEIoNcSOlQSgsuvnqiW5snhFdoxOSghtOZ1W5r.
 \.
 
 
 --
--- Name: notifications_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+-- Name: notifications_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
 SELECT pg_catalog.setval('public.notifications_id_seq', 53, true);
 
 
 --
--- Name: order_items_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+-- Name: order_items_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
 SELECT pg_catalog.setval('public.order_items_id_seq', 14, true);
 
 
 --
--- Name: orders_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+-- Name: orders_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
 SELECT pg_catalog.setval('public.orders_id_seq', 8, true);
 
 
 --
--- Name: products_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+-- Name: products_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.products_id_seq', 769079, true);
+SELECT pg_catalog.setval('public.products_id_seq', 778555, true);
 
 
 --
--- Name: push_tokens_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+-- Name: push_tokens_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
 SELECT pg_catalog.setval('public.push_tokens_id_seq', 1, false);
 
 
 --
--- Name: notifications notifications_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: notifications notifications_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.notifications
@@ -5236,7 +5224,7 @@ ALTER TABLE ONLY public.notifications
 
 
 --
--- Name: order_items order_items_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: order_items order_items_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.order_items
@@ -5244,7 +5232,7 @@ ALTER TABLE ONLY public.order_items
 
 
 --
--- Name: orders orders_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: orders orders_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.orders
@@ -5252,7 +5240,7 @@ ALTER TABLE ONLY public.orders
 
 
 --
--- Name: products products_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: products products_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.products
@@ -5260,7 +5248,7 @@ ALTER TABLE ONLY public.products
 
 
 --
--- Name: products products_sku_unique; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: products products_sku_unique; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.products
@@ -5268,7 +5256,7 @@ ALTER TABLE ONLY public.products
 
 
 --
--- Name: push_tokens push_tokens_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: push_tokens push_tokens_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.push_tokens
@@ -5276,7 +5264,7 @@ ALTER TABLE ONLY public.push_tokens
 
 
 --
--- Name: sessions sessions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: sessions sessions_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.sessions
@@ -5284,7 +5272,7 @@ ALTER TABLE ONLY public.sessions
 
 
 --
--- Name: user_roles user_roles_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: user_roles user_roles_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.user_roles
@@ -5292,7 +5280,7 @@ ALTER TABLE ONLY public.user_roles
 
 
 --
--- Name: users users_email_unique; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: users users_email_unique; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.users
@@ -5300,7 +5288,7 @@ ALTER TABLE ONLY public.users
 
 
 --
--- Name: users users_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: users users_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.users
@@ -5308,7 +5296,7 @@ ALTER TABLE ONLY public.users
 
 
 --
--- Name: users users_username_unique; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: users users_username_unique; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.users
@@ -5316,14 +5304,14 @@ ALTER TABLE ONLY public.users
 
 
 --
--- Name: IDX_session_expire; Type: INDEX; Schema: public; Owner: -
+-- Name: IDX_session_expire; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX "IDX_session_expire" ON public.sessions USING btree (expire);
 
 
 --
--- Name: notifications notifications_order_id_orders_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: notifications notifications_order_id_orders_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.notifications
@@ -5331,7 +5319,7 @@ ALTER TABLE ONLY public.notifications
 
 
 --
--- Name: notifications notifications_user_id_users_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: notifications notifications_user_id_users_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.notifications
@@ -5339,7 +5327,7 @@ ALTER TABLE ONLY public.notifications
 
 
 --
--- Name: order_items order_items_order_id_orders_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: order_items order_items_order_id_orders_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.order_items
@@ -5347,7 +5335,7 @@ ALTER TABLE ONLY public.order_items
 
 
 --
--- Name: order_items order_items_product_id_products_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: order_items order_items_product_id_products_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.order_items
@@ -5355,7 +5343,7 @@ ALTER TABLE ONLY public.order_items
 
 
 --
--- Name: orders orders_sales_point_id_users_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: orders orders_sales_point_id_users_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.orders
@@ -5363,7 +5351,7 @@ ALTER TABLE ONLY public.orders
 
 
 --
--- Name: orders orders_status_changed_by_users_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: orders orders_status_changed_by_users_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.orders
@@ -5371,7 +5359,7 @@ ALTER TABLE ONLY public.orders
 
 
 --
--- Name: push_tokens push_tokens_user_id_users_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: push_tokens push_tokens_user_id_users_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.push_tokens
@@ -5379,7 +5367,7 @@ ALTER TABLE ONLY public.push_tokens
 
 
 --
--- Name: user_roles user_roles_user_id_users_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: user_roles user_roles_user_id_users_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.user_roles
@@ -5390,5 +5378,5 @@ ALTER TABLE ONLY public.user_roles
 -- PostgreSQL database dump complete
 --
 
-\unrestrict BI3Hfg7DZeI2GyTksMTU7E6at3fVt5bfugrchYY279ib6aARpqEQ1RY1qOSwENI
+\unrestrict Sejyowr6zmNqDewhEx75UXF4bqzQJY19qbtRyErXl5BO8eA4ls1DbBXTHCHTsg9
 

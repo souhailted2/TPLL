@@ -9,6 +9,7 @@ import { startAlertChecker } from "./alert-checker";
 import { execSync } from "child_process";
 import path from "path";
 import fs from "fs";
+import { fileURLToPath } from "url";
 
 export async function registerRoutes(
   httpServer: Server,
@@ -26,10 +27,11 @@ export async function registerRoutes(
     const allowed = ['tpl-factory-hetzner.tar.gz', 'db_backup.sql'];
     const filename = req.params.filename;
     if (!allowed.includes(filename)) return res.status(404).send('Not found');
+    const currentDir = path.dirname(fileURLToPath(import.meta.url));
     const searchPaths = [
       path.resolve(process.cwd(), filename),
       path.resolve('/home/runner/workspace', filename),
-      path.resolve(__dirname, '..', filename),
+      path.resolve(currentDir, '..', filename),
     ];
     const filePath = searchPaths.find(p => fs.existsSync(p));
     if (!filePath) return res.status(404).send('File not found');
