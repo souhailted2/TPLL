@@ -26,8 +26,13 @@ export async function registerRoutes(
     const allowed = ['tpl-factory-hetzner.tar.gz', 'db_backup.sql'];
     const filename = req.params.filename;
     if (!allowed.includes(filename)) return res.status(404).send('Not found');
-    const filePath = path.resolve(process.cwd(), filename);
-    if (!fs.existsSync(filePath)) return res.status(404).send('File not found');
+    const searchPaths = [
+      path.resolve(process.cwd(), filename),
+      path.resolve('/home/runner/workspace', filename),
+      path.resolve(__dirname, '..', filename),
+    ];
+    const filePath = searchPaths.find(p => fs.existsSync(p));
+    if (!filePath) return res.status(404).send('File not found');
     res.download(filePath, filename);
   });
 
