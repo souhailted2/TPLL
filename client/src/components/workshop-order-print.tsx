@@ -2,6 +2,7 @@ import { useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Printer } from "lucide-react";
 import { formatMaghrebDate } from "@/lib/queryClient";
+import tplLogoPath from "@assets/TPLLL_1771181599017.jpg";
 
 interface WorkshopOrderPrintProps {
   order: any;
@@ -23,8 +24,30 @@ export function WorkshopOrderPrint({ order, onClose }: WorkshopOrderPrintProps) 
     const printContent = printRef.current;
     if (!printContent) return;
 
+    const logoImg = document.querySelector('#workshop-logo-img') as HTMLImageElement;
+    let logoDataUrl = '';
+    if (logoImg && logoImg.complete) {
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = logoImg.naturalWidth;
+        canvas.height = logoImg.naturalHeight;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(logoImg, 0, 0);
+          logoDataUrl = canvas.toDataURL('image/jpeg');
+        }
+      } catch (e) {
+        logoDataUrl = '';
+      }
+    }
+
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
+
+    let printHTML = printContent.innerHTML;
+    if (logoDataUrl) {
+      printHTML = printHTML.replace(/src="[^"]*TPLLL[^"]*"/g, `src="${logoDataUrl}"`);
+    }
 
     printWindow.document.write(`
       <!DOCTYPE html>
@@ -82,8 +105,8 @@ export function WorkshopOrderPrint({ order, onClose }: WorkshopOrderPrintProps) 
             border-radius: 6px;
           }
           .info-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
+            display: flex;
+            flex-wrap: wrap;
             gap: 10px;
             margin-bottom: 20px;
             background: #f8fafc;
@@ -94,6 +117,7 @@ export function WorkshopOrderPrint({ order, onClose }: WorkshopOrderPrintProps) 
           .info-item {
             display: flex;
             gap: 6px;
+            width: 48%;
           }
           .info-label {
             font-weight: bold;
@@ -130,13 +154,13 @@ export function WorkshopOrderPrint({ order, onClose }: WorkshopOrderPrintProps) 
             border-top: 2px solid #1e3a5f;
           }
           .signatures {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
+            display: flex;
             gap: 20px;
             margin-top: 40px;
             padding-top: 20px;
           }
           .sig-box {
+            flex: 1;
             text-align: center;
             padding: 15px;
             border: 1px dashed #cbd5e1;
@@ -178,7 +202,7 @@ export function WorkshopOrderPrint({ order, onClose }: WorkshopOrderPrintProps) 
         </style>
       </head>
       <body>
-        ${printContent.innerHTML}
+        ${printHTML}
       </body>
       </html>
     `);
@@ -207,6 +231,7 @@ export function WorkshopOrderPrint({ order, onClose }: WorkshopOrderPrintProps) 
         <div ref={printRef} className="p-6" dir="rtl">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '3px solid #1e3a5f', paddingBottom: '15px', marginBottom: '20px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <img id="workshop-logo-img" src={tplLogoPath} alt="TPL Logo" style={{ height: '55px', width: '55px', objectFit: 'contain', borderRadius: '6px' }} crossOrigin="anonymous" />
               <div>
                 <div style={{ fontSize: '22px', fontWeight: 'bold', color: '#1e3a5f' }}>شركة TPL</div>
                 <div style={{ fontSize: '11px', color: '#666' }}>شركة صناعة البراغي واللوالب والمسامير</div>
@@ -214,7 +239,7 @@ export function WorkshopOrderPrint({ order, onClose }: WorkshopOrderPrintProps) 
             </div>
             <div style={{ textAlign: 'left', fontSize: '12px', color: '#666' }}>
               <div>التاريخ: {formatMaghrebDate(new Date())}</div>
-              <div>الوقت: {format(new Date(), 'p')}</div>
+              <div>الوقت: {new Date().toLocaleTimeString('ar-DZ', { hour: '2-digit', minute: '2-digit' })}</div>
             </div>
           </div>
 
@@ -222,20 +247,20 @@ export function WorkshopOrderPrint({ order, onClose }: WorkshopOrderPrintProps) 
             أمر إنجاز للورشة
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '20px', background: '#f8fafc', padding: '12px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
-            <div style={{ display: 'flex', gap: '6px' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginBottom: '20px', background: '#f8fafc', padding: '12px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+            <div style={{ display: 'flex', gap: '6px', width: '48%' }}>
               <span style={{ fontWeight: 'bold', color: '#475569' }}>رقم الطلب:</span>
               <span style={{ color: '#1e293b' }}>#{order.id}</span>
             </div>
-            <div style={{ display: 'flex', gap: '6px' }}>
+            <div style={{ display: 'flex', gap: '6px', width: '48%' }}>
               <span style={{ fontWeight: 'bold', color: '#475569' }}>نقطة البيع:</span>
               <span style={{ color: '#1e293b' }}>{order.salesPoint?.salesPointName || order.salesPoint?.firstName || '-'}</span>
             </div>
-            <div style={{ display: 'flex', gap: '6px' }}>
+            <div style={{ display: 'flex', gap: '6px', width: '48%' }}>
               <span style={{ fontWeight: 'bold', color: '#475569' }}>تاريخ الطلب:</span>
-              <span style={{ color: '#1e293b' }}>{order.createdAt ? formatMaghrebDate(order.createdAt) : '-'}</span>
+              <span style={{ color: '#1e293b' }}>{formatMaghrebDate(order.createdAt)}</span>
             </div>
-            <div style={{ display: 'flex', gap: '6px' }}>
+            <div style={{ display: 'flex', gap: '6px', width: '48%' }}>
               <span style={{ fontWeight: 'bold', color: '#475569' }}>عدد الأصناف المقبولة:</span>
               <span style={{ color: '#1e293b' }}>{acceptedItems.length}</span>
             </div>
@@ -275,16 +300,16 @@ export function WorkshopOrderPrint({ order, onClose }: WorkshopOrderPrintProps) 
             <div style={{ fontWeight: 'bold', color: '#475569', marginBottom: '5px', fontSize: '13px' }}>ملاحظات:</div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px', marginTop: '40px', paddingTop: '20px' }}>
-            <div style={{ textAlign: 'center', padding: '15px', border: '1px dashed #cbd5e1', borderRadius: '6px' }}>
+          <div style={{ display: 'flex', gap: '20px', marginTop: '40px', paddingTop: '20px' }}>
+            <div style={{ flex: 1, textAlign: 'center', padding: '15px', border: '1px dashed #cbd5e1', borderRadius: '6px' }}>
               <div style={{ fontWeight: 'bold', color: '#475569', marginBottom: '40px' }}>مسؤول الاستقبال</div>
               <div style={{ borderTop: '1px solid #94a3b8', marginTop: '40px', paddingTop: '5px', fontSize: '11px', color: '#94a3b8' }}>التوقيع والختم</div>
             </div>
-            <div style={{ textAlign: 'center', padding: '15px', border: '1px dashed #cbd5e1', borderRadius: '6px' }}>
+            <div style={{ flex: 1, textAlign: 'center', padding: '15px', border: '1px dashed #cbd5e1', borderRadius: '6px' }}>
               <div style={{ fontWeight: 'bold', color: '#475569', marginBottom: '40px' }}>مسؤول الورشة</div>
               <div style={{ borderTop: '1px solid #94a3b8', marginTop: '40px', paddingTop: '5px', fontSize: '11px', color: '#94a3b8' }}>التوقيع والختم</div>
             </div>
-            <div style={{ textAlign: 'center', padding: '15px', border: '1px dashed #cbd5e1', borderRadius: '6px' }}>
+            <div style={{ flex: 1, textAlign: 'center', padding: '15px', border: '1px dashed #cbd5e1', borderRadius: '6px' }}>
               <div style={{ fontWeight: 'bold', color: '#475569', marginBottom: '40px' }}>المدير</div>
               <div style={{ borderTop: '1px solid #94a3b8', marginTop: '40px', paddingTop: '5px', fontSize: '11px', color: '#94a3b8' }}>التوقيع والختم</div>
             </div>
