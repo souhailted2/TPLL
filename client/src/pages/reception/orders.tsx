@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { formatMaghrebDate } from "@/lib/queryClient";
 import { useState, useMemo } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { WorkshopOrderPrint } from "@/components/workshop-order-print";
+import { WorkshopItemPrint } from "@/components/workshop-order-print";
 
 const ALERT_DAYS = 15;
 
@@ -43,7 +43,7 @@ export default function ReceptionOrders() {
   const updateItemStatus = useUpdateItemStatus();
   const dismissAlert = useDismissOrderAlert();
   const [activeFilter, setActiveFilter] = useState<string>('pending');
-  const [printOrder, setPrintOrder] = useState<any>(null);
+  const [printItem, setPrintItem] = useState<{ order: any; item: any } | null>(null);
   const { toast } = useToast();
 
   const filteredOrders = useMemo(() => {
@@ -261,16 +261,27 @@ export default function ReceptionOrders() {
                     <span className="font-bold text-primary">{item.quantity}</span>
                   </div>
                 </div>
-                <div className="flex items-center justify-between mt-2">
+                <div className="flex items-center justify-between gap-2 mt-2 flex-wrap">
                   <Badge variant="secondary" className={`text-[10px] ${getItemStatusColor(itemSt)}`}>
                     {getItemStatusLabel(itemSt)}
                   </Badge>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     {item.completedQuantity > 0 && (
                       <span className="text-xs text-slate-500">منجز: <span className="font-bold">{item.completedQuantity}</span></span>
                     )}
                     {(item.shippedQuantity || 0) > 0 && (
                       <span className="text-xs text-purple-600">مشحون: <span className="font-bold">{item.shippedQuantity}</span></span>
+                    )}
+                    {(itemSt === 'accepted' || itemSt === 'in_progress' || itemSt === 'completed') && (
+                      <Button
+                        size="sm" variant="outline"
+                        className="gap-1 text-[10px] border-blue-300 text-blue-700"
+                        onClick={() => setPrintItem({ order, item })}
+                        data-testid={`button-print-item-${item.id}`}
+                      >
+                        <Printer className="h-3 w-3" />
+                        طباعة أمر ورشة
+                      </Button>
                     )}
                   </div>
                 </div>
@@ -324,18 +335,6 @@ export default function ReceptionOrders() {
 
           {hasAlert && renderAlertBanner(alerts)}
 
-          {(order.status === 'accepted' || order.status === 'in_progress' || order.status === 'completed') && 
-            (order.items || []).some((item: any) => item.itemStatus === 'accepted' || item.itemStatus === 'in_progress' || item.itemStatus === 'completed') && (
-            <Button
-              size="sm" variant="outline"
-              className="gap-1 text-xs border-blue-300 text-blue-700"
-              onClick={() => setPrintOrder(order)}
-              data-testid={`button-print-workshop-${order.id}`}
-            >
-              <Printer className="h-3 w-3" />
-              طباعة أمر الورشة
-            </Button>
-          )}
 
           {order.items && order.items.length > 0 && renderOrderItems(order)}
         </CardContent>
@@ -383,8 +382,8 @@ export default function ReceptionOrders() {
         </div>
       </main>
 
-      {printOrder && (
-        <WorkshopOrderPrint order={printOrder} onClose={() => setPrintOrder(null)} />
+      {printItem && (
+        <WorkshopItemPrint order={printItem.order} item={printItem.item} onClose={() => setPrintItem(null)} />
       )}
     </div>
   );

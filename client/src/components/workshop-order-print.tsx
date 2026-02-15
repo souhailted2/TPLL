@@ -4,17 +4,14 @@ import { Printer } from "lucide-react";
 import { formatMaghrebDate } from "@/lib/queryClient";
 import tplLogoPath from "@assets/TPLLL_1771181599017.jpg";
 
-interface WorkshopOrderPrintProps {
+interface WorkshopItemPrintProps {
   order: any;
+  item: any;
   onClose: () => void;
 }
 
-export function WorkshopOrderPrint({ order, onClose }: WorkshopOrderPrintProps) {
+export function WorkshopItemPrint({ order, item, onClose }: WorkshopItemPrintProps) {
   const printRef = useRef<HTMLDivElement>(null);
-
-  const acceptedItems = (order.items || []).filter(
-    (item: any) => item.itemStatus === 'accepted' || item.itemStatus === 'in_progress' || item.itemStatus === 'completed'
-  );
 
   const getUnitLabel = (unit: string) => {
     return unit === 'bag' ? 'شكارة 25 كغ' : 'قطعة';
@@ -45,95 +42,15 @@ export function WorkshopOrderPrint({ order, onClose }: WorkshopOrderPrintProps) 
     const nowDate = formatMaghrebDate(new Date());
     const nowTime = new Date().toLocaleTimeString('ar-DZ', { hour: '2-digit', minute: '2-digit' });
 
-    const pages = acceptedItems.map((item: any, idx: number) => `
-      <div class="page" ${idx < acceptedItems.length - 1 ? 'style="page-break-after: always;"' : ''}>
-        <div class="header">
-          <div class="header-right">
-            ${logoSrc ? `<img src="${logoSrc}" alt="TPL Logo" class="logo" />` : ''}
-            <div>
-              <div class="company-name">شركة TPL</div>
-              <div class="company-sub">شركة صناعة البراغي واللوالب والمسامير</div>
-            </div>
-          </div>
-          <div class="header-left">
-            <div>التاريخ: ${nowDate}</div>
-            <div>الوقت: ${nowTime}</div>
-          </div>
-        </div>
-
-        <div class="doc-title">أمر إنجاز للورشة</div>
-
-        <div class="info-grid">
-          <div class="info-item">
-            <span class="info-label">رقم الطلب:</span>
-            <span class="info-value">#${order.id}</span>
-          </div>
-          <div class="info-item">
-            <span class="info-label">نقطة البيع:</span>
-            <span class="info-value">${order.salesPoint?.salesPointName || order.salesPoint?.firstName || '-'}</span>
-          </div>
-          <div class="info-item">
-            <span class="info-label">تاريخ الطلب:</span>
-            <span class="info-value">${formatMaghrebDate(order.createdAt)}</span>
-          </div>
-          <div class="info-item">
-            <span class="info-label">الصنف:</span>
-            <span class="info-value">${idx + 1} من ${acceptedItems.length}</span>
-          </div>
-        </div>
-
-        <table>
-          <thead>
-            <tr>
-              <th>اسم المنتج</th>
-              <th>الرمز</th>
-              <th>الكمية</th>
-              <th>الوحدة</th>
-              <th>ملاحظات</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td style="font-weight: bold; font-size: 15px;">${item.product?.name || '-'}</td>
-              <td style="color: #64748b;">${item.product?.sku || '-'}</td>
-              <td style="font-weight: bold; color: #1e3a5f; font-size: 16px;">${item.quantity}</td>
-              <td>${getUnitLabel(item.unit || 'piece')}</td>
-              <td></td>
-            </tr>
-          </tbody>
-        </table>
-
-        <div class="notes-section">
-          <div class="notes-title">ملاحظات:</div>
-        </div>
-
-        <div class="signatures">
-          <div class="sig-box">
-            <div class="sig-label">مسؤول المستخدمين</div>
-            <div class="sig-line">التوقيع والختم</div>
-          </div>
-          <div class="sig-box">
-            <div class="sig-label">مسؤول الورشة</div>
-            <div class="sig-line">التوقيع والختم</div>
-          </div>
-        </div>
-
-        <div class="footer">
-          شركة TPL - نظام إدارة سلسلة التوريد | تمت الطباعة بتاريخ ${nowDate} ${nowTime}
-        </div>
-      </div>
-    `).join('');
-
     printWindow.document.write(`
       <!DOCTYPE html>
       <html dir="rtl" lang="ar">
       <head>
         <meta charset="UTF-8">
-        <title>أمر ورشة - طلب #${order.id}</title>
+        <title>أمر ورشة - طلب #${order.id} - ${item.product?.name || ''}</title>
         <style>
           @media print {
             body { margin: 0; }
-            .page { page-break-inside: avoid; }
           }
           * { box-sizing: border-box; margin: 0; padding: 0; }
           body {
@@ -141,8 +58,6 @@ export function WorkshopOrderPrint({ order, onClose }: WorkshopOrderPrintProps) 
             direction: rtl;
             color: #1a1a1a;
             font-size: 14px;
-          }
-          .page {
             padding: 25px;
           }
           .header {
@@ -280,7 +195,76 @@ export function WorkshopOrderPrint({ order, onClose }: WorkshopOrderPrintProps) 
         </style>
       </head>
       <body>
-        ${pages}
+        <div class="header">
+          <div class="header-right">
+            ${logoSrc ? `<img src="${logoSrc}" alt="TPL Logo" class="logo" />` : ''}
+            <div>
+              <div class="company-name">شركة TPL</div>
+              <div class="company-sub">شركة صناعة البراغي واللوالب والمسامير</div>
+            </div>
+          </div>
+          <div class="header-left">
+            <div>التاريخ: ${nowDate}</div>
+            <div>الوقت: ${nowTime}</div>
+          </div>
+        </div>
+
+        <div class="doc-title">أمر إنجاز للورشة</div>
+
+        <div class="info-grid">
+          <div class="info-item">
+            <span class="info-label">رقم الطلب:</span>
+            <span class="info-value">#${order.id}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">نقطة البيع:</span>
+            <span class="info-value">${order.salesPoint?.salesPointName || order.salesPoint?.firstName || '-'}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">تاريخ الطلب:</span>
+            <span class="info-value">${formatMaghrebDate(order.createdAt)}</span>
+          </div>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>اسم المنتج</th>
+              <th>الرمز</th>
+              <th>الكمية</th>
+              <th>الوحدة</th>
+              <th>ملاحظات</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="font-weight: bold; font-size: 15px;">${item.product?.name || '-'}</td>
+              <td style="color: #64748b;">${item.product?.sku || '-'}</td>
+              <td style="font-weight: bold; color: #1e3a5f; font-size: 16px;">${item.quantity}</td>
+              <td>${getUnitLabel(item.unit || 'piece')}</td>
+              <td></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="notes-section">
+          <div class="notes-title">ملاحظات:</div>
+        </div>
+
+        <div class="signatures">
+          <div class="sig-box">
+            <div class="sig-label">مسؤول المستخدمين</div>
+            <div class="sig-line">التوقيع والختم</div>
+          </div>
+          <div class="sig-box">
+            <div class="sig-label">مسؤول الورشة</div>
+            <div class="sig-line">التوقيع والختم</div>
+          </div>
+        </div>
+
+        <div class="footer">
+          شركة TPL - نظام إدارة سلسلة التوريد | تمت الطباعة بتاريخ ${nowDate} ${nowTime}
+        </div>
       </body>
       </html>
     `);
@@ -294,7 +278,7 @@ export function WorkshopOrderPrint({ order, onClose }: WorkshopOrderPrintProps) 
     <div className="fixed inset-0 z-[100] bg-black/60 flex items-center justify-center p-4" onClick={onClose}>
       <div className="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
         <div className="sticky top-0 bg-white border-b p-3 flex items-center justify-between gap-2 z-[110]">
-          <h2 className="font-bold text-lg">معاينة أمر الورشة ({acceptedItems.length} صفحات)</h2>
+          <h2 className="font-bold text-lg">معاينة أمر الورشة — {item.product?.name}</h2>
           <div className="flex gap-2">
             <Button onClick={handlePrint} className="gap-2" data-testid="button-print-workshop-order">
               <Printer className="h-4 w-4" />
@@ -306,77 +290,73 @@ export function WorkshopOrderPrint({ order, onClose }: WorkshopOrderPrintProps) 
           </div>
         </div>
 
-        <div ref={printRef} className="p-6 space-y-8" dir="rtl">
+        <div ref={printRef} className="p-6" dir="rtl">
           <img id="workshop-logo-img" src={tplLogoPath} alt="" style={{ position: 'absolute', opacity: 0, pointerEvents: 'none', height: '1px', width: '1px' }} crossOrigin="anonymous" />
 
-          {acceptedItems.map((item: any, idx: number) => (
-            <div key={idx} className="border-2 border-slate-200 rounded-lg p-6" style={{ pageBreakAfter: idx < acceptedItems.length - 1 ? 'always' : 'auto' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '3px solid #1e3a5f', paddingBottom: '15px', marginBottom: '20px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <img src={tplLogoPath} alt="TPL Logo" style={{ height: '45px', width: '45px', objectFit: 'contain', borderRadius: '6px' }} />
-                  <div>
-                    <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#1e3a5f' }}>شركة TPL</div>
-                    <div style={{ fontSize: '10px', color: '#666' }}>شركة صناعة البراغي واللوالب والمسامير</div>
-                  </div>
-                </div>
-                <div style={{ textAlign: 'left', fontSize: '11px', color: '#666' }}>
-                  <div>التاريخ: {formatMaghrebDate(new Date())}</div>
-                  <div>صنف {idx + 1} من {acceptedItems.length}</div>
-                </div>
-              </div>
-
-              <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#d32f2f', textAlign: 'center', margin: '10px 0', padding: '6px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '6px' }}>
-                أمر إنجاز للورشة — طلب #{order.id}
-              </div>
-
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '15px', background: '#f8fafc', padding: '10px', borderRadius: '6px', border: '1px solid #e2e8f0', fontSize: '13px' }}>
-                <div style={{ display: 'flex', gap: '6px', width: '48%' }}>
-                  <span style={{ fontWeight: 'bold', color: '#475569' }}>نقطة البيع:</span>
-                  <span>{order.salesPoint?.salesPointName || order.salesPoint?.firstName || '-'}</span>
-                </div>
-                <div style={{ display: 'flex', gap: '6px', width: '48%' }}>
-                  <span style={{ fontWeight: 'bold', color: '#475569' }}>تاريخ الطلب:</span>
-                  <span>{formatMaghrebDate(order.createdAt)}</span>
-                </div>
-              </div>
-
-              <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '15px' }}>
-                <thead>
-                  <tr>
-                    <th style={{ background: '#1e3a5f', color: 'white', padding: '10px 8px', textAlign: 'right', fontSize: '13px' }}>اسم المنتج</th>
-                    <th style={{ background: '#1e3a5f', color: 'white', padding: '10px 8px', textAlign: 'right', fontSize: '13px' }}>الرمز</th>
-                    <th style={{ background: '#1e3a5f', color: 'white', padding: '10px 8px', textAlign: 'right', fontSize: '13px' }}>الكمية</th>
-                    <th style={{ background: '#1e3a5f', color: 'white', padding: '10px 8px', textAlign: 'right', fontSize: '13px' }}>الوحدة</th>
-                    <th style={{ background: '#1e3a5f', color: 'white', padding: '10px 8px', textAlign: 'right', fontSize: '13px' }}>ملاحظات</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td style={{ padding: '10px 8px', borderBottom: '1px solid #e2e8f0', fontSize: '14px', fontWeight: 'bold' }}>{item.product?.name || '-'}</td>
-                    <td style={{ padding: '10px 8px', borderBottom: '1px solid #e2e8f0', fontSize: '13px', color: '#64748b' }}>{item.product?.sku || '-'}</td>
-                    <td style={{ padding: '10px 8px', borderBottom: '1px solid #e2e8f0', fontSize: '16px', fontWeight: 'bold', color: '#1e3a5f' }}>{item.quantity}</td>
-                    <td style={{ padding: '10px 8px', borderBottom: '1px solid #e2e8f0', fontSize: '13px' }}>{getUnitLabel(item.unit || 'piece')}</td>
-                    <td style={{ padding: '10px 8px', borderBottom: '1px solid #e2e8f0', fontSize: '13px' }}></td>
-                  </tr>
-                </tbody>
-              </table>
-
-              <div style={{ padding: '10px', border: '1px solid #e2e8f0', borderRadius: '6px', minHeight: '40px' }}>
-                <div style={{ fontWeight: 'bold', color: '#475569', marginBottom: '5px', fontSize: '12px' }}>ملاحظات:</div>
-              </div>
-
-              <div style={{ display: 'flex', gap: '30px', marginTop: '30px' }}>
-                <div style={{ flex: 1, textAlign: 'center', padding: '12px', border: '1px dashed #cbd5e1', borderRadius: '6px' }}>
-                  <div style={{ fontWeight: 'bold', color: '#475569', marginBottom: '30px', fontSize: '14px' }}>مسؤول المستخدمين</div>
-                  <div style={{ borderTop: '1px solid #94a3b8', marginTop: '30px', paddingTop: '5px', fontSize: '10px', color: '#94a3b8' }}>التوقيع والختم</div>
-                </div>
-                <div style={{ flex: 1, textAlign: 'center', padding: '12px', border: '1px dashed #cbd5e1', borderRadius: '6px' }}>
-                  <div style={{ fontWeight: 'bold', color: '#475569', marginBottom: '30px', fontSize: '14px' }}>مسؤول الورشة</div>
-                  <div style={{ borderTop: '1px solid #94a3b8', marginTop: '30px', paddingTop: '5px', fontSize: '10px', color: '#94a3b8' }}>التوقيع والختم</div>
-                </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '3px solid #1e3a5f', paddingBottom: '15px', marginBottom: '20px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <img src={tplLogoPath} alt="TPL Logo" style={{ height: '45px', width: '45px', objectFit: 'contain', borderRadius: '6px' }} />
+              <div>
+                <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#1e3a5f' }}>شركة TPL</div>
+                <div style={{ fontSize: '10px', color: '#666' }}>شركة صناعة البراغي واللوالب والمسامير</div>
               </div>
             </div>
-          ))}
+            <div style={{ textAlign: 'left', fontSize: '11px', color: '#666' }}>
+              <div>التاريخ: {formatMaghrebDate(new Date())}</div>
+              <div>الوقت: {new Date().toLocaleTimeString('ar-DZ', { hour: '2-digit', minute: '2-digit' })}</div>
+            </div>
+          </div>
+
+          <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#d32f2f', textAlign: 'center', margin: '10px 0', padding: '6px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '6px' }}>
+            أمر إنجاز للورشة — طلب #{order.id}
+          </div>
+
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '15px', background: '#f8fafc', padding: '10px', borderRadius: '6px', border: '1px solid #e2e8f0', fontSize: '13px' }}>
+            <div style={{ display: 'flex', gap: '6px', width: '48%' }}>
+              <span style={{ fontWeight: 'bold', color: '#475569' }}>نقطة البيع:</span>
+              <span>{order.salesPoint?.salesPointName || order.salesPoint?.firstName || '-'}</span>
+            </div>
+            <div style={{ display: 'flex', gap: '6px', width: '48%' }}>
+              <span style={{ fontWeight: 'bold', color: '#475569' }}>تاريخ الطلب:</span>
+              <span>{formatMaghrebDate(order.createdAt)}</span>
+            </div>
+          </div>
+
+          <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '15px' }}>
+            <thead>
+              <tr>
+                <th style={{ background: '#1e3a5f', color: 'white', padding: '10px 8px', textAlign: 'right', fontSize: '13px' }}>اسم المنتج</th>
+                <th style={{ background: '#1e3a5f', color: 'white', padding: '10px 8px', textAlign: 'right', fontSize: '13px' }}>الرمز</th>
+                <th style={{ background: '#1e3a5f', color: 'white', padding: '10px 8px', textAlign: 'right', fontSize: '13px' }}>الكمية</th>
+                <th style={{ background: '#1e3a5f', color: 'white', padding: '10px 8px', textAlign: 'right', fontSize: '13px' }}>الوحدة</th>
+                <th style={{ background: '#1e3a5f', color: 'white', padding: '10px 8px', textAlign: 'right', fontSize: '13px' }}>ملاحظات</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style={{ padding: '10px 8px', borderBottom: '1px solid #e2e8f0', fontSize: '14px', fontWeight: 'bold' }}>{item.product?.name || '-'}</td>
+                <td style={{ padding: '10px 8px', borderBottom: '1px solid #e2e8f0', fontSize: '13px', color: '#64748b' }}>{item.product?.sku || '-'}</td>
+                <td style={{ padding: '10px 8px', borderBottom: '1px solid #e2e8f0', fontSize: '16px', fontWeight: 'bold', color: '#1e3a5f' }}>{item.quantity}</td>
+                <td style={{ padding: '10px 8px', borderBottom: '1px solid #e2e8f0', fontSize: '13px' }}>{getUnitLabel(item.unit || 'piece')}</td>
+                <td style={{ padding: '10px 8px', borderBottom: '1px solid #e2e8f0', fontSize: '13px' }}></td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div style={{ padding: '10px', border: '1px solid #e2e8f0', borderRadius: '6px', minHeight: '40px' }}>
+            <div style={{ fontWeight: 'bold', color: '#475569', marginBottom: '5px', fontSize: '12px' }}>ملاحظات:</div>
+          </div>
+
+          <div style={{ display: 'flex', gap: '30px', marginTop: '30px' }}>
+            <div style={{ flex: 1, textAlign: 'center', padding: '12px', border: '1px dashed #cbd5e1', borderRadius: '6px' }}>
+              <div style={{ fontWeight: 'bold', color: '#475569', marginBottom: '30px', fontSize: '14px' }}>مسؤول المستخدمين</div>
+              <div style={{ borderTop: '1px solid #94a3b8', marginTop: '30px', paddingTop: '5px', fontSize: '10px', color: '#94a3b8' }}>التوقيع والختم</div>
+            </div>
+            <div style={{ flex: 1, textAlign: 'center', padding: '12px', border: '1px dashed #cbd5e1', borderRadius: '6px' }}>
+              <div style={{ fontWeight: 'bold', color: '#475569', marginBottom: '30px', fontSize: '14px' }}>مسؤول الورشة</div>
+              <div style={{ borderTop: '1px solid #94a3b8', marginTop: '30px', paddingTop: '5px', fontSize: '10px', color: '#94a3b8' }}>التوقيع والختم</div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
