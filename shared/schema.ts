@@ -37,6 +37,7 @@ export const orderItems = pgTable("order_items", {
   quantity: integer("quantity").notNull(),
   completedQuantity: integer("completed_quantity").notNull().default(0),
   shippedQuantity: integer("shipped_quantity").notNull().default(0),
+  receivedQuantity: integer("received_quantity").notNull().default(0),
   unit: text("unit").notNull().default("piece"),
   itemStatus: text("item_status").notNull().default("pending"),
   lastCompletedUpdate: timestamp("last_completed_update"),
