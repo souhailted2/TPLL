@@ -1,7 +1,7 @@
 import { Sidebar } from "@/components/layout-sidebar";
-import { useOrders, useUpdateOrderStatus } from "@/hooks/use-orders";
+import { useOrders, useUpdateOrderStatus, useConfirmItemReceived } from "@/hooks/use-orders";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Package, PackageCheck } from "lucide-react";
+import { Loader2, Package, PackageCheck, Check } from "lucide-react";
 import { formatMaghrebDate } from "@/lib/queryClient";
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -36,6 +36,7 @@ function countItemsByStatus(orders: any[], statusFilter: string): number {
 export default function SalesOrders() {
   const { data: orders, isLoading } = useOrders();
   const updateStatus = useUpdateOrderStatus();
+  const confirmItemReceived = useConfirmItemReceived();
   const { toast } = useToast();
   const [activeFilter, setActiveFilter] = useState<string>('active');
 
@@ -152,6 +153,7 @@ export default function SalesOrders() {
       case 'in_progress': return 'قيد الإنجاز';
       case 'completed': return 'تم الإنجاز';
       case 'rejected': return 'مرفوض';
+      case 'received': return 'تم الاستلام';
       default: return 'في الانتظار';
     }
   };
@@ -162,6 +164,7 @@ export default function SalesOrders() {
       case 'in_progress': return 'bg-blue-100 text-blue-800';
       case 'completed': return 'bg-green-100 text-green-800';
       case 'rejected': return 'bg-red-100 text-red-800';
+      case 'received': return 'bg-teal-100 text-teal-800';
       default: return 'bg-amber-100 text-orange-800';
     }
   };
@@ -170,15 +173,15 @@ export default function SalesOrders() {
     return unit === 'bag' ? 'شكارة 25 كغ' : 'قطعة';
   };
 
-  const handleConfirmReceived = (orderId: number) => {
-    updateStatus.mutate(
-      { id: orderId, status: 'received' as any },
+  const handleConfirmItemReceived = (itemId: number, shippedQuantity: number) => {
+    confirmItemReceived.mutate(
+      { itemId, receivedQuantity: shippedQuantity },
       {
         onSuccess: () => {
-          toast({ title: 'تم تأكيد الاستلام بنجاح' });
+          toast({ title: 'تم تأكيد استلام الصنف بنجاح' });
         },
-        onError: () => {
-          toast({ title: 'خطأ', description: 'فشل تأكيد الاستلام', variant: 'destructive' });
+        onError: (err: any) => {
+          toast({ title: 'خطأ', description: err.message || 'فشل تأكيد الاستلام', variant: 'destructive' });
         },
       }
     );
@@ -205,19 +208,6 @@ export default function SalesOrders() {
             </span>
           </div>
 
-          {(order.status === 'shipped' || displayItems.some((i: any) => (i.shippedQuantity || 0) > 0)) && order.status !== 'received' && (
-            <Button
-              size="sm"
-              className="w-full bg-green-600 text-white gap-2"
-              onClick={() => handleConfirmReceived(order.id)}
-              disabled={updateStatus.isPending}
-              data-testid={`button-confirm-received-${order.id}`}
-            >
-              <PackageCheck className="h-4 w-4" />
-              <span>تأكيد الاستلام</span>
-            </Button>
-          )}
-
           {displayItems.length > 0 && (
             <div className="border-t border-slate-100 pt-3 space-y-2">
               <div className="flex items-center gap-2">
@@ -227,29 +217,54 @@ export default function SalesOrders() {
               <div className="grid gap-2">
                 {displayItems.map((item: any, idx: number) => {
                   const itemSt = item.itemStatus || 'pending';
+                  const isShipped = (item.shippedQuantity || 0) > 0;
+                  const isReceived = itemSt === 'received';
                   return (
-                    <div key={idx} className="flex items-start justify-between bg-slate-50 p-2 rounded-lg border gap-2">
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm break-words">{item.product?.name}</p>
-                        <p className="text-[10px] text-slate-400">{item.product?.sku}</p>
-                        <div className="flex items-center gap-2 mt-1 flex-wrap">
-                          <Badge variant="secondary" className={`text-[10px] ${getItemStatusColor(itemSt)}`}>
-                            {getItemStatusLabel(itemSt)}
+                    <div key={idx} className={`flex flex-col bg-slate-50 p-2 rounded-lg border gap-2 ${isReceived ? 'border-teal-200 bg-teal-50/50' : ''}`}>
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm break-words">{item.product?.name}</p>
+                          <p className="text-[10px] text-slate-400">{item.product?.sku}</p>
+                          <div className="flex items-center gap-2 mt-1 flex-wrap">
+                            <Badge variant="secondary" className={`text-[10px] ${isReceived ? 'bg-teal-100 text-teal-800' : getItemStatusColor(itemSt)}`}>
+                              {isReceived ? 'تم الاستلام' : getItemStatusLabel(itemSt)}
+                            </Badge>
+                            {item.completedQuantity > 0 && (
+                              <span className="text-[10px] text-green-700">منجز: {item.completedQuantity}</span>
+                            )}
+                            {isShipped && (
+                              <span className="text-[10px] text-purple-700">مشحون: {item.shippedQuantity}</span>
+                            )}
+                            {isReceived && (
+                              <span className="text-[10px] text-teal-700">مستلم: {item.receivedQuantity || item.shippedQuantity}</span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <Badge variant={item.unit === 'bag' ? 'default' : 'outline'} className="text-[10px]">
+                            {getUnitLabel(item.unit || 'piece')}
                           </Badge>
-                          {item.completedQuantity > 0 && (
-                            <span className="text-[10px] text-green-700">منجز: {item.completedQuantity}</span>
-                          )}
-                          {(item.shippedQuantity || 0) > 0 && (
-                            <span className="text-[10px] text-purple-700">مشحون: {item.shippedQuantity}</span>
-                          )}
+                          <span className="font-bold text-primary">{item.quantity}</span>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        <Badge variant={item.unit === 'bag' ? 'default' : 'outline'} className="text-[10px]">
-                          {getUnitLabel(item.unit || 'piece')}
-                        </Badge>
-                        <span className="font-bold text-primary">{item.quantity}</span>
-                      </div>
+                      {isShipped && !isReceived && (
+                        <Button
+                          size="sm"
+                          className="w-full bg-teal-600 text-white gap-2"
+                          onClick={() => handleConfirmItemReceived(item.id, item.shippedQuantity)}
+                          disabled={confirmItemReceived.isPending}
+                          data-testid={`button-confirm-item-received-${item.id}`}
+                        >
+                          <Check className="h-3 w-3" />
+                          <span>تأكيد استلام ({item.shippedQuantity} {getUnitLabel(item.unit || 'piece')})</span>
+                        </Button>
+                      )}
+                      {isReceived && (
+                        <div className="flex items-center gap-1 text-teal-700 text-xs" data-testid={`text-item-received-${item.id}`}>
+                          <PackageCheck className="h-3 w-3" />
+                          <span>تم تأكيد الاستلام</span>
+                        </div>
+                      )}
                     </div>
                   );
                 })}

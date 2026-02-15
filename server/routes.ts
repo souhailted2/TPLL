@@ -418,6 +418,45 @@ export async function registerRoutes(
     }
   });
 
+  // Confirm item received (sales point)
+  app.patch("/api/order-items/:itemId/receive", requireAuth, async (req: any, res) => {
+    try {
+      const itemId = Number(req.params.itemId);
+      const { receivedQuantity } = req.body;
+      const userId = req.session.userId;
+      const userRole = await storage.getUserRole(userId);
+      const role = userRole?.role;
+
+      if (!['sales_point'].includes(role || '')) {
+        return res.status(403).json({ message: "ليس لديك صلاحية لتأكيد الاستلام" });
+      }
+
+      if (typeof receivedQuantity !== 'number' || receivedQuantity < 0) {
+        return res.status(400).json({ message: "كمية الاستلام غير صالحة" });
+      }
+
+      const existingItem = await storage.getOrderItem(itemId);
+      if (!existingItem) return res.status(404).json({ message: "الصنف غير موجود" });
+
+      const order = await storage.getOrder(existingItem.orderId);
+      if (!order || order.salesPointId !== userId) {
+        return res.status(403).json({ message: "لا يمكنك تأكيد استلام أصناف طلبات أخرى" });
+      }
+
+      if (existingItem.shippedQuantity <= 0) {
+        return res.status(400).json({ message: "لم يتم شحن هذا الصنف بعد" });
+      }
+
+      const updated = await storage.updateOrderItemReceivedQuantity(itemId, receivedQuantity);
+      if (!updated) return res.status(404).json({ message: "الصنف غير موجود" });
+
+      res.json(updated);
+    } catch (err) {
+      console.error("Error confirming item receipt:", err);
+      res.status(500).json({ message: "فشل تأكيد الاستلام" });
+    }
+  });
+
   // Dismiss alert on an order
   app.patch("/api/orders/:id/dismiss-alert", requireAuth, async (req: any, res) => {
     try {

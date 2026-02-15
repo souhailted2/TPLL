@@ -101,6 +101,7 @@ export default function ShippingOrders() {
       case 'in_progress': return 'قيد الإنجاز';
       case 'completed': return 'تم الإنجاز';
       case 'rejected': return 'مرفوض';
+      case 'received': return 'تم الاستلام';
       default: return 'في الانتظار';
     }
   };
@@ -111,6 +112,7 @@ export default function ShippingOrders() {
       case 'in_progress': return 'bg-blue-100 text-blue-800';
       case 'completed': return 'bg-green-100 text-green-800';
       case 'rejected': return 'bg-red-100 text-red-800';
+      case 'received': return 'bg-teal-100 text-teal-800';
       default: return 'bg-amber-100 text-orange-800';
     }
   };

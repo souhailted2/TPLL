@@ -116,6 +116,28 @@ export function useShipItem() {
   });
 }
 
+export function useConfirmItemReceived() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ itemId, receivedQuantity }: { itemId: number; receivedQuantity: number }) => {
+      const res = await fetch(`/api/order-items/${itemId}/receive`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ receivedQuantity }),
+        credentials: "include",
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ message: "فشل تأكيد الاستلام" }));
+        throw new Error(err.message);
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [api.orders.list.path] });
+    },
+  });
+}
+
 export function useUpdateItemStatus() {
   const queryClient = useQueryClient();
   return useMutation({
