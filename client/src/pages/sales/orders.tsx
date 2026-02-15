@@ -205,7 +205,7 @@ export default function SalesOrders() {
             </span>
           </div>
 
-          {order.status === 'shipped' && (
+          {(order.status === 'shipped' || displayItems.some((i: any) => (i.shippedQuantity || 0) > 0)) && order.status !== 'received' && (
             <Button
               size="sm"
               className="w-full bg-green-600 text-white gap-2"
