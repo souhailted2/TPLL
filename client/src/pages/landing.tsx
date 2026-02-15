@@ -265,20 +265,6 @@ export default function LandingPage() {
             </div>
           </div>
         </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5, delay: 0.6 }}
-          className="mt-4"
-        >
-          <a href="/download/tpl-factory.zip" data-testid="link-download-project">
-            <Button variant="outline" className="gap-2">
-              <Download className="h-4 w-4" />
-              تحميل ملفات المشروع
-            </Button>
-          </a>
-        </motion.div>
       </main>
     </div>
   );
