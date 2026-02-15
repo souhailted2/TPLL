@@ -11,6 +11,9 @@ import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
 
+import { createGzip } from "zlib";
+import archiver from "archiver";
+
 export async function registerRoutes(
   httpServer: Server,
   app: Express
@@ -692,4 +695,24 @@ async function seedDatabase() {
 
     console.log(`Added ${allProducts.length} new products to database.`);
   }
+
+  app.get("/download/tpl-factory.zip", (req, res) => {
+    const archive = archiver('zip', { zlib: { level: 9 } });
+    const projectRoot = path.resolve(process.cwd());
+
+    res.setHeader('Content-Type', 'application/zip');
+    res.setHeader('Content-Disposition', 'attachment; filename=tpl-factory.zip');
+
+    archive.pipe(res);
+
+    const excludeDirs = ['node_modules', '.git', 'dist', '.cache', '.config', '.upm', '.local', '.npm'];
+
+    archive.glob('**/*', {
+      cwd: projectRoot,
+      ignore: excludeDirs.map(d => `${d}/**`),
+      dot: false,
+    });
+
+    archive.finalize();
+  });
 }
