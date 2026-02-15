@@ -1,0 +1,57 @@
+root@TPL:~/tpl-factory# git pull origin main
+remote: Enumerating objects: 16, done.
+remote: Counting objects: 100% (16/16), done.
+remote: Compressing objects: 100% (2/2), done.
+remote: Total 9 (delta 7), reused 9 (delta 7), pack-reused 0 (from 0)
+Unpacking objects: 100% (9/9), 3.37 KiB | 313.00 KiB/s, done.
+From https://github.com/souhailted2/TPLL
+ * branch            main       -> FETCH_HEAD
+   5dc2fa8..8585edc  main       -> origin/main
+Updating 5dc2fa8..8585edc
+Fast-forward
+ ...oot-TPL-tpl-factory-cd-tpl-factory-root-TPL-tpl-factor_1771195590759.txt | 190 ++++++++++++++++++++++++++++++++++++
+ client/public/tpl-logo.jpg                                                  | Bin 0 -> 153660 bytes
+ client/src/components/workshop-order-print.tsx                              |   2 +-
+ 3 files changed, 191 insertions(+), 1 deletion(-)
+ create mode 100644 attached_assets/Pasted-root-TPL-tpl-factory-cd-tpl-factory-root-TPL-tpl-factor_1771195590759.txt
+ create mode 100644 client/public/tpl-logo.jpg
+root@TPL:~/tpl-factory# docker compose down
+root@TPL:~/tpl-factory# docker compose up -d --build
+[+] Building 112.8s (18/18) FINISHED
+ => [internal] load local bake definitions                                                                         0.0s
+ => => reading from stdin 482B                                                                                     0.0s
+ => [internal] load build definition from Dockerfile                                                               0.0s
+ => => transferring dockerfile: 484B                                                                               0.0s
+ => [internal] load metadata for docker.io/library/node:20-alpine                                                  0.4s
+ => [internal] load .dockerignore                                                                                  0.0s
+ => => transferring context: 141B                                                                                  0.0s
+ => [builder 1/6] FROM docker.io/library/node:20-alpine@sha256:09e2b3d9726018aecf269bd35325f46bf75046a643a66d2836  0.0s
+ => => resolve docker.io/library/node:20-alpine@sha256:09e2b3d9726018aecf269bd35325f46bf75046a643a66d28360ec71132  0.0s
+ => [internal] load build context                                                                                  0.0s
+ => => transferring context: 175.39kB                                                                              0.0s
+ => CACHED [builder 2/6] WORKDIR /app                                                                              0.0s
+ => CACHED [builder 3/6] COPY package.json package-lock.json* ./                                                   0.0s
+ => CACHED [builder 4/6] RUN npm install                                                                           0.0s
+ => [builder 5/6] COPY . .                                                                                         0.1s
+ => [builder 6/6] RUN npm run build                                                                               22.1s
+ => CACHED [runner 4/8] RUN npm install --omit=dev                                                                 0.0s
+ => [runner 5/8] COPY --from=builder /app/dist ./dist                                                              0.7s
+ => [runner 6/8] COPY drizzle.config.ts ./                                                                         0.0s
+ => [runner 7/8] COPY shared ./shared                                                                              0.0s
+ => [runner 8/8] RUN npm install drizzle-kit tsx                                                                  12.0s
+ => exporting to image                                                                                            75.2s
+ => => exporting layers                                                                                           52.2s
+ => => exporting manifest sha256:b24d1ace83ee01e2a05d48345b02602acc743376c8126c2f2858a7c951b40ba6                  0.0s
+ => => exporting config sha256:8b41c81992c9477995ab7142623a43daad48942651600c9688afd86ec4834b1c                    0.0s
+ => => exporting attestation manifest sha256:85da525ed54c64dfec0a9fa2781050e013bc59be5c823a1071e29653b8bb31dc      0.0s
+ => => exporting manifest list sha256:3fba71521468b8014b78319d4d2e4cc6cbd404e96a8257a2cb603675bd698fca             0.0s
+ => => naming to docker.io/library/tpl-factory-app:latest                                                          0.0s
+ => => unpacking to docker.io/library/tpl-factory-app:latest                                                      22.8s
+ => resolving provenance for metadata file                                                                         0.0s
+[+] up 5/5
+ ✔ Image tpl-factory-app         Built                                                                            113.0s
+ ✔ Network tpl-factory_default   Created                                                                          0.1s
+ ✔ Container tpl-factory-db-1    Healthy                                                                          6.6s
+ ✔ Container tpl-factory-app-1   Created                                                                          0.1s
+ ✔ Container tpl-factory-nginx-1 Created                                                                          0.3s
+root@TPL:~/tpl-factory#
