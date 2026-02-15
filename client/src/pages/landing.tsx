@@ -4,7 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup, SelectLabel } from "@/components/ui/select";
 import { useAuth } from "@/hooks/use-auth";
-import { Loader2, ShieldCheck, BarChart3, Globe, LogIn, User, Lock, Factory, MapPin, Truck } from "lucide-react";
+import { Loader2, ShieldCheck, BarChart3, Globe, LogIn, User, Lock, Factory, MapPin, Truck, Download } from "lucide-react";
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -264,6 +264,20 @@ export default function LandingPage() {
               <p className="text-sm text-slate-500">تحديث مباشر بين المعرض والمصنع</p>
             </div>
           </div>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.6 }}
+          className="mt-4"
+        >
+          <a href="/download/tpl-factory.zip" data-testid="link-download-project">
+            <Button variant="outline" className="gap-2">
+              <Download className="h-4 w-4" />
+              تحميل ملفات المشروع
+            </Button>
+          </a>
         </motion.div>
       </main>
     </div>
