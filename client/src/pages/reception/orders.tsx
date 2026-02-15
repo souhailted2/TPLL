@@ -2,12 +2,13 @@ import { Sidebar } from "@/components/layout-sidebar";
 import { useOrders, useUpdateOrderStatus, useUpdateItemStatus, useDismissOrderAlert } from "@/hooks/use-orders";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Loader2, Check, X as XIcon, AlertTriangle, BellOff, PlayCircle, CheckCircle2, Package } from "lucide-react";
+import { Loader2, Check, X as XIcon, AlertTriangle, BellOff, PlayCircle, CheckCircle2, Package, Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { arSA } from "date-fns/locale";
 import { useState, useMemo } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { WorkshopOrderPrint } from "@/components/workshop-order-print";
 
 const ALERT_DAYS = 15;
 
@@ -43,6 +44,7 @@ export default function ReceptionOrders() {
   const updateItemStatus = useUpdateItemStatus();
   const dismissAlert = useDismissOrderAlert();
   const [activeFilter, setActiveFilter] = useState<string>('pending');
+  const [printOrder, setPrintOrder] = useState<any>(null);
   const { toast } = useToast();
 
   const filteredOrders = useMemo(() => {
@@ -318,6 +320,19 @@ export default function ReceptionOrders() {
 
           {hasAlert && renderAlertBanner(alerts)}
 
+          {(order.status === 'accepted' || order.status === 'in_progress' || order.status === 'completed') && 
+            (order.items || []).some((item: any) => item.itemStatus === 'accepted' || item.itemStatus === 'in_progress' || item.itemStatus === 'completed') && (
+            <Button
+              size="sm" variant="outline"
+              className="gap-1 text-xs border-blue-300 text-blue-700"
+              onClick={() => setPrintOrder(order)}
+              data-testid={`button-print-workshop-${order.id}`}
+            >
+              <Printer className="h-3 w-3" />
+              طباعة أمر الورشة
+            </Button>
+          )}
+
           {order.items && order.items.length > 0 && renderOrderItems(order)}
         </CardContent>
       </Card>
@@ -363,6 +378,10 @@ export default function ReceptionOrders() {
           )}
         </div>
       </main>
+
+      {printOrder && (
+        <WorkshopOrderPrint order={printOrder} onClose={() => setPrintOrder(null)} />
+      )}
     </div>
   );
 }
