@@ -2,7 +2,7 @@ import { useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Printer } from "lucide-react";
 import { formatMaghrebDate } from "@/lib/queryClient";
-import tplLogoPath from "@assets/TPLLL_1771181599017.jpg";
+const tplLogoPath = "/tpl-logo.jpg";
 
 interface WorkshopItemPrintProps {
   order: any;

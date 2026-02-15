@@ -1,0 +1,190 @@
+root@TPL:~/tpl-factory# cd ~/tpl-factory
+root@TPL:~/tpl-factory# git pull origin main
+remote: Enumerating objects: 5, done.
+remote: Counting objects: 100% (5/5), done.
+remote: Compressing objects: 100% (1/1), done.
+remote: Total 3 (delta 2), reused 3 (delta 2), pack-reused 0 (from 0)
+Unpacking objects: 100% (3/3), 707 bytes | 353.00 KiB/s, done.
+From https://github.com/souhailted2/TPLL
+ * branch            main       -> FETCH_HEAD
+   e8ae24c..5dc2fa8  main       -> origin/main
+Updating e8ae24c..5dc2fa8
+Fast-forward
+ nginx.conf | 7 +++++++
+ 1 file changed, 7 insertions(+)
+root@TPL:~/tpl-factory# docker compose down
+[+] down 4/4
+ ✔ Container tpl-factory-nginx-1 Removed                                                                           0.3ss
+ ✔ Container tpl-factory-app-1   Removed                                                                           10.3s
+ ✔ Container tpl-factory-db-1    Removed                                                                           0.2s
+ ✔ Network tpl-factory_default   Removed                                                                           0.1s
+root@TPL:~/tpl-factory# docker compose up -d --build
+[+] Building 16.2s (11/16)
+ => [internal] load local bake definitions                                                                         0.0s
+ => => reading from stdin 482B                                                                                     0.0s
+ => [internal] load build definition from Dockerfile                                                               0.0s
+ => => transferring dockerfile: 484B                                                                               0.0s
+ => [internal] load metadata for docker.io/library/node:20-alpine                                                  0.6s
+ => [internal] load .dockerignore                                                                                  0.0s
+ => => transferring context: 141B                                                                                  0.0s
+ => [builder 1/6] FROM docker.io/library/node:20-alpine@sha256:09e2b3d9726018aecf269bd35325f46bf75046a643a66d2836  0.1s
+ => => resolve docker.io/library/node:20-alpine@sha256:09e2b3d9726018aecf269bd35325f46bf75046a643a66d28360ec71132  0.0s
+ => [internal] load build context                                                                                  0.0s
+ => => transferring context: 8.15kB                                                                                0.0s
+ => CACHED [builder 2/6] WORKDIR /app                                                                              0.0s
+ => CACHED [builder 3/6] COPY package.json package-lock.json* ./                                                   0.0s
+ => CACHED [builder 4/6] RUN npm install                                                                           0.0s
+ => [builder 5/6] COPY . .                                                                                         0.1s
+ => ERROR [builder 6/6] RUN npm run build                                                                         15.1s
+------
+ > [builder 6/6] RUN npm run build:
+0.708
+0.708 > rest-express@1.0.0 build
+0.708 > tsx script/build.ts
+0.708
+2.700 building client...
+2.930 vite v7.3.0 building client environment for production...
+4.692 transforming...
+14.09 ✓ 2574 modules transformed.
+14.87 ✗ Build failed in 11.32s
+14.87 [vite:asset] Could not load /app/attached_assets/TPLLL_1771181599017.jpg (imported by client/src/components/workshop-order-print.tsx): ENOENT: no such file or directory, open '/app/attached_assets/TPLLL_1771181599017.jpg'
+14.87     at async open (node:internal/fs/promises:634:25)
+14.87     at async Object.readFile (node:internal/fs/promises:1236:14)
+14.87     at async fileToBuiltUrl (/app/node_modules/vite/dist/node/chunks/config.js:8777:18)
+14.87     at async Object.handler (/app/node_modules/vite/dist/node/chunks/config.js:8671:17)
+14.87     at async PluginDriver.hookFirstAndGetPlugin (/app/node_modules/rollup/dist/es/shared/node-entry.js:22376:28)
+14.87     at async <anonymous> (/app/node_modules/rollup/dist/es/shared/node-entry.js:21376:33)
+14.87     at async Queue.work (/app/node_modules/rollup/dist/es/shared/node-entry.js:22604:32) {
+14.87   errno: -2,
+14.87   code: 'PLUGIN_ERROR',
+14.87   syscall: 'open',
+14.87   path: '/app/attached_assets/TPLLL_1771181599017.jpg',
+14.87   pluginCode: 'ENOENT',
+14.87   plugin: 'vite:asset',
+14.87   hook: 'load',
+14.87   watchFiles: [
+14.87     '/app/client/index.html',
+14.87     '/app/client/src/main.tsx',
+14.87     '/app/package.json',
+14.87     '/app/node_modules/react/jsx-runtime.js',
+14.87     '/app/node_modules/react-dom/client.js',
+14.87     '/app/client/src/App.tsx',
+14.87     '/app/client/src/index.css',
+14.87     '/app/node_modules/@tanstack/react-query/build/modern/index.js',
+14.87     '/app/node_modules/react/cjs/react-jsx-runtime.production.min.js',
+14.87     '/app/node_modules/react-dom/index.js',
+14.87     '/app/client/src/lib/queryClient.ts',
+14.87     '/app/client/src/components/ui/toaster.tsx',
+14.87     '/app/client/src/components/ui/tooltip.tsx',
+14.87     '/app/client/src/hooks/use-auth.ts',
+14.87     '/app/client/src/hooks/use-user-role.ts',
+14.87     '/app/client/src/pages/landing.tsx',
+14.87     '/app/client/src/pages/not-found.tsx',
+14.87     '/app/client/src/pages/admin/dashboard.tsx',
+14.87     '/app/client/src/pages/admin/products.tsx',
+14.87     '/app/client/src/pages/reception/orders.tsx',
+14.87     '/app/client/src/pages/admin/orders.tsx',
+14.87     '/app/client/src/pages/reception/products.tsx',
+14.87     '/app/client/src/pages/shipping/orders.tsx',
+14.87     '/app/client/src/pages/sales/new-order.tsx',
+14.87     '/app/node_modules/react/index.js',
+14.87     '/app/client/src/pages/sales/history.tsx',
+14.87     '/app/client/src/pages/sales/orders.tsx',
+14.87     '/app/node_modules/wouter/esm/index.js',
+14.87     '/app/node_modules/lucide-react/dist/esm/lucide-react.js',
+14.87     '/app/node_modules/@tanstack/react-query/build/modern/types.js',
+14.87     '/app/node_modules/@tanstack/react-query/build/modern/useQuery.js',
+14.87     '/app/node_modules/@tanstack/react-query/build/modern/useSuspenseInfiniteQuery.js',
+14.87     '/app/node_modules/@tanstack/react-query/build/modern/useSuspenseQuery.js',
+14.87     '/app/node_modules/@tanstack/react-query/build/modern/useSuspenseQueries.js',
+14.87     '/app/node_modules/@tanstack/react-query/build/modern/usePrefetchInfiniteQuery.js',
+14.87     '/app/node_modules/@tanstack/react-query/build/modern/queryOptions.js',
+14.87     '/app/node_modules/@tanstack/react-query/build/modern/infiniteQueryOptions.js',
+14.87     '/app/node_modules/@tanstack/react-query/build/modern/HydrationBoundary.js',
+14.87     '/app/node_modules/@tanstack/react-query/build/modern/QueryClientProvider.js',
+14.87     '/app/node_modules/@tanstack/react-query/build/modern/QueryErrorResetBoundary.js',
+14.87     '/app/node_modules/@tanstack/react-query/build/modern/useQueries.js',
+14.87     '/app/node_modules/@tanstack/react-query/build/modern/useMutationState.js',
+14.87     '/app/node_modules/@tanstack/react-query/build/modern/useInfiniteQuery.js',
+14.87     '/app/node_modules/@tanstack/query-core/build/modern/index.js',
+14.87     '/app/node_modules/@tanstack/react-query/build/modern/usePrefetchQuery.js',
+14.87     '/app/node_modules/@tanstack/react-query/build/modern/useIsFetching.js',
+14.87     '/app/node_modules/@tanstack/react-query/build/modern/isRestoring.js',
+14.87     '/app/node_modules/@tanstack/react-query/build/modern/useMutation.js',
+14.87     '/app/node_modules/react-dom/cjs/react-dom.production.min.js',
+14.87     '/app/node_modules/react/cjs/react.production.min.js',
+14.87     '/app/node_modules/regexparam/dist/index.mjs',
+14.87     '/app/node_modules/wouter/esm/react-deps.js',
+14.87     '/app/node_modules/wouter/esm/use-browser-location.js',
+14.87     '/app/shared/routes.ts',
+14.87     '/app/node_modules/lucide-react/dist/esm/icons/a-arrow-down.js',
+14.87     '/app/node_modules/date-fns/index.mjs',
+14.87     '/app/node_modules/date-fns/locale.mjs',
+14.87     '/app/node_modules/lucide-react/dist/esm/icons/accessibility.js',
+14.87     '/app/node_modules/lucide-react/dist/esm/icons/a-arrow-up.js',
+14.87     '/app/node_modules/lucide-react/dist/esm/icons/a-large-small.js',
+14.87     '/app/node_modules/lucide-react/dist/esm/icons/index.js',
+14.87     '/app/node_modules/lucide-react/dist/esm/icons/activity.js',
+14.87     '/app/node_modules/lucide-react/dist/esm/icons/alarm-smoke.js',
+14.87     '/app/node_modules/lucide-react/dist/esm/icons/air-vent.js',
+14.87     '/app/node_modules/lucide-react/dist/esm/icons/album.js',
+14.87     '/app/node_modules/lucide-react/dist/esm/icons/align-end-horizontal.js',
+14.87     '/app/node_modules/lucide-react/dist/esm/icons/align-end-vertical.js',
+14.87     '/app/node_modules/lucide-react/dist/esm/icons/align-center-horizontal.js',
+14.87     '/app/node_modules/lucide-react/dist/esm/icons/align-horizontal-distribute-end.js',
+14.87     '/app/node_modules/lucide-react/dist/esm/icons/align-horizontal-distribute-start.js',
+14.87     '/app/node_modules/lucide-react/dist/esm/icons/align-horizontal-justify-center.js',
+14.87     '/app/node_modules/lucide-react/dist/esm/icons/align-center-vertical.js',
+14.87     '/app/node_modules/lucide-react/dist/esm/icons/align-horizontal-justify-start.js',
+14.87     '/app/node_modules/lucide-react/dist/esm/icons/align-center.js',
+14.87     '/app/node_modules/lucide-react/dist/esm/icons/align-horizontal-space-between.js',
+14.87     '/app/node_modules/lucide-react/dist/esm/icons/align-justify.js',
+14.87     '/app/node_modules/lucide-react/dist/esm/icons/align-horizontal-distribute-center.js',
+14.87     '/app/node_modules/lucide-react/dist/esm/icons/align-left.js',
+14.87     '/app/node_modules/lucide-react/dist/esm/icons/align-horizontal-space-around.js',
+14.87     '/app/node_modules/lucide-react/dist/esm/icons/align-right.js',
+14.87     '/app/node_modules/lucide-react/dist/esm/icons/align-horizontal-justify-end.js',
+14.87     '/app/node_modules/lucide-react/dist/esm/icons/align-start-horizontal.js',
+14.87     '/app/node_modules/lucide-react/dist/esm/icons/align-vertical-distribute-center.js',
+14.87     '/app/node_modules/lucide-react/dist/esm/icons/align-start-vertical.js',
+14.87     '/app/node_modules/lucide-react/dist/esm/icons/align-vertical-distribute-end.js',
+14.87     '/app/node_modules/lucide-react/dist/esm/icons/align-vertical-justify-center.js',
+14.87     '/app/node_modules/lucide-react/dist/esm/icons/align-vertical-justify-end.js',
+14.87     '/app/node_modules/lucide-react/dist/esm/icons/align-vertical-justify-start.js',
+14.87     '/app/node_modules/lucide-react/dist/esm/icons/align-vertical-distribute-start.js',
+14.87     '/app/node_modules/lucide-react/dist/esm/icons/align-vertical-space-around.js',
+14.87     '/app/node_modules/lucide-react/dist/esm/icons/ambulance.js',
+14.87     '/app/node_modules/lucide-react/dist/esm/icons/align-vertical-space-between.js',
+14.87     '/app/node_modules/lucide-react/dist/esm/icons/ampersand.js',
+14.87     '/app/node_modules/lucide-react/dist/esm/icons/ampersands.js',
+14.87     '/app/node_modules/lucide-react/dist/esm/icons/amphora.js',
+14.87     '/app/node_modules/lucide-react/dist/esm/icons/angry.js',
+14.87     '/app/node_modules/lucide-react/dist/esm/icons/anchor.js',
+14.87     '/app/node_modules/lucide-react/dist/esm/icons/antenna.js',
+14.87     '/app/node_modules/lucide-react/dist/esm/icons/annoyed.js',
+14.87     '/app/node_modules/lucide-react/dist/esm/icons/aperture.js',
+14.87     ... 2506 more items
+14.87   ]
+14.87 }
+------
+[+] up 0/1
+ ⠙ Image tpl-factory-app Building                                                                                  16.4s
+Dockerfile:9
+
+--------------------
+
+   7 |
+
+   8 |     COPY . .
+
+   9 | >>> RUN npm run build
+
+  10 |
+
+  11 |     FROM node:20-alpine AS runner
+
+--------------------
+
+failed to solve: process "/bin/sh -c npm run build" did not complete successfully: exit code: 1
+
+root@TPL:~/tpl-factory#
