@@ -1,0 +1,50 @@
+~/workspace$ git pull --rebase origin main
+From https://github.com/souhailted2/TPLL
+ * branch            main       -> FETCH_HEAD
+Successfully rebased and updated refs/heads/replit-agent.
+~/workspace$ git push origin main
+To https://github.com/souhailted2/TPLL
+ ! [rejected]        main -> main (non-fast-forward)
+error: failed to push some refs to 'https://github.com/souhailted2/TPLL'
+hint: Updates were rejected because the tip of your current branch is behind
+hint: its remote counterpart. If you want to integrate the remote changes,
+hint: use 'git pull' before pushing again.
+hint: See the 'Note about fast-forwards' in 'git push --help' for details.
+~/workspace$ git pull --rebase origin main && git push origin main
+From https://github.com/souhailted2/TPLL
+ * branch            main       -> FETCH_HEAD
+Successfully rebased and updated refs/heads/main.
+Enumerating objects: 1287, done.
+Counting objects: 100% (1287/1287), done.
+Delta compression using up to 8 threads
+Compressing objects: 100% (1265/1265), done.
+Writing objects: 100% (1286/1286), 33.51 MiB | 5.70 MiB/s, done.
+Total 1286 (delta 961), reused 0 (delta 0), pack-reused 0 (from 0)
+remote: Resolving deltas: 100% (961/961), done.
+remote: error: GH013: Repository rule violations found for refs/heads/main.
+remote: 
+remote: - GITHUB PUSH PROTECTION
+remote:   —————————————————————————————————————————
+remote:     Resolve the following violations before pushing again
+remote: 
+remote:     - Push cannot contain secrets
+remote: 
+remote:     
+remote:      (?) Learn how to resolve a blocked push
+remote:      https://docs.github.com/code-security/secret-scanning/working-with-secret-scanning-and-push-protection/working-with-push-protection-from-the-command-line#resolving-a-blocked-push
+remote:     
+remote:     
+remote:       —— Google Cloud Service Account Credentials ——————————
+remote:        locations:
+remote:          - commit: a75af3f596eecfc5095a89a2a93ff81fb22d6bd3
+remote:            path: attached_assets/tpl-factory-firebase-adminsdk-fbsvc-ebae24de84_1770151821297.json:1
+remote:     
+remote:        (?) To push, remove secret from commit(s) or follow this URL to allow the secret.
+remote:        https://github.com/souhailted2/TPLL/security/secret-scanning/unblock-secret/39ivjALoSrD5QIsDTDFSrnmJFW8
+remote:     
+remote: 
+remote: 
+To https://github.com/souhailted2/TPLL
+ ! [remote rejected] main -> main (push declined due to repository rule violations)
+error: failed to push some refs to 'https://github.com/souhailted2/TPLL'
+~/workspace$ 
