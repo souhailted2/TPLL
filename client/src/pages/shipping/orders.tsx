@@ -45,12 +45,34 @@ export default function ShippingOrders() {
 
   const shippedOrders = useMemo(() => {
     if (!orders) return [];
-    return orders.filter((o: any) => o.status === 'shipped');
+    const result: any[] = [];
+    for (const order of orders) {
+      if (order.status === 'shipped') {
+        result.push({ ...order });
+        continue;
+      }
+      const shippedItems = (order.items || []).filter((i: any) => (i.shippedQuantity || 0) > 0);
+      if (shippedItems.length > 0) {
+        result.push({ ...order, _filteredItems: shippedItems });
+      }
+    }
+    return result;
   }, [orders]);
 
   const receivedOrders = useMemo(() => {
     if (!orders) return [];
-    return orders.filter((o: any) => o.status === 'received');
+    const result: any[] = [];
+    for (const order of orders) {
+      if (order.status === 'received') {
+        result.push({ ...order });
+        continue;
+      }
+      const receivedItems = (order.items || []).filter((i: any) => (i.itemStatus || 'pending') === 'received');
+      if (receivedItems.length > 0) {
+        result.push({ ...order, _filteredItems: receivedItems });
+      }
+    }
+    return result;
   }, [orders]);
 
   const handleCompletedQuantity = async (itemId: number, quantity: number) => {
@@ -314,7 +336,7 @@ export default function ShippingOrders() {
   };
 
   const renderHistoryCard = (order: any) => {
-    const items = order.items || [];
+    const items = order._filteredItems || order.items || [];
 
     return (
       <Card key={order.id} data-testid={`card-history-${order.id}`}>
