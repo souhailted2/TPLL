@@ -123,8 +123,20 @@ export default function AdminOrders() {
         return result;
       }
 
-      case 'shipped':
-        return orders.filter((o: any) => o.status === 'shipped').map((o: any) => ({ ...o }));
+      case 'shipped': {
+        const result: any[] = [];
+        for (const order of orders) {
+          if (order.status === 'shipped') {
+            result.push({ ...order });
+            continue;
+          }
+          const shippedItems = (order.items || []).filter((i: any) => (i.shippedQuantity || 0) > 0);
+          if (shippedItems.length > 0) {
+            result.push({ ...order, _filteredItems: shippedItems });
+          }
+        }
+        return result;
+      }
 
       case 'received':
         return orders.filter((o: any) => o.status === 'received').map((o: any) => ({ ...o }));
@@ -339,6 +351,16 @@ export default function AdminOrders() {
   const inProgressItemCount = useMemo(() => countItemsByStatus(orders || [], 'in_progress'), [orders]);
   const completedItemCount = useMemo(() => countItemsByStatus(orders || [], 'completed'), [orders]);
   const rejectedItemCount = useMemo(() => countItemsByStatus(orders || [], 'rejected'), [orders]);
+  const shippedItemCount = useMemo(() => {
+    if (!orders) return 0;
+    let count = 0;
+    for (const order of orders) {
+      if (order.status === 'shipped') { count++; continue; }
+      const shippedItems = (order.items || []).filter((i: any) => (i.shippedQuantity || 0) > 0);
+      if (shippedItems.length > 0) count += shippedItems.length;
+    }
+    return count;
+  }, [orders]);
 
   return (
     <div className="min-h-screen bg-slate-50 flex" dir="rtl">
@@ -356,7 +378,7 @@ export default function AdminOrders() {
               { key: 'pending', label: 'في الانتظار', count: orders?.filter((o: any) => o.status === 'submitted').length || 0 },
               { key: 'in_progress', label: 'قيد العمل', count: inProgressItemCount },
               { key: 'completed', label: 'منجز', count: completedItemCount },
-              { key: 'shipped', label: 'تم الشحن', count: orders?.filter((o: any) => o.status === 'shipped').length || 0 },
+              { key: 'shipped', label: 'تم الشحن', count: shippedItemCount },
               { key: 'received', label: 'تم الاستلام', count: orders?.filter((o: any) => o.status === 'received').length || 0 },
               { key: 'rejected', label: 'مرفوض', count: rejectedItemCount },
             ].map(f => (
