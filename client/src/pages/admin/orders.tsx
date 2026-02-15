@@ -58,6 +58,8 @@ function filterItemsByStatus(items: any[], filter: string): any[] {
       return items.filter((i: any) => (i.itemStatus || 'pending') === 'completed');
     case 'rejected':
       return items.filter((i: any) => (i.itemStatus || 'pending') === 'rejected');
+    case 'received':
+      return items.filter((i: any) => (i.itemStatus || 'pending') === 'received');
     default:
       return items;
   }
@@ -90,7 +92,7 @@ export default function AdminOrders() {
     return orders.filter((o: any) => getOrderAlertInfo(o) !== null).length;
   }, [orders]);
 
-  const isItemLevelFilter = ['in_progress', 'completed', 'rejected'].includes(activeFilter);
+  const isItemLevelFilter = ['in_progress', 'completed', 'rejected', 'received'].includes(activeFilter);
 
   const filteredData = useMemo(() => {
     if (!orders) return [];
@@ -138,8 +140,20 @@ export default function AdminOrders() {
         return result;
       }
 
-      case 'received':
-        return orders.filter((o: any) => o.status === 'received').map((o: any) => ({ ...o }));
+      case 'received': {
+        const result: any[] = [];
+        for (const order of orders) {
+          if (order.status === 'received') {
+            result.push({ ...order });
+            continue;
+          }
+          const receivedItems = filterItemsByStatus(order.items || [], 'received');
+          if (receivedItems.length > 0) {
+            result.push({ ...order, _filteredItems: receivedItems });
+          }
+        }
+        return result;
+      }
 
       case 'rejected': {
         const result: any[] = [];
@@ -381,7 +395,7 @@ export default function AdminOrders() {
               { key: 'in_progress', label: 'قيد العمل', count: inProgressItemCount },
               { key: 'completed', label: 'منجز', count: completedItemCount },
               { key: 'shipped', label: 'تم الشحن', count: shippedItemCount },
-              { key: 'received', label: 'تم الاستلام', count: orders?.filter((o: any) => o.status === 'received').length || 0 },
+              { key: 'received', label: 'تم الاستلام', count: countItemsByStatus(orders || [], 'received') },
               { key: 'rejected', label: 'مرفوض', count: rejectedItemCount },
             ].map(f => (
               <Button 
