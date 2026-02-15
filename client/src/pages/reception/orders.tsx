@@ -37,6 +37,31 @@ function getOrderAlertInfo(order: any) {
   return alerts.length > 0 ? alerts : null;
 }
 
+function filterItemsByStatus(items: any[], filter: string): any[] {
+  switch (filter) {
+    case 'in_progress':
+      return items.filter((i: any) => ['accepted', 'in_progress'].includes(i.itemStatus || 'pending'));
+    case 'completed':
+      return items.filter((i: any) => (i.itemStatus || 'pending') === 'completed');
+    case 'rejected':
+      return items.filter((i: any) => (i.itemStatus || 'pending') === 'rejected');
+    case 'shipped':
+      return items.filter((i: any) => (i.shippedQuantity || 0) > 0);
+    default:
+      return items;
+  }
+}
+
+function countItemsByStatus(orders: any[], statusFilter: string): number {
+  if (!orders) return 0;
+  let count = 0;
+  for (const order of orders) {
+    if (!order.items) continue;
+    count += filterItemsByStatus(order.items, statusFilter).length;
+  }
+  return count;
+}
+
 export default function ReceptionOrders() {
   const { data: orders, isLoading } = useOrders();
   const updateStatus = useUpdateOrderStatus();
@@ -46,22 +71,90 @@ export default function ReceptionOrders() {
   const [printItem, setPrintItem] = useState<{ order: any; item: any } | null>(null);
   const { toast } = useToast();
 
-  const filteredOrders = useMemo(() => {
-    if (!orders) return [];
-    switch (activeFilter) {
-      case 'pending': return orders.filter((o: any) => o.status === 'submitted');
-      case 'accepted': return orders.filter((o: any) => o.status === 'accepted' || o.status === 'in_progress');
-      case 'completed': return orders.filter((o: any) => o.status === 'completed');
-      case 'rejected': return orders.filter((o: any) => o.status === 'rejected');
-      case 'alerts': return orders.filter((o: any) => getOrderAlertInfo(o) !== null);
-      default: return orders;
-    }
-  }, [orders, activeFilter]);
-
   const alertCount = useMemo(() => {
     if (!orders) return 0;
     return orders.filter((o: any) => getOrderAlertInfo(o) !== null).length;
   }, [orders]);
+
+  const inProgressItemCount = useMemo(() => countItemsByStatus(orders || [], 'in_progress'), [orders]);
+  const completedItemCount = useMemo(() => countItemsByStatus(orders || [], 'completed'), [orders]);
+  const rejectedItemCount = useMemo(() => countItemsByStatus(orders || [], 'rejected'), [orders]);
+  const shippedItemCount = useMemo(() => {
+    if (!orders) return 0;
+    let count = 0;
+    for (const order of orders) {
+      if (order.status === 'shipped') { count++; continue; }
+      const shippedItems = (order.items || []).filter((i: any) => (i.shippedQuantity || 0) > 0);
+      if (shippedItems.length > 0) count += shippedItems.length;
+    }
+    return count;
+  }, [orders]);
+
+  const filteredData = useMemo(() => {
+    if (!orders) return [];
+
+    switch (activeFilter) {
+      case 'pending':
+        return orders.filter((o: any) => o.status === 'submitted').map((o: any) => ({ ...o }));
+
+      case 'accepted': {
+        const result: any[] = [];
+        for (const order of orders) {
+          if (['shipped', 'received', 'rejected', 'submitted'].includes(order.status)) continue;
+          const filtered = filterItemsByStatus(order.items || [], 'in_progress');
+          if (filtered.length > 0) {
+            result.push({ ...order, _filteredItems: filtered });
+          }
+        }
+        return result;
+      }
+
+      case 'completed': {
+        const result: any[] = [];
+        for (const order of orders) {
+          if (['shipped', 'received', 'rejected', 'submitted'].includes(order.status)) continue;
+          const filtered = filterItemsByStatus(order.items || [], 'completed');
+          if (filtered.length > 0) {
+            result.push({ ...order, _filteredItems: filtered });
+          }
+        }
+        return result;
+      }
+
+      case 'shipped': {
+        const result: any[] = [];
+        for (const order of orders) {
+          if (order.status === 'shipped') {
+            result.push({ ...order });
+            continue;
+          }
+          const shippedItems = (order.items || []).filter((i: any) => (i.shippedQuantity || 0) > 0);
+          if (shippedItems.length > 0) {
+            result.push({ ...order, _filteredItems: shippedItems });
+          }
+        }
+        return result;
+      }
+
+      case 'rejected': {
+        const result: any[] = [];
+        for (const order of orders) {
+          const filtered = filterItemsByStatus(order.items || [], 'rejected');
+          if (filtered.length > 0) {
+            result.push({ ...order, _filteredItems: filtered });
+          }
+        }
+        const rejectedOrders = orders.filter((o: any) => o.status === 'rejected' && !result.find(r => r.id === o.id));
+        return [...result, ...rejectedOrders];
+      }
+
+      case 'alerts':
+        return orders.filter((o: any) => getOrderAlertInfo(o) !== null).map((o: any) => ({ ...o }));
+
+      default:
+        return orders.map((o: any) => ({ ...o }));
+    }
+  }, [orders, activeFilter]);
 
   const handleItemStatusChange = async (itemId: number, newStatus: string) => {
     try {
@@ -237,66 +330,10 @@ export default function ReceptionOrders() {
     }
   };
 
-  const renderOrderItems = (order: any) => {
-    return (
-      <div className="space-y-2 mt-3 pt-3 border-t border-slate-100">
-        <div className="flex items-center gap-2 mb-2">
-          <Package className="h-4 w-4 text-slate-500" />
-          <p className="font-bold text-sm">{order.items?.length || 0} أصناف</p>
-        </div>
-        <div className="grid gap-2">
-          {(order.items || []).map((item: any, idx: number) => {
-            const itemSt = item.itemStatus || 'pending';
-            return (
-              <div key={idx} className={`p-3 rounded-lg border ${getItemBorderColor(itemSt)}`} data-testid={`item-card-${item.id}`}>
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-sm break-words">{item.product?.name}</p>
-                    <p className="text-[10px] text-slate-400">{item.product?.sku}</p>
-                  </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <Badge variant={item.unit === 'bag' ? 'default' : 'outline'} className="text-[10px]">
-                      {getUnitLabel(item.unit || 'piece')}
-                    </Badge>
-                    <span className="font-bold text-primary">{item.quantity}</span>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between gap-2 mt-2 flex-wrap">
-                  <Badge variant="secondary" className={`text-[10px] ${getItemStatusColor(itemSt)}`}>
-                    {getItemStatusLabel(itemSt)}
-                  </Badge>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    {item.completedQuantity > 0 && (
-                      <span className="text-xs text-slate-500">منجز: <span className="font-bold">{item.completedQuantity}</span></span>
-                    )}
-                    {(item.shippedQuantity || 0) > 0 && (
-                      <span className="text-xs text-purple-600">مشحون: <span className="font-bold">{item.shippedQuantity}</span></span>
-                    )}
-                    {(itemSt === 'accepted' || itemSt === 'in_progress' || itemSt === 'completed') && (
-                      <Button
-                        size="sm" variant="outline"
-                        className="gap-1 text-[10px] border-blue-300 text-blue-700"
-                        onClick={() => setPrintItem({ order, item })}
-                        data-testid={`button-print-item-${item.id}`}
-                      >
-                        <Printer className="h-3 w-3" />
-                        طباعة أمر ورشة
-                      </Button>
-                    )}
-                  </div>
-                </div>
-                {renderItemActions(item, order)}
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    );
-  };
-
   const renderOrderCard = (order: any) => {
     const alerts = getOrderAlertInfo(order);
     const hasAlert = alerts !== null;
+    const displayItems = order._filteredItems || order.items || [];
 
     return (
       <Card key={order.id} className={hasAlert ? 'border-red-200' : ''} data-testid={`card-order-${order.id}`}>
@@ -335,8 +372,60 @@ export default function ReceptionOrders() {
 
           {hasAlert && renderAlertBanner(alerts)}
 
-
-          {order.items && order.items.length > 0 && renderOrderItems(order)}
+          {displayItems.length > 0 && (
+            <div className="space-y-2 mt-3 pt-3 border-t border-slate-100">
+              <div className="flex items-center gap-2 mb-2">
+                <Package className="h-4 w-4 text-slate-500" />
+                <p className="font-bold text-sm">{displayItems.length} أصناف</p>
+              </div>
+              <div className="grid gap-2">
+                {displayItems.map((item: any, idx: number) => {
+                  const itemSt = item.itemStatus || 'pending';
+                  return (
+                    <div key={idx} className={`p-3 rounded-lg border ${getItemBorderColor(itemSt)}`} data-testid={`item-card-${item.id}`}>
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm break-words">{item.product?.name}</p>
+                          <p className="text-[10px] text-slate-400">{item.product?.sku}</p>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <Badge variant={item.unit === 'bag' ? 'default' : 'outline'} className="text-[10px]">
+                            {getUnitLabel(item.unit || 'piece')}
+                          </Badge>
+                          <span className="font-bold text-primary">{item.quantity}</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between gap-2 mt-2 flex-wrap">
+                        <Badge variant="secondary" className={`text-[10px] ${getItemStatusColor(itemSt)}`}>
+                          {getItemStatusLabel(itemSt)}
+                        </Badge>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {item.completedQuantity > 0 && (
+                            <span className="text-xs text-slate-500">منجز: <span className="font-bold">{item.completedQuantity}</span></span>
+                          )}
+                          {(item.shippedQuantity || 0) > 0 && (
+                            <span className="text-xs text-purple-600">مشحون: <span className="font-bold">{item.shippedQuantity}</span></span>
+                          )}
+                          {(itemSt === 'accepted' || itemSt === 'in_progress' || itemSt === 'completed') && (
+                            <Button
+                              size="sm" variant="outline"
+                              className="gap-1 text-[10px] border-blue-300 text-blue-700"
+                              onClick={() => setPrintItem({ order, item })}
+                              data-testid={`button-print-item-${item.id}`}
+                            >
+                              <Printer className="h-3 w-3" />
+                              طباعة أمر ورشة
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                      {renderItemActions(item, order)}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
     );
@@ -355,9 +444,10 @@ export default function ReceptionOrders() {
           <div className="flex flex-wrap gap-2">
             {[
               { key: 'pending', label: 'في الانتظار', count: orders?.filter((o: any) => o.status === 'submitted').length || 0 },
-              { key: 'accepted', label: 'قيد العمل', count: orders?.filter((o: any) => o.status === 'accepted' || o.status === 'in_progress').length || 0 },
-              { key: 'completed', label: 'منجز', count: orders?.filter((o: any) => o.status === 'completed').length || 0 },
-              { key: 'rejected', label: 'مرفوض', count: orders?.filter((o: any) => o.status === 'rejected').length || 0 },
+              { key: 'accepted', label: 'قيد العمل', count: inProgressItemCount },
+              { key: 'completed', label: 'منجز', count: completedItemCount },
+              { key: 'shipped', label: 'تم الشحن', count: shippedItemCount },
+              { key: 'rejected', label: 'مرفوض', count: rejectedItemCount },
               ...(alertCount > 0 ? [{ key: 'alerts', label: 'تنبيهات', count: alertCount }] : []),
               { key: 'all', label: 'الكل', count: orders?.length || 0 },
             ].map(f => (
@@ -373,8 +463,8 @@ export default function ReceptionOrders() {
             <div className="p-12 flex justify-center"><Loader2 className="animate-spin text-primary" /></div>
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {filteredOrders?.map((order: any) => renderOrderCard(order))}
-              {filteredOrders?.length === 0 && (
+              {filteredData?.map((order: any) => renderOrderCard(order))}
+              {filteredData?.length === 0 && (
                 <div className="col-span-full text-center py-12 text-slate-400">لا توجد طلبات</div>
               )}
             </div>

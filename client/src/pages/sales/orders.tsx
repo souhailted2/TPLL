@@ -8,20 +8,117 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent } from "@/components/ui/card";
 
+function filterItemsByStatus(items: any[], filter: string): any[] {
+  switch (filter) {
+    case 'in_progress':
+      return items.filter((i: any) => ['accepted', 'in_progress'].includes(i.itemStatus || 'pending'));
+    case 'completed':
+      return items.filter((i: any) => (i.itemStatus || 'pending') === 'completed');
+    case 'rejected':
+      return items.filter((i: any) => (i.itemStatus || 'pending') === 'rejected');
+    case 'shipped':
+      return items.filter((i: any) => (i.shippedQuantity || 0) > 0);
+    default:
+      return items;
+  }
+}
+
+function countItemsByStatus(orders: any[], statusFilter: string): number {
+  if (!orders) return 0;
+  let count = 0;
+  for (const order of orders) {
+    if (!order.items) continue;
+    count += filterItemsByStatus(order.items, statusFilter).length;
+  }
+  return count;
+}
+
 export default function SalesOrders() {
   const { data: orders, isLoading } = useOrders();
   const updateStatus = useUpdateOrderStatus();
   const { toast } = useToast();
   const [activeFilter, setActiveFilter] = useState<string>('active');
 
-  const filteredOrders = useMemo(() => {
+  const inProgressItemCount = useMemo(() => countItemsByStatus(orders || [], 'in_progress'), [orders]);
+  const completedItemCount = useMemo(() => countItemsByStatus(orders || [], 'completed'), [orders]);
+  const shippedItemCount = useMemo(() => {
+    if (!orders) return 0;
+    let count = 0;
+    for (const order of orders) {
+      if (order.status === 'shipped') { count++; continue; }
+      const shippedItems = (order.items || []).filter((i: any) => (i.shippedQuantity || 0) > 0);
+      if (shippedItems.length > 0) count += shippedItems.length;
+    }
+    return count;
+  }, [orders]);
+  const rejectedItemCount = useMemo(() => countItemsByStatus(orders || [], 'rejected'), [orders]);
+
+  const filteredData = useMemo(() => {
     if (!orders) return [];
+
     switch (activeFilter) {
-      case 'active': return orders.filter((order: any) =>
-        !['received'].includes(order.status)
-      );
-      case 'received': return orders.filter((order: any) => order.status === 'received');
-      default: return orders;
+      case 'active':
+        return orders.filter((order: any) => !['received'].includes(order.status)).map((o: any) => ({ ...o }));
+
+      case 'pending':
+        return orders.filter((o: any) => o.status === 'submitted').map((o: any) => ({ ...o }));
+
+      case 'in_progress': {
+        const result: any[] = [];
+        for (const order of orders) {
+          if (['shipped', 'received', 'rejected', 'submitted'].includes(order.status)) continue;
+          const filtered = filterItemsByStatus(order.items || [], 'in_progress');
+          if (filtered.length > 0) {
+            result.push({ ...order, _filteredItems: filtered });
+          }
+        }
+        return result;
+      }
+
+      case 'completed': {
+        const result: any[] = [];
+        for (const order of orders) {
+          if (['shipped', 'received', 'rejected', 'submitted'].includes(order.status)) continue;
+          const filtered = filterItemsByStatus(order.items || [], 'completed');
+          if (filtered.length > 0) {
+            result.push({ ...order, _filteredItems: filtered });
+          }
+        }
+        return result;
+      }
+
+      case 'shipped': {
+        const result: any[] = [];
+        for (const order of orders) {
+          if (order.status === 'shipped') {
+            result.push({ ...order });
+            continue;
+          }
+          const shippedItems = (order.items || []).filter((i: any) => (i.shippedQuantity || 0) > 0);
+          if (shippedItems.length > 0) {
+            result.push({ ...order, _filteredItems: shippedItems });
+          }
+        }
+        return result;
+      }
+
+      case 'rejected': {
+        const result: any[] = [];
+        for (const order of orders) {
+          const filtered = filterItemsByStatus(order.items || [], 'rejected');
+          if (filtered.length > 0) {
+            result.push({ ...order, _filteredItems: filtered });
+          }
+        }
+        const rejectedOrders = orders.filter((o: any) => o.status === 'rejected' && !result.find(r => r.id === o.id));
+        return [...result, ...rejectedOrders];
+      }
+
+      case 'received':
+        return orders.filter((order: any) => order.status === 'received').map((o: any) => ({ ...o }));
+
+      default:
+        return orders.map((o: any) => ({ ...o }));
     }
   }, [orders, activeFilter]);
 
@@ -87,6 +184,83 @@ export default function SalesOrders() {
     );
   };
 
+  const renderOrderCard = (order: any) => {
+    const displayItems = order._filteredItems || order.items || [];
+
+    return (
+      <Card key={order.id} data-testid={`card-order-${order.id}`}>
+        <CardContent className="p-4 space-y-3">
+          <div className="flex items-center justify-between gap-2">
+            <span className="font-mono font-bold text-lg" data-testid={`text-order-id-${order.id}`}>#{order.id}</span>
+            <Badge variant="secondary" className={getStatusColor(order.status)} data-testid={`badge-status-${order.id}`}>
+              {getStatusLabel(order.status)}
+            </Badge>
+          </div>
+          <div className="flex items-center justify-between gap-2 text-sm">
+            <span className="font-bold text-slate-700" data-testid={`text-sales-point-${order.id}`}>
+              {order.salesPoint?.salesPointName || order.salesPoint?.firstName}
+            </span>
+            <span className="text-xs text-slate-400">
+              {order.createdAt && formatMaghrebDate(order.createdAt)}
+            </span>
+          </div>
+
+          {order.status === 'shipped' && (
+            <Button
+              size="sm"
+              className="w-full bg-green-600 text-white gap-2"
+              onClick={() => handleConfirmReceived(order.id)}
+              disabled={updateStatus.isPending}
+              data-testid={`button-confirm-received-${order.id}`}
+            >
+              <PackageCheck className="h-4 w-4" />
+              <span>تأكيد الاستلام</span>
+            </Button>
+          )}
+
+          {displayItems.length > 0 && (
+            <div className="border-t border-slate-100 pt-3 space-y-2">
+              <div className="flex items-center gap-2">
+                <Package className="h-4 w-4 text-slate-400" />
+                <p className="font-bold text-sm">{displayItems.length} أصناف</p>
+              </div>
+              <div className="grid gap-2">
+                {displayItems.map((item: any, idx: number) => {
+                  const itemSt = item.itemStatus || 'pending';
+                  return (
+                    <div key={idx} className="flex items-start justify-between bg-slate-50 p-2 rounded-lg border gap-2">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm break-words">{item.product?.name}</p>
+                        <p className="text-[10px] text-slate-400">{item.product?.sku}</p>
+                        <div className="flex items-center gap-2 mt-1 flex-wrap">
+                          <Badge variant="secondary" className={`text-[10px] ${getItemStatusColor(itemSt)}`}>
+                            {getItemStatusLabel(itemSt)}
+                          </Badge>
+                          {item.completedQuantity > 0 && (
+                            <span className="text-[10px] text-green-700">منجز: {item.completedQuantity}</span>
+                          )}
+                          {(item.shippedQuantity || 0) > 0 && (
+                            <span className="text-[10px] text-purple-700">مشحون: {item.shippedQuantity}</span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <Badge variant={item.unit === 'bag' ? 'default' : 'outline'} className="text-[10px]">
+                          {getUnitLabel(item.unit || 'piece')}
+                        </Badge>
+                        <span className="font-bold text-primary">{item.quantity}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 flex" dir="rtl">
       <Sidebar role="sales_point" />
@@ -100,6 +274,11 @@ export default function SalesOrders() {
           <div className="flex flex-wrap gap-2">
             {[
               { key: 'active', label: 'الطلبات النشطة', count: orders?.filter((o: any) => !['received'].includes(o.status)).length || 0 },
+              { key: 'pending', label: 'في الانتظار', count: orders?.filter((o: any) => o.status === 'submitted').length || 0 },
+              { key: 'in_progress', label: 'قيد العمل', count: inProgressItemCount },
+              { key: 'completed', label: 'منجز', count: completedItemCount },
+              { key: 'shipped', label: 'تم الشحن', count: shippedItemCount },
+              { key: 'rejected', label: 'مرفوض', count: rejectedItemCount },
               { key: 'received', label: 'تم الاستلام', count: orders?.filter((o: any) => o.status === 'received').length || 0 },
               { key: 'all', label: 'الكل', count: orders?.length || 0 },
             ].map(f => (
@@ -112,84 +291,13 @@ export default function SalesOrders() {
 
           {isLoading ? (
             <div className="p-12 flex justify-center"><Loader2 className="animate-spin text-primary" /></div>
-          ) : filteredOrders?.length === 0 ? (
+          ) : filteredData?.length === 0 ? (
             <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-12 text-center text-slate-400">
               لا توجد طلبات
             </div>
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {filteredOrders?.map((order: any) => (
-                <Card key={order.id} data-testid={`card-order-${order.id}`}>
-                  <CardContent className="p-4 space-y-3">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="font-mono font-bold text-lg" data-testid={`text-order-id-${order.id}`}>#{order.id}</span>
-                      <Badge variant="secondary" className={getStatusColor(order.status)} data-testid={`badge-status-${order.id}`}>
-                        {getStatusLabel(order.status)}
-                      </Badge>
-                    </div>
-                    <div className="flex items-center justify-between gap-2 text-sm">
-                      <span className="font-bold text-slate-700" data-testid={`text-sales-point-${order.id}`}>
-                        {order.salesPoint?.salesPointName || order.salesPoint?.firstName}
-                      </span>
-                      <span className="text-xs text-slate-400">
-                        {order.createdAt && formatMaghrebDate(order.createdAt)}
-                      </span>
-                    </div>
-
-                    {order.status === 'shipped' && (
-                      <Button
-                        size="sm"
-                        className="w-full bg-green-600 text-white gap-2"
-                        onClick={() => handleConfirmReceived(order.id)}
-                        disabled={updateStatus.isPending}
-                        data-testid={`button-confirm-received-${order.id}`}
-                      >
-                        <PackageCheck className="h-4 w-4" />
-                        <span>تأكيد الاستلام</span>
-                      </Button>
-                    )}
-
-                    {order.items && order.items.length > 0 && (
-                      <div className="border-t border-slate-100 pt-3 space-y-2">
-                        <div className="flex items-center gap-2">
-                          <Package className="h-4 w-4 text-slate-400" />
-                          <p className="font-bold text-sm">{order.items.length} أصناف</p>
-                        </div>
-                        <div className="grid gap-2">
-                          {order.items.map((item: any, idx: number) => {
-                            const itemSt = item.itemStatus || 'pending';
-                            return (
-                              <div key={idx} className="flex items-start justify-between bg-slate-50 p-2 rounded-lg border gap-2">
-                                <div className="flex-1 min-w-0">
-                                  <p className="font-medium text-sm break-words">{item.product?.name}</p>
-                                  <p className="text-[10px] text-slate-400">{item.product?.sku}</p>
-                                  <div className="flex items-center gap-2 mt-1">
-                                    <Badge variant="secondary" className={`text-[10px] ${getItemStatusColor(itemSt)}`}>
-                                      {getItemStatusLabel(itemSt)}
-                                    </Badge>
-                                    {item.completedQuantity > 0 && (
-                                      <span className="text-[10px] text-green-700">منجز: {item.completedQuantity}</span>
-                                    )}
-                                    {(item.shippedQuantity || 0) > 0 && (
-                                      <span className="text-[10px] text-purple-700">مشحون: {item.shippedQuantity}</span>
-                                    )}
-                                  </div>
-                                </div>
-                                <div className="flex items-center gap-2 shrink-0">
-                                  <Badge variant={item.unit === 'bag' ? 'default' : 'outline'} className="text-[10px]">
-                                    {getUnitLabel(item.unit || 'piece')}
-                                  </Badge>
-                                  <span className="font-bold text-primary">{item.quantity}</span>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              ))}
+              {filteredData?.map((order: any) => renderOrderCard(order))}
             </div>
           )}
         </div>
