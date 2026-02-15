@@ -1,4 +1,30 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
+import { format } from "date-fns";
+import { arSA } from "date-fns/locale";
+
+// Custom months for Maghreb region
+const maghrebMonths = [
+  "جانفي", "فيفري", "مارس", "أفريل", "ماي", "جوان",
+  "جويلية", "أوت", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"
+];
+
+export const formatMaghrebDate = (date: Date | string | number | null | undefined, formatStr: string = "dd MMMM yyyy") => {
+  if (!date) return "-";
+  const d = new Date(date);
+  let result = format(d, formatStr, { locale: arSA });
+  
+  // Replace standard Arabic months with Maghreb months
+  const standardMonths = [
+    "يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو",
+    "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"
+  ];
+  
+  standardMonths.forEach((month, i) => {
+    result = result.replace(month, maghrebMonths[i]);
+  });
+  
+  return result;
+};
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {

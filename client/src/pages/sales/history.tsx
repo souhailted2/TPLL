@@ -2,8 +2,7 @@ import { Sidebar } from "@/components/layout-sidebar";
 import { useOrders } from "@/hooks/use-orders";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Package, History } from "lucide-react";
-import { format } from "date-fns";
-import { arSA } from "date-fns/locale";
+import { formatMaghrebDate } from "@/lib/queryClient";
 import { useMemo } from "react";
 
 export default function SalesOrderHistory() {
@@ -70,7 +69,7 @@ export default function SalesOrderHistory() {
                     </div>
                     <div className="flex items-center justify-between gap-2 text-sm text-slate-500 mb-3">
                       <span>
-                        {order.createdAt && format(new Date(order.createdAt), 'PPP', { locale: arSA })}
+                        {order.createdAt && formatMaghrebDate(order.createdAt)}
                       </span>
                       <div className="flex items-center gap-1">
                         <Package className="h-4 w-4" />

@@ -2,8 +2,7 @@ import { Sidebar } from "@/components/layout-sidebar";
 import { useOrders, useUpdateOrderStatus } from "@/hooks/use-orders";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Package, PackageCheck } from "lucide-react";
-import { format } from "date-fns";
-import { arSA } from "date-fns/locale";
+import { formatMaghrebDate } from "@/lib/queryClient";
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -133,7 +132,7 @@ export default function SalesOrders() {
                         {order.salesPoint?.salesPointName || order.salesPoint?.firstName}
                       </span>
                       <span className="text-xs text-slate-400">
-                        {order.createdAt && format(new Date(order.createdAt), 'PPP', { locale: arSA })}
+                        {order.createdAt && formatMaghrebDate(order.createdAt)}
                       </span>
                     </div>
 

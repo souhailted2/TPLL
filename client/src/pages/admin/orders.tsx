@@ -5,8 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Loader2, ChevronDown, ChevronUp, Package, User, AlertTriangle, BellOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { format } from "date-fns";
-import { arSA } from "date-fns/locale";
+import { formatMaghrebDate } from "@/lib/queryClient";
 import { useState, useMemo } from "react";
 import { useSearch, useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
@@ -225,7 +224,7 @@ export default function AdminOrders() {
                   {order.salesPoint?.salesPointName || order.salesPoint?.firstName}
                 </span>
                 <span className="text-xs text-slate-400">
-                  {order.createdAt && format(new Date(order.createdAt), 'PP', { locale: arSA })}
+                  {order.createdAt && formatMaghrebDate(order.createdAt)}
                 </span>
               </div>
 
@@ -234,7 +233,7 @@ export default function AdminOrders() {
                   <User className="h-3 w-3" />
                   <span>تغيير: {order.statusChanger.firstName}</span>
                   {order.statusChangedAt && (
-                    <span className="text-slate-400">({format(new Date(order.statusChangedAt), 'PP', { locale: arSA })})</span>
+                    <span className="text-slate-400">({formatMaghrebDate(order.statusChangedAt)})</span>
                   )}
                 </div>
               )}
@@ -300,7 +299,7 @@ export default function AdminOrders() {
                       {order.salesPoint?.salesPointName || order.salesPoint?.firstName}
                     </TableCell>
                     <TableCell>
-                      {order.createdAt && format(new Date(order.createdAt), 'PP p', { locale: arSA })}
+                      {order.createdAt && formatMaghrebDate(order.createdAt)}
                     </TableCell>
                     <TableCell>
                       <Button 
@@ -327,7 +326,7 @@ export default function AdminOrders() {
                           <div className="min-w-0">
                             <p className="text-sm font-medium text-slate-700 truncate">{order.statusChanger.firstName}</p>
                             {order.statusChangedAt && (
-                              <p className="text-xs text-slate-400">{format(new Date(order.statusChangedAt), 'PP p', { locale: arSA })}</p>
+                              <p className="text-xs text-slate-400">{formatMaghrebDate(order.statusChangedAt)}</p>
                             )}
                           </div>
                         </div>

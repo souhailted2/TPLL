@@ -4,8 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Loader2, Check, X as XIcon, AlertTriangle, BellOff, PlayCircle, CheckCircle2, Package, Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { format } from "date-fns";
-import { arSA } from "date-fns/locale";
+import { formatMaghrebDate } from "@/lib/queryClient";
 import { useState, useMemo } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { WorkshopOrderPrint } from "@/components/workshop-order-print";
@@ -301,7 +300,7 @@ export default function ReceptionOrders() {
               {order.salesPoint?.salesPointName || order.salesPoint?.firstName}
             </span>
             <span className="text-xs text-slate-400">
-              {order.createdAt && format(new Date(order.createdAt), 'PP', { locale: arSA })}
+              {order.createdAt && formatMaghrebDate(order.createdAt)}
             </span>
           </div>
 

@@ -1,8 +1,7 @@
 import { useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Printer } from "lucide-react";
-import { format } from "date-fns";
-import { arSA } from "date-fns/locale";
+import { formatMaghrebDate } from "@/lib/queryClient";
 
 interface WorkshopOrderPrintProps {
   order: any;
@@ -214,7 +213,7 @@ export function WorkshopOrderPrint({ order, onClose }: WorkshopOrderPrintProps) 
               </div>
             </div>
             <div style={{ textAlign: 'left', fontSize: '12px', color: '#666' }}>
-              <div>التاريخ: {format(new Date(), 'PP', { locale: arSA })}</div>
+              <div>التاريخ: {formatMaghrebDate(new Date())}</div>
               <div>الوقت: {format(new Date(), 'p')}</div>
             </div>
           </div>
@@ -234,7 +233,7 @@ export function WorkshopOrderPrint({ order, onClose }: WorkshopOrderPrintProps) 
             </div>
             <div style={{ display: 'flex', gap: '6px' }}>
               <span style={{ fontWeight: 'bold', color: '#475569' }}>تاريخ الطلب:</span>
-              <span style={{ color: '#1e293b' }}>{order.createdAt ? format(new Date(order.createdAt), 'PP', { locale: arSA }) : '-'}</span>
+              <span style={{ color: '#1e293b' }}>{order.createdAt ? formatMaghrebDate(order.createdAt) : '-'}</span>
             </div>
             <div style={{ display: 'flex', gap: '6px' }}>
               <span style={{ fontWeight: 'bold', color: '#475569' }}>عدد الأصناف المقبولة:</span>
@@ -292,7 +291,7 @@ export function WorkshopOrderPrint({ order, onClose }: WorkshopOrderPrintProps) 
           </div>
 
           <div style={{ textAlign: 'center', marginTop: '30px', paddingTop: '10px', borderTop: '1px solid #e2e8f0', fontSize: '11px', color: '#94a3b8' }}>
-            شركة TPL - نظام إدارة سلسلة التوريد | تمت الطباعة بتاريخ {format(new Date(), 'Pp', { locale: arSA })}
+            شركة TPL - نظام إدارة سلسلة التوريد | تمت الطباعة بتاريخ {formatMaghrebDate(new Date())} {new Date().toLocaleTimeString('ar-DZ', {hour: '2-digit', minute:'2-digit'})}
           </div>
         </div>
       </div>

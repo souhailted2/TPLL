@@ -5,8 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Loader2, Truck, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { format } from "date-fns";
-import { arSA } from "date-fns/locale";
+import { formatMaghrebDate } from "@/lib/queryClient";
 import { useState, useMemo } from "react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -209,7 +208,7 @@ export default function ShippingOrders() {
             {order.salesPoint?.salesPointName || order.salesPoint?.firstName}
           </span>
           <span className="text-xs text-slate-400">
-            {order.createdAt && format(new Date(order.createdAt), 'PP', { locale: arSA })}
+            {order.createdAt && formatMaghrebDate(order.createdAt)}
           </span>
         </div>
 
