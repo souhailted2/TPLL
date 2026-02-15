@@ -172,7 +172,7 @@ export default function SalesOrders() {
 
   const handleConfirmReceived = (orderId: number) => {
     updateStatus.mutate(
-      { id: orderId, status: 'received' },
+      { id: orderId, status: 'received' as any },
       {
         onSuccess: () => {
           toast({ title: 'تم تأكيد الاستلام بنجاح' });

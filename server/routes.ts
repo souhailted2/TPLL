@@ -220,14 +220,14 @@ export async function registerRoutes(
           completed: ['shipped'],
         },
         sales_point: {
-          shipped: ['completed'],
+          shipped: ['received'],
         },
         admin: {
           submitted: ['accepted', 'rejected'],
           accepted: ['in_progress'],
           in_progress: ['completed'],
           completed: ['shipped'],
-          shipped: ['completed'],
+          shipped: ['received'],
         },
       };
 
