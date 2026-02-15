@@ -308,9 +308,16 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateOrderItemCompletedQuantity(itemId: number, completedQuantity: number): Promise<OrderItem | undefined> {
+    const updateData: any = { completedQuantity, lastCompletedUpdate: new Date() };
+
+    const [currentItem] = await db.select().from(orderItems).where(eq(orderItems.id, itemId));
+    if (currentItem && completedQuantity >= currentItem.quantity) {
+      updateData.itemStatus = 'completed';
+    }
+
     const [updated] = await db
       .update(orderItems)
-      .set({ completedQuantity, lastCompletedUpdate: new Date() })
+      .set(updateData)
       .where(eq(orderItems.id, itemId))
       .returning();
     
@@ -325,10 +332,11 @@ export class DatabaseStorage implements IStorage {
         .from(orderItems)
         .where(eq(orderItems.orderId, updated.orderId));
       
-      const allCompleted = allItems.every(item => item.completedQuantity >= item.quantity);
+      const nonRejectedItems = allItems.filter(item => item.itemStatus !== 'rejected');
+      const allCompleted = nonRejectedItems.length > 0 && nonRejectedItems.every(item => item.completedQuantity >= item.quantity);
       if (allCompleted) {
         const [order] = await db.select().from(orders).where(eq(orders.id, updated.orderId));
-        if (order && (order.status === 'in_progress' || order.status === 'accepted')) {
+        if (order && order.status !== 'shipped' && order.status !== 'received' && order.status !== 'completed') {
           await db
             .update(orders)
             .set({ status: 'completed', statusChangedAt: new Date() })
