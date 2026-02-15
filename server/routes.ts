@@ -567,6 +567,26 @@ export async function registerRoutes(
   // Seed Products in background (don't block server startup)
   seedDatabase().catch(err => console.error("Background seeding error:", err));
 
+  app.get("/download/tpl-factory.zip", (req: any, res: any) => {
+    const archive = archiver('zip', { zlib: { level: 9 } });
+    const projectRoot = path.resolve(process.cwd());
+
+    res.setHeader('Content-Type', 'application/zip');
+    res.setHeader('Content-Disposition', 'attachment; filename=tpl-factory.zip');
+
+    archive.pipe(res);
+
+    const excludeDirs = ['node_modules', '.git', 'dist', '.cache', '.config', '.upm', '.local', '.npm'];
+
+    archive.glob('**/*', {
+      cwd: projectRoot,
+      ignore: excludeDirs.map(d => `${d}/**`),
+      dot: false,
+    });
+
+    archive.finalize();
+  });
+
   return httpServer;
 }
 
@@ -695,24 +715,4 @@ async function seedDatabase() {
 
     console.log(`Added ${allProducts.length} new products to database.`);
   }
-
-  app.get("/download/tpl-factory.zip", (req, res) => {
-    const archive = archiver('zip', { zlib: { level: 9 } });
-    const projectRoot = path.resolve(process.cwd());
-
-    res.setHeader('Content-Type', 'application/zip');
-    res.setHeader('Content-Disposition', 'attachment; filename=tpl-factory.zip');
-
-    archive.pipe(res);
-
-    const excludeDirs = ['node_modules', '.git', 'dist', '.cache', '.config', '.upm', '.local', '.npm'];
-
-    archive.glob('**/*', {
-      cwd: projectRoot,
-      ignore: excludeDirs.map(d => `${d}/**`),
-      dot: false,
-    });
-
-    archive.finalize();
-  });
 }
