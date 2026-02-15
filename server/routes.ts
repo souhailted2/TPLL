@@ -35,11 +35,11 @@ export async function registerRoutes(
 
     archive.pipe(res);
 
-    const excludeDirs = ['node_modules', '.git', 'dist', '.cache', '.config', '.upm', '.local', '.npm'];
+    const excludeDirs = ['node_modules', '.git', 'dist', '.cache', '.config', '.upm', '.local', '.npm', 'drizzle', 'migrations', '*.sql', 'db_backup*', 'pgdata'];
 
     archive.glob('**/*', {
       cwd: projectRoot,
-      ignore: excludeDirs.map(d => `${d}/**`),
+      ignore: [...excludeDirs.map(d => d.includes('*') ? d : `${d}/**`), '*.sql', 'db_backup*'],
       dot: false,
     });
 
