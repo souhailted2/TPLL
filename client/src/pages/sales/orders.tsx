@@ -168,7 +168,10 @@ export default function SalesOrders() {
                                       {getItemStatusLabel(itemSt)}
                                     </Badge>
                                     {item.completedQuantity > 0 && (
-                                      <span className="text-[10px] text-green-700">مستلم: {item.completedQuantity}</span>
+                                      <span className="text-[10px] text-green-700">منجز: {item.completedQuantity}</span>
+                                    )}
+                                    {(item.shippedQuantity || 0) > 0 && (
+                                      <span className="text-[10px] text-purple-700">مشحون: {item.shippedQuantity}</span>
                                     )}
                                   </div>
                                 </div>

@@ -1,8 +1,8 @@
 import { Sidebar } from "@/components/layout-sidebar";
-import { useOrders, useUpdateOrderStatus, useUpdateCompletedQuantity } from "@/hooks/use-orders";
+import { useOrders, useUpdateCompletedQuantity, useShipItem } from "@/hooks/use-orders";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Loader2, Truck, Package } from "lucide-react";
+import { Loader2, Truck, Package, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { formatMaghrebDate } from "@/lib/queryClient";
@@ -11,10 +11,11 @@ import { useToast } from "@/hooks/use-toast";
 
 export default function ShippingOrders() {
   const { data: orders, isLoading } = useOrders();
-  const updateStatus = useUpdateOrderStatus();
   const updateCompleted = useUpdateCompletedQuantity();
+  const shipItem = useShipItem();
   const [activeFilter, setActiveFilter] = useState<string>('ready');
   const [completedQuantities, setCompletedQuantities] = useState<Record<number, number>>({});
+  const [shipQuantities, setShipQuantities] = useState<Record<number, number>>({});
   const { toast } = useToast();
 
   const hasCompletedItems = (order: any) => {
@@ -43,20 +44,21 @@ export default function ShippingOrders() {
     }
   }, [orders, activeFilter, readyOrders]);
 
-  const handleShip = async (orderId: number) => {
+  const handleCompletedQuantity = async (itemId: number, quantity: number) => {
     try {
-      await updateStatus.mutateAsync({ id: orderId, status: 'shipped' });
-      toast({ title: "تم الشحن", description: `تم شحن الطلب #${orderId}` });
+      await updateCompleted.mutateAsync({ itemId, completedQuantity: quantity });
+      toast({ title: "تم التحديث", description: "تم تحديث الكمية المنجزة" });
+      setCompletedQuantities(prev => ({ ...prev, [itemId]: 0 }));
     } catch (err: any) {
       toast({ title: "خطأ", description: err.message, variant: "destructive" });
     }
   };
 
-  const handleCompletedQuantity = async (itemId: number, quantity: number) => {
+  const handleShipItem = async (itemId: number, quantity: number) => {
     try {
-      await updateCompleted.mutateAsync({ itemId, completedQuantity: quantity });
-      toast({ title: "تم التحديث", description: "تم تحديث الكمية المستلمة" });
-      setCompletedQuantities(prev => ({ ...prev, [itemId]: 0 }));
+      await shipItem.mutateAsync({ itemId, shippedQuantity: quantity });
+      toast({ title: "تم الشحن", description: "تم شحن الكمية بنجاح" });
+      setShipQuantities(prev => ({ ...prev, [itemId]: 0 }));
     } catch (err: any) {
       toast({ title: "خطأ", description: err.message, variant: "destructive" });
     }
@@ -76,7 +78,7 @@ export default function ShippingOrders() {
   const getStatusLabel = (status: string) => {
     switch(status) {
       case 'in_progress':
-      case 'accepted': return 'جزئياً جاهز للشحن';
+      case 'accepted': return 'قيد العمل';
       case 'completed': return 'جاهز للشحن';
       case 'shipped': return 'تم الشحن';
       case 'received': return 'تم الاستلام';
@@ -110,7 +112,6 @@ export default function ShippingOrders() {
 
   const renderOrderItems = (order: any) => {
     const items = order.items || [];
-    const acceptedItems = items.filter((item: any) => ['accepted', 'in_progress', 'completed'].includes(item.itemStatus || 'pending'));
     const isShippedOrReceived = order.status === 'shipped' || order.status === 'received';
 
     return (
@@ -125,6 +126,8 @@ export default function ShippingOrders() {
             const isAccepted = ['accepted', 'in_progress', 'completed'].includes(itemSt);
             const maxAllowed = Math.ceil(item.quantity * 1.5);
             const currentCompleted = item.completedQuantity || 0;
+            const currentShipped = item.shippedQuantity || 0;
+            const shippable = currentCompleted - currentShipped;
 
             return (
               <div key={idx} className={`p-3 rounded-lg border ${isAccepted ? 'bg-white' : 'bg-slate-50 border-slate-200 opacity-60'}`} data-testid={`item-card-${item.id}`}>
@@ -145,42 +148,99 @@ export default function ShippingOrders() {
                 </div>
 
                 {isAccepted && (
-                  <div className="mt-2 pt-2 border-t border-slate-100">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-xs text-slate-500">المستلم: <span className="font-bold text-green-700">{currentCompleted}</span> / {item.quantity}</span>
-                      <span className="text-[10px] text-slate-400">(حد أقصى: {maxAllowed})</span>
+                  <div className="mt-2 pt-2 border-t border-slate-100 space-y-2">
+                    <div className="flex flex-wrap items-center gap-3 text-xs">
+                      <span className="text-slate-500">المطلوب: <span className="font-bold">{item.quantity}</span></span>
+                      <span className="text-slate-500">المنجز: <span className="font-bold text-green-700">{currentCompleted}</span></span>
+                      <span className="text-slate-500">المشحون: <span className="font-bold text-purple-700">{currentShipped}</span></span>
+                      {shippable > 0 && (
+                        <span className="text-slate-500">متاح للشحن: <span className="font-bold text-blue-700">{shippable}</span></span>
+                      )}
                     </div>
+
                     {!isShippedOrReceived && (
-                      <div className="flex items-center gap-2 mt-2">
-                        <span className="text-xs text-slate-500 shrink-0">كمية مستلمة:</span>
-                        <Input
-                          type="number"
-                          min={0}
-                          max={maxAllowed}
-                          value={completedQuantities[item.id] !== undefined ? (completedQuantities[item.id] === 0 ? '' : completedQuantities[item.id]) : ''}
-                          onChange={(e) => {
-                            const val = e.target.value === '' ? 0 : Number(e.target.value);
-                            if (val >= 0 && val <= maxAllowed) {
-                              setCompletedQuantities(prev => ({ ...prev, [item.id]: val }));
-                            }
-                          }}
-                          placeholder="0"
-                          className="w-20 h-8 text-center"
-                          data-testid={`input-completed-${item.id}`}
-                        />
-                        <Button
-                          size="sm" variant="outline"
-                          onClick={() => {
-                            const newQty = completedQuantities[item.id] || 0;
-                            if (newQty > 0) {
-                              handleCompletedQuantity(item.id, currentCompleted + newQty);
-                            }
-                          }}
-                          disabled={updateCompleted.isPending || !(completedQuantities[item.id] > 0)}
-                          data-testid={`button-save-completed-${item.id}`}
-                        >
-                          حفظ
-                        </Button>
+                      <>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-slate-500 shrink-0">كمية منجزة:</span>
+                          <Input
+                            type="number"
+                            min={0}
+                            max={maxAllowed}
+                            value={completedQuantities[item.id] !== undefined ? (completedQuantities[item.id] === 0 ? '' : completedQuantities[item.id]) : ''}
+                            onChange={(e) => {
+                              const val = e.target.value === '' ? 0 : Number(e.target.value);
+                              if (val >= 0 && val <= maxAllowed) {
+                                setCompletedQuantities(prev => ({ ...prev, [item.id]: val }));
+                              }
+                            }}
+                            placeholder="0"
+                            className="w-20 h-8 text-center"
+                            data-testid={`input-completed-${item.id}`}
+                          />
+                          <span className="text-[10px] text-slate-400">(حد أقصى: {maxAllowed})</span>
+                          <Button
+                            size="sm" variant="outline"
+                            onClick={() => {
+                              const newQty = completedQuantities[item.id] || 0;
+                              if (newQty > 0) {
+                                handleCompletedQuantity(item.id, currentCompleted + newQty);
+                              }
+                            }}
+                            disabled={updateCompleted.isPending || !(completedQuantities[item.id] > 0)}
+                            data-testid={`button-save-completed-${item.id}`}
+                          >
+                            حفظ
+                          </Button>
+                        </div>
+
+                        {currentCompleted > 0 && shippable > 0 && (
+                          <div className="flex items-center gap-2 bg-purple-50 p-2 rounded-lg border border-purple-200">
+                            <Send className="h-3 w-3 text-purple-600 shrink-0" />
+                            <span className="text-xs text-purple-700 shrink-0">كمية الشحن:</span>
+                            <Input
+                              type="number"
+                              min={1}
+                              max={shippable}
+                              value={shipQuantities[item.id] !== undefined ? (shipQuantities[item.id] === 0 ? '' : shipQuantities[item.id]) : ''}
+                              onChange={(e) => {
+                                const val = e.target.value === '' ? 0 : Number(e.target.value);
+                                if (val >= 0 && val <= shippable) {
+                                  setShipQuantities(prev => ({ ...prev, [item.id]: val }));
+                                }
+                              }}
+                              placeholder={`1 - ${shippable}`}
+                              className="w-24 h-8 text-center"
+                              data-testid={`input-ship-${item.id}`}
+                            />
+                            <Button
+                              size="sm"
+                              className="gap-1"
+                              onClick={() => {
+                                const qty = shipQuantities[item.id] || 0;
+                                if (qty > 0 && qty <= shippable) {
+                                  handleShipItem(item.id, currentShipped + qty);
+                                }
+                              }}
+                              disabled={shipItem.isPending || !(shipQuantities[item.id] > 0)}
+                              data-testid={`button-ship-item-${item.id}`}
+                            >
+                              <Truck className="h-3 w-3" />
+                              شحن
+                            </Button>
+                          </div>
+                        )}
+
+                        {currentShipped > 0 && currentShipped >= currentCompleted && (
+                          <div className="text-xs text-center text-purple-600 font-bold bg-purple-50 rounded-lg py-1">
+                            تم شحن كامل الكمية المنجزة
+                          </div>
+                        )}
+                      </>
+                    )}
+
+                    {isShippedOrReceived && currentShipped > 0 && (
+                      <div className="text-xs text-center text-purple-600 font-bold bg-purple-50 rounded-lg py-1">
+                        تم شحن {currentShipped} {getUnitLabel(item.unit || 'piece')}
                       </div>
                     )}
                   </div>
@@ -212,22 +272,11 @@ export default function ShippingOrders() {
           </span>
         </div>
 
-        {(order.status === 'completed' || ((order.status === 'in_progress' || order.status === 'accepted') && (hasCompletedItems(order) || hasAcceptedOrCompletedItems(order)))) && (
-          <Button
-            size="sm" className="w-full gap-2"
-            onClick={() => handleShip(order.id)}
-            disabled={updateStatus.isPending}
-            data-testid={`button-ship-${order.id}`}
-          >
-            <Truck className="h-4 w-4" />
-            شحن الكمية المستلمة
-          </Button>
-        )}
         {order.status === 'shipped' && (
-          <p className="text-sm text-slate-400 text-center">في الطريق</p>
+          <p className="text-sm text-purple-600 text-center font-medium">تم شحن الطلب</p>
         )}
         {order.status === 'received' && (
-          <p className="text-sm text-green-600 text-center">تم التسليم</p>
+          <p className="text-sm text-green-600 text-center font-medium">تم التسليم</p>
         )}
 
         {order.items && order.items.length > 0 && renderOrderItems(order)}
@@ -242,7 +291,7 @@ export default function ShippingOrders() {
         <div className="max-w-7xl mx-auto space-y-6">
           <div className="flex flex-col gap-2">
             <h1 className="text-3xl font-bold text-slate-900" data-testid="text-page-title">إدارة الشحن</h1>
-            <p className="text-slate-500">استلام البضائع من المصنع وشحنها إلى نقاط البيع</p>
+            <p className="text-slate-500">استلام البضائع من المصنع وشحنها إلى نقاط البيع — لكل صنف على حدة</p>
           </div>
 
           <div className="flex flex-wrap gap-2">

@@ -94,6 +94,28 @@ export function useUpdateCompletedQuantity() {
   });
 }
 
+export function useShipItem() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ itemId, shippedQuantity }: { itemId: number; shippedQuantity: number }) => {
+      const res = await fetch(`/api/order-items/${itemId}/ship`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ shippedQuantity }),
+        credentials: "include",
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ message: "فشل شحن الصنف" }));
+        throw new Error(err.message);
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [api.orders.list.path] });
+    },
+  });
+}
+
 export function useUpdateItemStatus() {
   const queryClient = useQueryClient();
   return useMutation({

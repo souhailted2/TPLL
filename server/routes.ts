@@ -381,6 +381,40 @@ export async function registerRoutes(
     }
   });
 
+  // Ship quantity for individual order item (shipping team)
+  app.patch("/api/order-items/:id/ship", requireFactory, async (req: any, res) => {
+    try {
+      const itemId = Number(req.params.id);
+      const { shippedQuantity } = req.body;
+      const userId = req.session.userId;
+      const userRole = await storage.getUserRole(userId);
+      const role = userRole?.role;
+
+      if (!['admin', 'shipping'].includes(role || '')) {
+        return res.status(403).json({ message: "ليس لديك صلاحية لشحن الأصناف" });
+      }
+
+      if (typeof shippedQuantity !== 'number' || shippedQuantity < 0) {
+        return res.status(400).json({ message: "كمية الشحن غير صالحة" });
+      }
+
+      const existingItem = await storage.getOrderItem(itemId);
+      if (!existingItem) return res.status(404).json({ message: "الصنف غير موجود" });
+
+      if (shippedQuantity > existingItem.completedQuantity) {
+        return res.status(400).json({ message: `كمية الشحن لا يمكن أن تتجاوز الكمية المنجزة (${existingItem.completedQuantity})` });
+      }
+
+      const updated = await storage.updateOrderItemShippedQuantity(itemId, shippedQuantity);
+      if (!updated) return res.status(404).json({ message: "الصنف غير موجود" });
+
+      res.json(updated);
+    } catch (err) {
+      console.error("Error shipping item:", err);
+      res.status(500).json({ message: "فشل شحن الصنف" });
+    }
+  });
+
   // Dismiss alert on an order
   app.patch("/api/orders/:id/dismiss-alert", requireAuth, async (req: any, res) => {
     try {

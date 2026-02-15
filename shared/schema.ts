@@ -36,8 +36,9 @@ export const orderItems = pgTable("order_items", {
   productId: integer("product_id").notNull().references(() => products.id),
   quantity: integer("quantity").notNull(),
   completedQuantity: integer("completed_quantity").notNull().default(0),
-  unit: text("unit").notNull().default("piece"), // "piece" (قطعة) or "bag" (شكارة 25 كغ)
-  itemStatus: text("item_status").notNull().default("pending"), // pending, accepted, rejected, in_progress, completed
+  shippedQuantity: integer("shipped_quantity").notNull().default(0),
+  unit: text("unit").notNull().default("piece"),
+  itemStatus: text("item_status").notNull().default("pending"),
   lastCompletedUpdate: timestamp("last_completed_update"),
 });
 

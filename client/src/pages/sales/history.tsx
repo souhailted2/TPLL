@@ -87,11 +87,21 @@ export default function SalesOrderHistory() {
                                 <p className="font-medium text-sm break-words">{item.product?.name}</p>
                                 <p className="text-[10px] text-slate-400">{item.product?.sku}</p>
                               </div>
-                              <div className="flex items-center gap-2 shrink-0">
-                                <Badge variant={item.unit === 'bag' ? 'default' : 'outline'} className="text-[10px]">
-                                  {getUnitLabel(item.unit || 'piece')}
-                                </Badge>
-                                <span className="font-bold text-primary">{item.quantity}</span>
+                              <div className="flex flex-col items-end gap-1 shrink-0">
+                                <div className="flex items-center gap-2">
+                                  <Badge variant={item.unit === 'bag' ? 'default' : 'outline'} className="text-[10px]">
+                                    {getUnitLabel(item.unit || 'piece')}
+                                  </Badge>
+                                  <span className="font-bold text-primary">{item.quantity}</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  {item.completedQuantity > 0 && (
+                                    <span className="text-[10px] text-green-700">منجز: {item.completedQuantity}</span>
+                                  )}
+                                  {(item.shippedQuantity || 0) > 0 && (
+                                    <span className="text-[10px] text-purple-700">مشحون: {item.shippedQuantity}</span>
+                                  )}
+                                </div>
                               </div>
                             </div>
                           ))}

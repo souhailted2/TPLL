@@ -26,6 +26,7 @@ export interface IStorage {
   getOrderItem(itemId: number): Promise<OrderItem | undefined>;
   updateOrderItemStatus(itemId: number, itemStatus: string): Promise<OrderItem | undefined>;
   updateOrderItemCompletedQuantity(itemId: number, completedQuantity: number): Promise<OrderItem | undefined>;
+  updateOrderItemShippedQuantity(itemId: number, shippedQuantity: number): Promise<OrderItem | undefined>;
   syncOrderStatusFromItems(orderId: number): Promise<void>;
   dismissOrderAlert(orderId: number): Promise<Order | undefined>;
 
@@ -336,6 +337,37 @@ export class DatabaseStorage implements IStorage {
       }
     }
     
+    return updated;
+  }
+
+  async updateOrderItemShippedQuantity(itemId: number, shippedQuantity: number): Promise<OrderItem | undefined> {
+    const [updated] = await db
+      .update(orderItems)
+      .set({ shippedQuantity })
+      .where(eq(orderItems.id, itemId))
+      .returning();
+
+    if (updated) {
+      const allItems = await db
+        .select()
+        .from(orderItems)
+        .where(eq(orderItems.orderId, updated.orderId));
+
+      const allFullyShipped = allItems
+        .filter(i => i.itemStatus !== 'rejected')
+        .every(i => i.shippedQuantity >= i.completedQuantity && i.completedQuantity > 0);
+
+      if (allFullyShipped) {
+        const [order] = await db.select().from(orders).where(eq(orders.id, updated.orderId));
+        if (order && order.status !== 'shipped' && order.status !== 'received') {
+          await db
+            .update(orders)
+            .set({ status: 'shipped', statusChangedAt: new Date() })
+            .where(eq(orders.id, updated.orderId));
+        }
+      }
+    }
+
     return updated;
   }
 

@@ -183,14 +183,19 @@ export default function AdminOrders() {
                     {getItemStatusLabel(itemSt)}
                   </Badge>
                 </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  <Badge variant={item.unit === 'bag' ? 'default' : 'outline'} className="text-[10px]">
-                    {getUnitLabel(item.unit || 'piece')}
-                  </Badge>
-                  <div className="text-left">
-                    <span className={`font-bold ${itemHasIssue ? 'text-red-600' : 'text-primary'}`}>{item.completedQuantity || 0}</span>
-                    <span className="text-xs text-slate-400 mr-1">/ {item.quantity}</span>
+                <div className="flex flex-col items-end gap-1 shrink-0">
+                  <div className="flex items-center gap-2">
+                    <Badge variant={item.unit === 'bag' ? 'default' : 'outline'} className="text-[10px]">
+                      {getUnitLabel(item.unit || 'piece')}
+                    </Badge>
+                    <div className="text-left">
+                      <span className={`font-bold ${itemHasIssue ? 'text-red-600' : 'text-primary'}`}>{item.completedQuantity || 0}</span>
+                      <span className="text-xs text-slate-400 mr-1">/ {item.quantity}</span>
+                    </div>
                   </div>
+                  {(item.shippedQuantity || 0) > 0 && (
+                    <span className="text-[10px] text-purple-700">مشحون: {item.shippedQuantity}</span>
+                  )}
                 </div>
               </div>
             </div>
@@ -395,14 +400,19 @@ export default function AdminOrders() {
                                       {getItemStatusLabel(itemSt2)}
                                     </Badge>
                                   </div>
-                                  <div className="flex items-center gap-4">
-                                    <Badge variant={item.unit === 'bag' ? 'default' : 'outline'}>
-                                      {getUnitLabel(item.unit || 'piece')}
-                                    </Badge>
-                                    <div className="text-left">
-                                      <span className={`font-bold text-lg ${itemHasIssue ? 'text-red-600' : 'text-primary'}`}>{item.completedQuantity || 0}</span>
-                                      <span className="text-xs text-slate-400 mr-1">/ {item.quantity}</span>
+                                  <div className="flex flex-col items-end gap-1">
+                                    <div className="flex items-center gap-4">
+                                      <Badge variant={item.unit === 'bag' ? 'default' : 'outline'}>
+                                        {getUnitLabel(item.unit || 'piece')}
+                                      </Badge>
+                                      <div className="text-left">
+                                        <span className={`font-bold text-lg ${itemHasIssue ? 'text-red-600' : 'text-primary'}`}>{item.completedQuantity || 0}</span>
+                                        <span className="text-xs text-slate-400 mr-1">/ {item.quantity}</span>
+                                      </div>
                                     </div>
+                                    {(item.shippedQuantity || 0) > 0 && (
+                                      <span className="text-xs text-purple-700">مشحون: {item.shippedQuantity}</span>
+                                    )}
                                   </div>
                                 </div>
                               );

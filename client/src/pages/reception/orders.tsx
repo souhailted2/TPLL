@@ -265,9 +265,14 @@ export default function ReceptionOrders() {
                   <Badge variant="secondary" className={`text-[10px] ${getItemStatusColor(itemSt)}`}>
                     {getItemStatusLabel(itemSt)}
                   </Badge>
-                  {item.completedQuantity > 0 && (
-                    <span className="text-xs text-slate-500">مستلم: <span className="font-bold">{item.completedQuantity}</span></span>
-                  )}
+                  <div className="flex items-center gap-2">
+                    {item.completedQuantity > 0 && (
+                      <span className="text-xs text-slate-500">منجز: <span className="font-bold">{item.completedQuantity}</span></span>
+                    )}
+                    {(item.shippedQuantity || 0) > 0 && (
+                      <span className="text-xs text-purple-600">مشحون: <span className="font-bold">{item.shippedQuantity}</span></span>
+                    )}
+                  </div>
                 </div>
                 {renderItemActions(item, order)}
               </div>
