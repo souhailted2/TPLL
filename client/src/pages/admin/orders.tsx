@@ -37,6 +37,42 @@ function getOrderAlertInfo(order: any) {
   return alerts.length > 0 ? alerts : null;
 }
 
+function getItemStatusFilter(itemStatus: string): string {
+  switch (itemStatus) {
+    case 'pending': return 'pending';
+    case 'accepted':
+    case 'in_progress': return 'in_progress';
+    case 'completed': return 'completed';
+    case 'rejected': return 'rejected';
+    default: return 'pending';
+  }
+}
+
+function filterItemsByStatus(items: any[], filter: string): any[] {
+  switch (filter) {
+    case 'pending':
+      return items.filter((i: any) => (i.itemStatus || 'pending') === 'pending');
+    case 'in_progress':
+      return items.filter((i: any) => ['accepted', 'in_progress'].includes(i.itemStatus || 'pending'));
+    case 'completed':
+      return items.filter((i: any) => (i.itemStatus || 'pending') === 'completed');
+    case 'rejected':
+      return items.filter((i: any) => (i.itemStatus || 'pending') === 'rejected');
+    default:
+      return items;
+  }
+}
+
+function countItemsByStatus(orders: any[], statusFilter: string): number {
+  if (!orders) return 0;
+  let count = 0;
+  for (const order of orders) {
+    if (!order.items) continue;
+    count += filterItemsByStatus(order.items, statusFilter).length;
+  }
+  return count;
+}
+
 export default function AdminOrders() {
   const { data: orders, isLoading } = useOrders();
   const updateStatus = useUpdateOrderStatus();
@@ -53,18 +89,63 @@ export default function AdminOrders() {
     if (!orders) return 0;
     return orders.filter((o: any) => getOrderAlertInfo(o) !== null).length;
   }, [orders]);
-  
-  const filteredOrders = useMemo(() => {
+
+  const isItemLevelFilter = ['in_progress', 'completed', 'rejected'].includes(activeFilter);
+
+  const filteredData = useMemo(() => {
     if (!orders) return [];
+
     switch (activeFilter) {
-      case 'pending': return orders.filter((o: any) => o.status === 'submitted');
-      case 'in_progress': return orders.filter((o: any) => o.status === 'accepted' || o.status === 'in_progress');
-      case 'completed': return orders.filter((o: any) => o.status === 'completed');
-      case 'shipped': return orders.filter((o: any) => o.status === 'shipped');
-      case 'received': return orders.filter((o: any) => o.status === 'received');
-      case 'rejected': return orders.filter((o: any) => o.status === 'rejected');
-      case 'alerts': return orders.filter((o: any) => getOrderAlertInfo(o) !== null);
-      default: return orders;
+      case 'pending':
+        return orders.filter((o: any) => o.status === 'submitted').map((o: any) => ({ ...o }));
+
+      case 'in_progress': {
+        const result: any[] = [];
+        for (const order of orders) {
+          if (['shipped', 'received', 'rejected', 'submitted'].includes(order.status)) continue;
+          const filtered = filterItemsByStatus(order.items || [], 'in_progress');
+          if (filtered.length > 0) {
+            result.push({ ...order, _filteredItems: filtered });
+          }
+        }
+        return result;
+      }
+
+      case 'completed': {
+        const result: any[] = [];
+        for (const order of orders) {
+          if (['shipped', 'received', 'rejected', 'submitted'].includes(order.status)) continue;
+          const filtered = filterItemsByStatus(order.items || [], 'completed');
+          if (filtered.length > 0) {
+            result.push({ ...order, _filteredItems: filtered });
+          }
+        }
+        return result;
+      }
+
+      case 'shipped':
+        return orders.filter((o: any) => o.status === 'shipped').map((o: any) => ({ ...o }));
+
+      case 'received':
+        return orders.filter((o: any) => o.status === 'received').map((o: any) => ({ ...o }));
+
+      case 'rejected': {
+        const result: any[] = [];
+        for (const order of orders) {
+          const filtered = filterItemsByStatus(order.items || [], 'rejected');
+          if (filtered.length > 0) {
+            result.push({ ...order, _filteredItems: filtered });
+          }
+        }
+        const rejectedOrders = orders.filter((o: any) => o.status === 'rejected' && !result.find(r => r.id === o.id));
+        return [...result, ...rejectedOrders];
+      }
+
+      case 'alerts':
+        return orders.filter((o: any) => getOrderAlertInfo(o) !== null).map((o: any) => ({ ...o }));
+
+      default:
+        return orders.map((o: any) => ({ ...o }));
     }
   }, [orders, activeFilter]);
   
@@ -137,6 +218,7 @@ export default function AdminOrders() {
   const renderOrderCard = (order: any) => {
     const alerts = getOrderAlertInfo(order);
     const hasAlert = alerts !== null;
+    const displayItems = order._filteredItems || order.items || [];
 
     return (
       <Card key={order.id} className={hasAlert ? 'border-red-200' : ''} data-testid={`card-order-${order.id}`}>
@@ -204,14 +286,14 @@ export default function AdminOrders() {
             </>
           )}
 
-          {order.items && order.items.length > 0 && (
+          {displayItems.length > 0 && (
             <div className="space-y-2 pt-3 border-t border-slate-100">
               <div className="flex items-center gap-2 mb-2">
                 <Package className="h-4 w-4 text-slate-500" />
-                <p className="font-bold text-sm">{order.items.length} أصناف</p>
+                <p className="font-bold text-sm">{displayItems.length} أصناف</p>
               </div>
               <div className="grid gap-2">
-                {order.items.map((item: any, idx: number) => {
+                {displayItems.map((item: any, idx: number) => {
                   const itemSt = item.itemStatus || 'pending';
                   const itemRefDate = item.lastCompletedUpdate ? new Date(item.lastCompletedUpdate) : (order.createdAt ? new Date(order.createdAt) : null);
                   const itemHasIssue = itemRefDate && 
@@ -254,6 +336,10 @@ export default function AdminOrders() {
     );
   };
 
+  const inProgressItemCount = useMemo(() => countItemsByStatus(orders || [], 'in_progress'), [orders]);
+  const completedItemCount = useMemo(() => countItemsByStatus(orders || [], 'completed'), [orders]);
+  const rejectedItemCount = useMemo(() => countItemsByStatus(orders || [], 'rejected'), [orders]);
+
   return (
     <div className="min-h-screen bg-slate-50 flex" dir="rtl">
       <Sidebar role="admin" />
@@ -268,11 +354,11 @@ export default function AdminOrders() {
             {[
               { key: 'all', label: 'الكل', count: orders?.length || 0 },
               { key: 'pending', label: 'في الانتظار', count: orders?.filter((o: any) => o.status === 'submitted').length || 0 },
-              { key: 'in_progress', label: 'قيد العمل', count: orders?.filter((o: any) => o.status === 'accepted' || o.status === 'in_progress').length || 0 },
-              { key: 'completed', label: 'منجز', count: orders?.filter((o: any) => o.status === 'completed').length || 0 },
+              { key: 'in_progress', label: 'قيد العمل', count: inProgressItemCount },
+              { key: 'completed', label: 'منجز', count: completedItemCount },
               { key: 'shipped', label: 'تم الشحن', count: orders?.filter((o: any) => o.status === 'shipped').length || 0 },
               { key: 'received', label: 'تم الاستلام', count: orders?.filter((o: any) => o.status === 'received').length || 0 },
-              { key: 'rejected', label: 'مرفوض', count: orders?.filter((o: any) => o.status === 'rejected').length || 0 },
+              { key: 'rejected', label: 'مرفوض', count: rejectedItemCount },
             ].map(f => (
               <Button 
                 key={f.key}
@@ -301,8 +387,8 @@ export default function AdminOrders() {
             <div className="p-12 flex justify-center"><Loader2 className="animate-spin text-primary" /></div>
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {filteredOrders?.map((order: any) => renderOrderCard(order))}
-              {filteredOrders?.length === 0 && (
+              {filteredData?.map((order: any) => renderOrderCard(order))}
+              {filteredData?.length === 0 && (
                 <div className="col-span-full text-center py-12 text-slate-400">لا توجد طلبات بعد</div>
               )}
             </div>
