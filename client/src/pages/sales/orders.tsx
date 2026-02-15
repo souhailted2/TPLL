@@ -18,6 +18,8 @@ function filterItemsByStatus(items: any[], filter: string): any[] {
       return items.filter((i: any) => (i.itemStatus || 'pending') === 'rejected');
     case 'shipped':
       return items.filter((i: any) => (i.shippedQuantity || 0) > 0);
+    case 'received':
+      return items.filter((i: any) => (i.itemStatus || 'pending') === 'received');
     default:
       return items;
   }
@@ -115,8 +117,20 @@ export default function SalesOrders() {
         return [...result, ...rejectedOrders];
       }
 
-      case 'received':
-        return orders.filter((order: any) => order.status === 'received').map((o: any) => ({ ...o }));
+      case 'received': {
+        const result: any[] = [];
+        for (const order of orders) {
+          if (order.status === 'received') {
+            result.push({ ...order });
+            continue;
+          }
+          const receivedItems = filterItemsByStatus(order.items || [], 'received');
+          if (receivedItems.length > 0) {
+            result.push({ ...order, _filteredItems: receivedItems });
+          }
+        }
+        return result;
+      }
 
       default:
         return orders.map((o: any) => ({ ...o }));
@@ -294,7 +308,7 @@ export default function SalesOrders() {
               { key: 'completed', label: 'منجز', count: completedItemCount },
               { key: 'shipped', label: 'تم الشحن', count: shippedItemCount },
               { key: 'rejected', label: 'مرفوض', count: rejectedItemCount },
-              { key: 'received', label: 'تم الاستلام', count: orders?.filter((o: any) => o.status === 'received').length || 0 },
+              { key: 'received', label: 'تم الاستلام', count: countItemsByStatus(orders || [], 'received') },
               { key: 'all', label: 'الكل', count: orders?.length || 0 },
             ].map(f => (
               <Button key={f.key} variant={activeFilter === f.key ? 'default' : 'outline'} size="sm"
