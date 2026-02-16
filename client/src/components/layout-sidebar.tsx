@@ -10,7 +10,9 @@ import {
   X,
   Bell,
   BellRing,
-  Truck
+  Truck,
+  Factory,
+  FileText
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useState } from "react";
@@ -19,7 +21,7 @@ import { NotificationDropdown } from "./notification-dropdown";
 import { usePushNotifications } from "@/hooks/use-push-notifications";
 
 interface SidebarProps {
-  role: 'admin' | 'reception' | 'shipping' | 'sales_point';
+  role: 'admin' | 'reception' | 'shipping' | 'sales_point' | 'factory_monitor';
 }
 
 export function Sidebar({ role }: SidebarProps) {
@@ -49,11 +51,17 @@ export function Sidebar({ role }: SidebarProps) {
     { href: "/admin/products", label: "المنتجات", icon: Package },
   ];
 
+  const factoryMonitorLinks = [
+    { href: "/factory/map", label: "خريطة المصنع", icon: Factory },
+    { href: "/factory/logs", label: "سجل الإنتاج", icon: FileText },
+  ];
+
   const linksMap: Record<string, typeof adminLinks> = {
     admin: adminLinks,
     reception: receptionLinks,
     shipping: shippingLinks,
     sales_point: salesLinks,
+    factory_monitor: factoryMonitorLinks,
   };
   const links = linksMap[role] || salesLinks;
 
@@ -62,6 +70,7 @@ export function Sidebar({ role }: SidebarProps) {
     reception: 'فريق الاستقبال',
     shipping: 'فريق الشحن',
     sales_point: 'نقطة بيع',
+    factory_monitor: 'مراقب الإنتاج',
   };
 
   const roleAbbreviations: Record<string, string> = {
@@ -69,6 +78,7 @@ export function Sidebar({ role }: SidebarProps) {
     reception: 'RC',
     shipping: 'SH',
     sales_point: 'SP',
+    factory_monitor: 'FM',
   };
 
   return (

@@ -13,7 +13,7 @@ const ACCOUNTS = [
   { id: "المدير العام", label: "المدير العام", role: "admin", group: "admin" },
   { id: "reception1", label: "طارق", role: "reception", group: "factory" },
   { id: "reception2", label: "العيد", role: "reception", group: "factory" },
-  { id: "reception3", label: "وليد", role: "reception", group: "factory" },
+  { id: "walid", label: "وليد (مراقب الإنتاج)", role: "factory_monitor", group: "factory" },
   { id: "shipping", label: "الشحن", role: "shipping", group: "factory" },
   { id: "alger", label: "نقطة الجزائر", role: "sales", group: "sales" },
   { id: "eloued", label: "نقطة الوادي", role: "sales", group: "sales" },

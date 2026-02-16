@@ -118,7 +118,7 @@ export async function seedUsers() {
     { username: "المدير العام", password: "5555", firstName: "المدير العام", role: "admin", salesPointName: null },
     { username: "reception1", password: "1111", firstName: "طارق", role: "reception", salesPointName: null },
     { username: "reception2", password: "1111", firstName: "العيد", role: "reception", salesPointName: null },
-    { username: "reception3", password: "1111", firstName: "وليد", role: "reception", salesPointName: null },
+    { username: "walid", password: "1111", firstName: "وليد", role: "factory_monitor", salesPointName: null },
     { username: "shipping", password: "1111", firstName: "فريق الشحن", role: "shipping", salesPointName: null },
     { username: "alger", password: "0000", firstName: "نقطة بيع الجزائر", role: "sales_point", salesPointName: "الجزائر" },
     { username: "eloued", password: "0000", firstName: "نقطة بيع الوادي", role: "sales_point", salesPointName: "الوادي" },

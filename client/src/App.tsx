@@ -19,6 +19,8 @@ import ShippingOrders from "@/pages/shipping/orders";
 import SalesNewOrder from "@/pages/sales/new-order";
 import SalesOrders from "@/pages/sales/orders";
 import SalesOrderHistory from "@/pages/sales/history";
+import FactoryMap from "@/pages/factory/map";
+import FactoryLogs from "@/pages/factory/logs";
 import { useEffect } from "react";
 
 function Router() {
@@ -49,6 +51,7 @@ function Router() {
     reception: '/reception/orders',
     shipping: '/shipping/orders',
     sales_point: '/sales/new-order',
+    factory_monitor: '/factory/map',
   };
 
   return (
@@ -83,6 +86,13 @@ function Router() {
           <Route path="/sales/new-order" component={SalesNewOrder} />
           <Route path="/sales/orders" component={SalesOrders} />
           <Route path="/sales/history" component={SalesOrderHistory} />
+        </>
+      )}
+
+      {role === 'factory_monitor' && (
+        <>
+          <Route path="/factory/map" component={FactoryMap} />
+          <Route path="/factory/logs" component={FactoryLogs} />
         </>
       )}
 

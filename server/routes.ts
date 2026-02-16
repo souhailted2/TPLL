@@ -83,7 +83,7 @@ export async function registerRoutes(
     if (!req.session.userId) return res.status(401).json({ message: "Unauthorized" });
     const userId = req.session.userId;
     const role = await storage.getUserRole(userId);
-    if (!['admin', 'reception', 'shipping'].includes(role?.role || '')) {
+    if (!['admin', 'reception', 'shipping', 'factory_monitor'].includes(role?.role || '')) {
       return res.status(403).json({ message: "Forbidden: Factory staff only" });
     }
     next();
@@ -546,6 +546,96 @@ export async function registerRoutes(
       res.json(order);
     } catch (err) {
       res.status(500).json({ message: "Failed to dismiss alert" });
+    }
+  });
+
+  // === Machines API ===
+  const requireFactoryMonitor = async (req: any, res: any, next: any) => {
+    if (!req.session.userId) return res.status(401).json({ message: "Unauthorized" });
+    const role = await storage.getUserRole(req.session.userId);
+    if (!['admin', 'factory_monitor'].includes(role?.role || '')) {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+    next();
+  };
+
+  app.get("/api/machines", requireFactoryMonitor, async (req, res) => {
+    try {
+      const machinesList = await storage.getMachines();
+      res.json(machinesList);
+    } catch (err) {
+      res.status(500).json({ message: "Failed to get machines" });
+    }
+  });
+
+  app.post("/api/machines", requireFactoryMonitor, async (req, res) => {
+    try {
+      const machine = await storage.createMachine(req.body);
+      res.status(201).json(machine);
+    } catch (err) {
+      res.status(500).json({ message: "Failed to create machine" });
+    }
+  });
+
+  app.patch("/api/machines/:id", requireFactoryMonitor, async (req, res) => {
+    try {
+      const machine = await storage.updateMachine(Number(req.params.id), req.body);
+      if (!machine) return res.status(404).json({ message: "Machine not found" });
+      res.json(machine);
+    } catch (err) {
+      res.status(500).json({ message: "Failed to update machine" });
+    }
+  });
+
+  app.delete("/api/machines/:id", requireFactoryMonitor, async (req, res) => {
+    try {
+      await storage.deleteMachine(Number(req.params.id));
+      res.json({ success: true });
+    } catch (err) {
+      res.status(500).json({ message: "Failed to delete machine" });
+    }
+  });
+
+  // === Production Logs API ===
+  app.get("/api/production-logs", requireFactoryMonitor, async (req, res) => {
+    try {
+      const filters: any = {};
+      if (req.query.machineId) filters.machineId = Number(req.query.machineId);
+      if (req.query.date) filters.date = req.query.date as string;
+      if (req.query.workerName) filters.workerName = req.query.workerName as string;
+      const logs = await storage.getProductionLogs(filters);
+      res.json(logs);
+    } catch (err) {
+      res.status(500).json({ message: "Failed to get production logs" });
+    }
+  });
+
+  app.post("/api/production-logs", requireFactoryMonitor, async (req, res) => {
+    try {
+      const userId = req.session.userId!;
+      const { machineId, workerName, quantity, productDescription, logDate } = req.body;
+      if (!machineId || !workerName || !quantity || !logDate) {
+        return res.status(400).json({ message: "جميع الحقول مطلوبة" });
+      }
+      const log = await storage.createProductionLog(userId, {
+        machineId: Number(machineId),
+        workerName,
+        quantity: Number(quantity),
+        productDescription: productDescription || null,
+        logDate,
+      });
+      res.status(201).json(log);
+    } catch (err) {
+      res.status(500).json({ message: "Failed to create production log" });
+    }
+  });
+
+  app.delete("/api/production-logs/:id", requireFactoryMonitor, async (req, res) => {
+    try {
+      await storage.deleteProductionLog(Number(req.params.id));
+      res.json({ success: true });
+    } catch (err) {
+      res.status(500).json({ message: "Failed to delete production log" });
     }
   });
 

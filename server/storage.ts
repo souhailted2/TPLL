@@ -1,11 +1,14 @@
 import { db } from "./db";
 import {
   products, orders, orderItems, userRoles, notifications, pushTokens,
+  machines, productionLogs,
   type Product, type InsertProduct, type UpdateProductRequest,
   type Order, type CreateOrderRequest, type OrderItem,
   type UserRole, type UpdateUserRoleRequest,
   type Notification, type InsertNotification,
   type PushToken, type InsertPushToken,
+  type Machine, type InsertMachine,
+  type ProductionLog, type InsertProductionLog,
   users
 } from "@shared/schema";
 import { eq, desc, and, or, ilike, sql, aliasedTable } from "drizzle-orm";
@@ -49,6 +52,19 @@ export interface IStorage {
   getPushTokens(userId: string): Promise<PushToken[]>;
   getPushTokensByUserIds(userIds: string[]): Promise<PushToken[]>;
   deletePushToken(token: string): Promise<void>;
+
+  // Machines
+  getMachines(): Promise<Machine[]>;
+  getMachine(id: number): Promise<Machine | undefined>;
+  createMachine(machine: InsertMachine): Promise<Machine>;
+  updateMachine(id: number, data: Partial<InsertMachine>): Promise<Machine | undefined>;
+  deleteMachine(id: number): Promise<void>;
+  seedMachines(machinesList: InsertMachine[]): Promise<void>;
+
+  // Production Logs
+  getProductionLogs(filters?: { machineId?: number; date?: string; workerName?: string }): Promise<(ProductionLog & { machine?: Machine })[]>;
+  createProductionLog(userId: string, log: InsertProductionLog): Promise<ProductionLog>;
+  deleteProductionLog(id: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -501,6 +517,78 @@ export class DatabaseStorage implements IStorage {
 
   async deletePushToken(token: string): Promise<void> {
     await db.delete(pushTokens).where(eq(pushTokens.token, token));
+  }
+
+  // Machines
+  async getMachines(): Promise<Machine[]> {
+    return db.select().from(machines).orderBy(machines.code);
+  }
+
+  async getMachine(id: number): Promise<Machine | undefined> {
+    const [machine] = await db.select().from(machines).where(eq(machines.id, id));
+    return machine;
+  }
+
+  async createMachine(machine: InsertMachine): Promise<Machine> {
+    const [created] = await db.insert(machines).values(machine).returning();
+    return created;
+  }
+
+  async updateMachine(id: number, data: Partial<InsertMachine>): Promise<Machine | undefined> {
+    const [updated] = await db.update(machines).set(data).where(eq(machines.id, id)).returning();
+    return updated;
+  }
+
+  async deleteMachine(id: number): Promise<void> {
+    await db.delete(machines).where(eq(machines.id, id));
+  }
+
+  async seedMachines(machinesList: InsertMachine[]): Promise<void> {
+    for (const m of machinesList) {
+      await db.insert(machines).values(m).onConflictDoUpdate({
+        target: machines.code,
+        set: { name: m.name, section: m.section, posX: m.posX, posY: m.posY, width: m.width, height: m.height },
+      });
+    }
+  }
+
+  // Production Logs
+  async getProductionLogs(filters?: { machineId?: number; date?: string; workerName?: string }): Promise<any[]> {
+    const conditions: any[] = [];
+    if (filters?.machineId) conditions.push(eq(productionLogs.machineId, filters.machineId));
+    if (filters?.date) conditions.push(eq(productionLogs.logDate, filters.date));
+    if (filters?.workerName) conditions.push(ilike(productionLogs.workerName, `%${filters.workerName}%`));
+
+    const query = db
+      .select({
+        id: productionLogs.id,
+        machineId: productionLogs.machineId,
+        workerName: productionLogs.workerName,
+        quantity: productionLogs.quantity,
+        productDescription: productionLogs.productDescription,
+        logDate: productionLogs.logDate,
+        createdAt: productionLogs.createdAt,
+        createdBy: productionLogs.createdBy,
+        machine: machines,
+      })
+      .from(productionLogs)
+      .leftJoin(machines, eq(productionLogs.machineId, machines.id))
+      .orderBy(desc(productionLogs.createdAt));
+
+    if (conditions.length > 0) {
+      // @ts-ignore
+      return query.where(and(...conditions));
+    }
+    return query;
+  }
+
+  async createProductionLog(userId: string, log: InsertProductionLog): Promise<ProductionLog> {
+    const [created] = await db.insert(productionLogs).values({ ...log, createdBy: userId }).returning();
+    return created;
+  }
+
+  async deleteProductionLog(id: number): Promise<void> {
+    await db.delete(productionLogs).where(eq(productionLogs.id, id));
   }
 }
 
