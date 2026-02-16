@@ -188,24 +188,26 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createOrder(salesPointId: string, orderRequest: CreateOrderRequest): Promise<Order> {
-    const [newOrder] = await db.insert(orders).values({
-      salesPointId,
-      status: 'submitted'
-    }).returning();
+    return await db.transaction(async (tx) => {
+      const [newOrder] = await tx.insert(orders).values({
+        salesPointId,
+        status: 'submitted'
+      }).returning();
 
-    for (const item of orderRequest.items) {
-      const product = await this.getProduct(item.productId);
-      if (!product) throw new Error(`Product ${item.productId} not found`);
-      
-      await db.insert(orderItems).values({
-        orderId: newOrder.id,
-        productId: item.productId,
-        quantity: item.quantity,
-        unit: item.unit || 'piece'
-      });
-    }
+      console.log(`Creating order #${newOrder.id} with ${orderRequest.items.length} items`);
 
-    return newOrder;
+      for (const item of orderRequest.items) {
+        await tx.insert(orderItems).values({
+          orderId: newOrder.id,
+          productId: item.productId,
+          quantity: item.quantity,
+          unit: item.unit || 'piece'
+        });
+      }
+
+      console.log(`Order #${newOrder.id} created successfully with ${orderRequest.items.length} items`);
+      return newOrder;
+    });
   }
 
   async updateOrderStatus(id: number, status: string, changedByUserId?: string): Promise<Order | undefined> {

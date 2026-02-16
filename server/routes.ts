@@ -176,6 +176,9 @@ export async function registerRoutes(
     try {
       const input = api.orders.create.input.parse(req.body);
       const userId = req.session.userId;
+      
+      console.log(`Order request from user ${userId}: ${input.items.length} items`, JSON.stringify(input.items.map(i => ({ productId: i.productId, quantity: i.quantity, unit: i.unit }))));
+      
       const order = await storage.createOrder(userId, input);
       
       res.status(201).json(order);
@@ -218,6 +221,7 @@ export async function registerRoutes(
       if (err instanceof z.ZodError) {
         return res.status(400).json({ message: err.errors[0].message });
       }
+      console.error("Order creation error:", err);
       res.status(500).json({ message: "Failed to create order" });
     }
   });
