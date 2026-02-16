@@ -178,3 +178,50 @@ export const insertPushTokenSchema = createInsertSchema(pushTokens).omit({ id: t
 export type PushToken = typeof pushTokens.$inferSelect;
 export type InsertPushToken = z.infer<typeof insertPushTokenSchema>;
 
+// === FACTORY MACHINES & PRODUCTION ===
+
+export const machines = pgTable("machines", {
+  id: serial("id").primaryKey(),
+  code: text("code").notNull().unique(),
+  name: text("name"),
+  section: text("section"),
+  posX: numeric("pos_x"),
+  posY: numeric("pos_y"),
+  width: numeric("width"),
+  height: numeric("height"),
+});
+
+export const productionLogs = pgTable("production_logs", {
+  id: serial("id").primaryKey(),
+  machineId: integer("machine_id").notNull().references(() => machines.id),
+  workerName: text("worker_name").notNull(),
+  quantity: integer("quantity").notNull(),
+  productDescription: text("product_description"),
+  logDate: text("log_date").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  createdBy: varchar("created_by").references(() => users.id),
+});
+
+export const machinesRelations = relations(machines, ({ many }) => ({
+  productionLogs: many(productionLogs),
+}));
+
+export const productionLogsRelations = relations(productionLogs, ({ one }) => ({
+  machine: one(machines, {
+    fields: [productionLogs.machineId],
+    references: [machines.id],
+  }),
+  creator: one(users, {
+    fields: [productionLogs.createdBy],
+    references: [users.id],
+  }),
+}));
+
+export const insertMachineSchema = createInsertSchema(machines).omit({ id: true });
+export type Machine = typeof machines.$inferSelect;
+export type InsertMachine = z.infer<typeof insertMachineSchema>;
+
+export const insertProductionLogSchema = createInsertSchema(productionLogs).omit({ id: true, createdAt: true, createdBy: true });
+export type ProductionLog = typeof productionLogs.$inferSelect;
+export type InsertProductionLog = z.infer<typeof insertProductionLogSchema>;
+
