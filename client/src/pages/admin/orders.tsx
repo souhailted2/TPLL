@@ -1,9 +1,11 @@
 import { Sidebar } from "@/components/layout-sidebar";
-import { useOrders, useUpdateOrderStatus, useDismissOrderAlert } from "@/hooks/use-orders";
+import { useOrders, useUpdateOrderStatus, useDismissOrderAlert, useAdminCorrectItem } from "@/hooks/use-orders";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Loader2, Package, User, AlertTriangle, BellOff } from "lucide-react";
+import { Loader2, Package, User, AlertTriangle, BellOff, Pencil, Save, X as XIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { formatMaghrebDate } from "@/lib/queryClient";
 import { useState, useMemo } from "react";
 import { useSearch, useLocation } from "wouter";
@@ -79,6 +81,7 @@ export default function AdminOrders() {
   const { data: orders, isLoading } = useOrders();
   const updateStatus = useUpdateOrderStatus();
   const dismissAlert = useDismissOrderAlert();
+  const adminCorrect = useAdminCorrectItem();
   const searchString = useSearch();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
@@ -86,6 +89,8 @@ export default function AdminOrders() {
   const searchParams = new URLSearchParams(searchString);
   const filterParam = searchParams.get('filter');
   const [activeFilter, setActiveFilter] = useState<string>(filterParam || 'all');
+  const [editingItem, setEditingItem] = useState<number | null>(null);
+  const [editValues, setEditValues] = useState<{ completedQuantity: number; shippedQuantity: number; itemStatus: string }>({ completedQuantity: 0, shippedQuantity: 0, itemStatus: 'pending' });
 
   const alertCount = useMemo(() => {
     if (!orders) return 0;
@@ -336,6 +341,7 @@ export default function AdminOrders() {
                   const itemHasIssue = itemRefDate && 
                     ((new Date().getTime() - itemRefDate.getTime()) / (1000 * 60 * 60 * 24) >= ALERT_DAYS) &&
                     item.completedQuantity !== item.quantity && !order.alertDismissed;
+                  const isEditing = editingItem === item.id;
 
                   return (
                     <div key={idx} className={`p-3 rounded-lg border ${itemHasIssue ? 'bg-red-50 border-red-200' : 'bg-white'}`} data-testid={`item-card-${item.id}`}>
@@ -353,15 +359,117 @@ export default function AdminOrders() {
                           </Badge>
                         </div>
                       </div>
-                      <div className="mt-2 pt-2 border-t border-slate-100">
-                        <div className="flex flex-wrap items-center gap-3 text-xs">
-                          <span className="text-slate-500">المطلوب: <span className="font-bold">{item.quantity}</span></span>
-                          <span className="text-slate-500">المنجز: <span className={`font-bold ${itemHasIssue ? 'text-red-600' : 'text-green-700'}`}>{item.completedQuantity || 0}</span></span>
-                          {(item.shippedQuantity || 0) > 0 && (
-                            <span className="text-slate-500">المشحون: <span className="font-bold text-purple-700">{item.shippedQuantity}</span></span>
-                          )}
+
+                      {isEditing ? (
+                        <div className="mt-2 pt-2 border-t border-orange-200 bg-orange-50 rounded-lg p-3 space-y-3">
+                          <p className="text-xs font-bold text-orange-800">تصحيح الصنف</p>
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <div>
+                              <label className="text-[10px] text-slate-500 block mb-1">الحالة</label>
+                              <Select value={editValues.itemStatus} onValueChange={(v) => setEditValues(prev => ({ ...prev, itemStatus: v }))}>
+                                <SelectTrigger className="text-xs" data-testid={`select-status-${item.id}`}>
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="pending">في الانتظار</SelectItem>
+                                  <SelectItem value="accepted">مقبول</SelectItem>
+                                  <SelectItem value="in_progress">قيد الإنجاز</SelectItem>
+                                  <SelectItem value="completed">منجز</SelectItem>
+                                  <SelectItem value="rejected">مرفوض</SelectItem>
+                                  <SelectItem value="received">تم الاستلام</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <div>
+                              <label className="text-[10px] text-slate-500 block mb-1">الكمية المستلمة من المصنع</label>
+                              <Input
+                                type="number"
+                                min={0}
+                                value={editValues.completedQuantity}
+                                onChange={(e) => setEditValues(prev => ({ ...prev, completedQuantity: Number(e.target.value) }))}
+                                className="text-xs"
+                                data-testid={`input-completed-${item.id}`}
+                              />
+                            </div>
+                            <div>
+                              <label className="text-[10px] text-slate-500 block mb-1">الكمية المشحونة</label>
+                              <Input
+                                type="number"
+                                min={0}
+                                value={editValues.shippedQuantity}
+                                onChange={(e) => setEditValues(prev => ({ ...prev, shippedQuantity: Number(e.target.value) }))}
+                                className="text-xs"
+                                data-testid={`input-shipped-${item.id}`}
+                              />
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              size="sm"
+                              className="gap-1 text-xs"
+                              onClick={async () => {
+                                try {
+                                  const corrections: any = {};
+                                  if (editValues.completedQuantity !== (item.completedQuantity || 0)) corrections.completedQuantity = editValues.completedQuantity;
+                                  if (editValues.shippedQuantity !== (item.shippedQuantity || 0)) corrections.shippedQuantity = editValues.shippedQuantity;
+                                  if (editValues.itemStatus !== itemSt) corrections.itemStatus = editValues.itemStatus;
+                                  if (Object.keys(corrections).length === 0) {
+                                    setEditingItem(null);
+                                    return;
+                                  }
+                                  await adminCorrect.mutateAsync({ itemId: item.id, corrections });
+                                  toast({ title: "تم التصحيح بنجاح" });
+                                  setEditingItem(null);
+                                } catch (err: any) {
+                                  toast({ title: "خطأ", description: err.message, variant: "destructive" });
+                                }
+                              }}
+                              disabled={adminCorrect.isPending}
+                              data-testid={`button-save-correct-${item.id}`}
+                            >
+                              <Save className="h-3 w-3" />
+                              حفظ التصحيح
+                            </Button>
+                            <Button
+                              size="sm" variant="outline"
+                              className="gap-1 text-xs"
+                              onClick={() => setEditingItem(null)}
+                              data-testid={`button-cancel-correct-${item.id}`}
+                            >
+                              <XIcon className="h-3 w-3" />
+                              إلغاء
+                            </Button>
+                          </div>
                         </div>
-                      </div>
+                      ) : (
+                        <div className="mt-2 pt-2 border-t border-slate-100">
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <div className="flex flex-wrap items-center gap-3 text-xs">
+                              <span className="text-slate-500">المطلوب: <span className="font-bold">{item.quantity}</span></span>
+                              <span className="text-slate-500">المنجز: <span className={`font-bold ${itemHasIssue ? 'text-red-600' : 'text-green-700'}`}>{item.completedQuantity || 0}</span></span>
+                              {(item.shippedQuantity || 0) > 0 && (
+                                <span className="text-slate-500">المشحون: <span className="font-bold text-purple-700">{item.shippedQuantity}</span></span>
+                              )}
+                            </div>
+                            <Button
+                              size="sm" variant="outline"
+                              className="gap-1 text-[10px] border-orange-300 text-orange-700"
+                              onClick={() => {
+                                setEditingItem(item.id);
+                                setEditValues({
+                                  completedQuantity: item.completedQuantity || 0,
+                                  shippedQuantity: item.shippedQuantity || 0,
+                                  itemStatus: itemSt,
+                                });
+                              }}
+                              data-testid={`button-edit-item-${item.id}`}
+                            >
+                              <Pencil className="h-3 w-3" />
+                              تصحيح
+                            </Button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   );
                 })}

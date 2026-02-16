@@ -486,6 +486,57 @@ export async function registerRoutes(
     }
   });
 
+  // Admin correct item (fix shipping mistakes)
+  app.patch("/api/order-items/:id/admin-correct", requireFactory, async (req: any, res) => {
+    try {
+      const itemId = Number(req.params.id);
+      const userId = req.session.userId;
+      const userRole = await storage.getUserRole(userId);
+      const role = userRole?.role;
+
+      if (role !== 'admin') {
+        return res.status(403).json({ message: "فقط المدير العام يمكنه تصحيح الأصناف" });
+      }
+
+      const { completedQuantity, shippedQuantity, itemStatus } = req.body;
+
+      const existingItem = await storage.getOrderItem(itemId);
+      if (!existingItem) return res.status(404).json({ message: "الصنف غير موجود" });
+
+      const corrections: any = {};
+
+      if (completedQuantity !== undefined) {
+        if (typeof completedQuantity !== 'number' || completedQuantity < 0) {
+          return res.status(400).json({ message: "الكمية المستلمة غير صالحة" });
+        }
+        corrections.completedQuantity = completedQuantity;
+      }
+
+      if (shippedQuantity !== undefined) {
+        if (typeof shippedQuantity !== 'number' || shippedQuantity < 0) {
+          return res.status(400).json({ message: "كمية الشحن غير صالحة" });
+        }
+        corrections.shippedQuantity = shippedQuantity;
+      }
+
+      if (itemStatus !== undefined) {
+        const validStatuses = ['pending', 'accepted', 'in_progress', 'completed', 'rejected', 'received'];
+        if (!validStatuses.includes(itemStatus)) {
+          return res.status(400).json({ message: "حالة الصنف غير صالحة" });
+        }
+        corrections.itemStatus = itemStatus;
+      }
+
+      const updated = await storage.adminCorrectItem(itemId, corrections);
+      if (!updated) return res.status(404).json({ message: "الصنف غير موجود" });
+
+      res.json(updated);
+    } catch (err) {
+      console.error("Error admin correcting item:", err);
+      res.status(500).json({ message: "فشل تصحيح الصنف" });
+    }
+  });
+
   // Dismiss alert on an order
   app.patch("/api/orders/:id/dismiss-alert", requireAuth, async (req: any, res) => {
     try {
