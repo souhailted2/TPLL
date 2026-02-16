@@ -39,8 +39,8 @@ function getOrderAlertInfo(order: any) {
 
 function getItemStatusFilter(itemStatus: string): string {
   switch (itemStatus) {
-    case 'pending': return 'pending';
-    case 'accepted':
+    case 'pending':
+    case 'accepted': return 'pending';
     case 'in_progress': return 'in_progress';
     case 'completed': return 'completed';
     case 'rejected': return 'rejected';
@@ -51,9 +51,9 @@ function getItemStatusFilter(itemStatus: string): string {
 function filterItemsByStatus(items: any[], filter: string): any[] {
   switch (filter) {
     case 'pending':
-      return items.filter((i: any) => (i.itemStatus || 'pending') === 'pending');
+      return items.filter((i: any) => ['pending', 'accepted'].includes(i.itemStatus || 'pending'));
     case 'in_progress':
-      return items.filter((i: any) => ['accepted', 'in_progress'].includes(i.itemStatus || 'pending'));
+      return items.filter((i: any) => (i.itemStatus || 'pending') === 'in_progress');
     case 'completed':
       return items.filter((i: any) => (i.itemStatus || 'pending') === 'completed');
     case 'rejected':
@@ -98,8 +98,17 @@ export default function AdminOrders() {
     if (!orders) return [];
 
     switch (activeFilter) {
-      case 'pending':
-        return orders.filter((o: any) => o.status === 'submitted').map((o: any) => ({ ...o }));
+      case 'pending': {
+        const result: any[] = [];
+        for (const order of orders) {
+          if (['shipped', 'received', 'rejected'].includes(order.status)) continue;
+          const filtered = filterItemsByStatus(order.items || [], 'pending');
+          if (filtered.length > 0) {
+            result.push({ ...order, _filteredItems: filtered });
+          }
+        }
+        return result;
+      }
 
       case 'in_progress': {
         const result: any[] = [];
@@ -391,7 +400,7 @@ export default function AdminOrders() {
           <div className="flex flex-wrap gap-2">
             {[
               { key: 'all', label: 'الكل', count: orders?.length || 0 },
-              { key: 'pending', label: 'في الانتظار', count: orders?.filter((o: any) => o.status === 'submitted').length || 0 },
+              { key: 'pending', label: 'في الانتظار', count: countItemsByStatus(orders || [], 'pending') },
               { key: 'in_progress', label: 'قيد العمل', count: inProgressItemCount },
               { key: 'completed', label: 'منجز', count: completedItemCount },
               { key: 'shipped', label: 'تم الشحن', count: shippedItemCount },

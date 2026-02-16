@@ -98,20 +98,17 @@ export default function ReceptionOrders() {
     switch (activeFilter) {
       case 'pending': {
         const result: any[] = [];
-        const submittedOrders = orders.filter((o: any) => o.status === 'submitted').map((o: any) => ({ ...o }));
-        result.push(...submittedOrders);
         for (const order of orders) {
-          if (order.status === 'submitted') continue;
           if (['shipped', 'received', 'rejected'].includes(order.status)) continue;
           const filtered = filterItemsByStatus(order.items || [], 'pending');
-          if (filtered.length > 0 && !result.find(r => r.id === order.id)) {
+          if (filtered.length > 0) {
             result.push({ ...order, _filteredItems: filtered });
           }
         }
         return result;
       }
 
-      case 'accepted': {
+      case 'in_progress': {
         const result: any[] = [];
         for (const order of orders) {
           if (['shipped', 'received', 'rejected', 'submitted'].includes(order.status)) continue;
@@ -459,8 +456,8 @@ export default function ReceptionOrders() {
 
           <div className="flex flex-wrap gap-2">
             {[
-              { key: 'pending', label: 'في الانتظار', count: (orders?.filter((o: any) => o.status === 'submitted').length || 0) + countItemsByStatus(orders || [], 'pending') },
-              { key: 'accepted', label: 'قيد العمل', count: inProgressItemCount },
+              { key: 'pending', label: 'في الانتظار', count: countItemsByStatus(orders || [], 'pending') },
+              { key: 'in_progress', label: 'قيد العمل', count: inProgressItemCount },
               { key: 'completed', label: 'منجز', count: completedItemCount },
               { key: 'shipped', label: 'تم الشحن', count: shippedItemCount },
               { key: 'rejected', label: 'مرفوض', count: rejectedItemCount },
