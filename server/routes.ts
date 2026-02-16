@@ -178,40 +178,42 @@ export async function registerRoutes(
       const userId = req.session.userId;
       const order = await storage.createOrder(userId, input);
       
-      // Notify reception team and admins about the new order
-      const userRole = await storage.getUserRole(userId);
-      const salesPointName = userRole?.salesPointName || "نقطة بيع";
-      const adminIds = await storage.getAdminUserIds();
-      const receptionIds = await storage.getUserIdsByRole('reception');
-      const notifyIds = Array.from(new Set([...adminIds, ...receptionIds]));
-      
-      for (const notifyId of notifyIds) {
-        await storage.createNotification({
-          userId: notifyId,
-          type: "new_order",
-          title: "طلب جديد",
-          message: `طلب جديد #${order.id} من ${salesPointName}`,
-          orderId: order.id,
-          isRead: false
-        });
-      }
-      
-      // Send push notifications
-      const notifyTokens = await storage.getPushTokensByUserIds(notifyIds);
-      if (notifyTokens.length > 0) {
-        const tokens = notifyTokens.map(t => t.token);
-        const invalidTokens = await sendPushToMultipleTokens(
-          tokens,
-          "طلب جديد",
-          `طلب جديد #${order.id} من ${salesPointName}`,
-          { orderId: String(order.id), type: "new_order" }
-        );
-        for (const invalidToken of invalidTokens) {
-          await storage.deletePushToken(invalidToken);
-        }
-      }
-      
       res.status(201).json(order);
+      
+      try {
+        const userRole = await storage.getUserRole(userId);
+        const salesPointName = userRole?.salesPointName || "نقطة بيع";
+        const adminIds = await storage.getAdminUserIds();
+        const receptionIds = await storage.getUserIdsByRole('reception');
+        const notifyIds = Array.from(new Set([...adminIds, ...receptionIds]));
+        
+        for (const notifyId of notifyIds) {
+          await storage.createNotification({
+            userId: notifyId,
+            type: "new_order",
+            title: "طلب جديد",
+            message: `طلب جديد #${order.id} من ${salesPointName}`,
+            orderId: order.id,
+            isRead: false
+          });
+        }
+        
+        const notifyTokens = await storage.getPushTokensByUserIds(notifyIds);
+        if (notifyTokens.length > 0) {
+          const tokens = notifyTokens.map(t => t.token);
+          const invalidTokens = await sendPushToMultipleTokens(
+            tokens,
+            "طلب جديد",
+            `طلب جديد #${order.id} من ${salesPointName}`,
+            { orderId: String(order.id), type: "new_order" }
+          );
+          for (const invalidToken of invalidTokens) {
+            await storage.deletePushToken(invalidToken);
+          }
+        }
+      } catch (notifErr) {
+        console.error("Notification error (order created successfully):", notifErr);
+      }
     } catch (err) {
       if (err instanceof z.ZodError) {
         return res.status(400).json({ message: err.errors[0].message });
