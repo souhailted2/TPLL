@@ -1,0 +1,49 @@
+~/workspace$ git push origin main
+Enumerating objects: 28, done.
+Counting objects: 100% (28/28), done.
+Delta compression using up to 8 threads
+Compressing objects: 100% (23/23), done.
+Writing objects: 100% (23/23), 10.00 MiB | 5.02 MiB/s, done.
+Total 23 (delta 18), reused 0 (delta 0), pack-reused 0 (from 0)
+remote: Resolving deltas: 100% (18/18), completed with 4 local objects.
+remote: error: GH013: Repository rule violations found for refs/heads/main.
+remote: 
+remote: - GITHUB PUSH PROTECTION
+remote:   —————————————————————————————————————————
+remote:     Resolve the following violations before pushing again
+remote: 
+remote:     - Push cannot contain secrets
+remote: 
+remote:     
+remote:      (?) Learn how to resolve a blocked push
+remote:      https://docs.github.com/code-security/secret-scanning/working-with-secret-scanning-and-push-protection/working-with-push-protection-from-the-command-line#resolving-a-blocked-push
+remote:     
+remote:     
+remote:       —— Google Cloud Service Account Credentials ——————————
+remote:        locations:
+remote:          - commit: 6e222fa167f2ee243a8b689d45eef91bbcd0be4a
+remote:            path: attached_assets/tpl-factory-firebase-adminsdk-fbsvc-c64b81c6b6_1771233951399.json:1
+remote:     
+remote:        (?) To push, remove secret from commit(s) or follow this URL to allow the secret.
+remote:        https://github.com/souhailted2/TPLL/security/secret-scanning/unblock-secret/39kJzlB5pGwF46Fprou2dKXzs8T
+remote:     
+remote:     
+remote:       —— Google Cloud Service Account Credentials ——————————
+remote:        locations:
+remote:          - commit: 871294fbd97c9dba6d2679771b6f6f9622cf0e98
+remote:            path: attached_assets/Pasted-Microsoft-Windows-Version-10-0-26100-7623-c-Microsoft-C_1771234184926.txt:38
+remote:          - commit: 07ac0650e95990716d2883eb7e0956cfd682c9b3
+remote:            path: attached_assets/Pasted-Microsoft-Windows-Version-10-0-26100-7623-c-Microsoft-C_1771234327317.txt:38
+remote:          - commit: 07ac0650e95990716d2883eb7e0956cfd682c9b3
+remote:            path: attached_assets/Pasted-Microsoft-Windows-Version-10-0-26100-7623-c-Microsoft-C_1771234327317.txt:47
+remote:     
+remote:        (?) To push, remove secret from commit(s) or follow this URL to allow the secret.
+remote:        https://github.com/souhailted2/TPLL/security/secret-scanning/unblock-secret/39kJzl6IM1fUPFKod7DfrWrf8ix
+remote:     
+remote: 
+remote: 
+To https://github.com/souhailted2/TPLL
+ ! [remote rejected] main -> main (push declined due to repository rule violations)
+error: failed to push some refs to 'https://github.com/souhailted2/TPLL'
+~/workspace$ ^C
+~/workspace$ 

@@ -6,3 +6,5 @@ vite.config.ts.*
 *.tar.gz
 .env
 setup-env.sh
+*firebase*adminsdk*
+attached_assets/Pasted-Microsoft*
