@@ -1,0 +1,60 @@
+root@TPL:~# /root/git-update.sh
+🔄 Starting safe GitHub update...
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📦 Step 1: Creating pre-update backup...
+✅ Backup saved: /root/backups/pre_git_update_20260216_144758.sql (300K)
+
+📥 Step 2: Pulling latest changes from GitHub...
+remote: Enumerating objects: 50, done.
+remote: Counting objects: 100% (50/50), done.
+remote: Compressing objects: 100% (9/9), done.
+remote: Total 36 (delta 27), reused 36 (delta 27), pack-reused 0 (from 0)
+Unpacking objects: 100% (36/36), 154.92 KiB | 1.87 MiB/s, done.
+From https://github.com/souhailted2/TPLL
+   9dd9c01..84f9c53  main       -> origin/main
+HEAD is now at 84f9c53 Saved progress at the end of the loop
+✅ Code updated from GitHub
+
+🔨 Step 3: Rebuilding application...
+[+] Building 53.9s (18/18) FINISHED
+ => [internal] load local bake definitions                                                                         0.0s
+ => => reading from stdin 482B                                                                                     0.0s
+ => [internal] load build definition from Dockerfile                                                               0.0s
+ => => transferring dockerfile: 484B                                                                               0.0s
+ => [internal] load metadata for docker.io/library/node:20-alpine                                                  0.7s
+ => [internal] load .dockerignore                                                                                  0.0s
+ => => transferring context: 141B                                                                                  0.0s
+ => [builder 1/6] FROM docker.io/library/node:20-alpine@sha256:09e2b3d9726018aecf269bd35325f46bf75046a643a66d2836  0.1s
+ => => resolve docker.io/library/node:20-alpine@sha256:09e2b3d9726018aecf269bd35325f46bf75046a643a66d28360ec71132  0.0s
+ => [internal] load build context                                                                                  0.0s
+ => => transferring context: 108.93kB                                                                              0.0s
+ => CACHED [builder 2/6] WORKDIR /app                                                                              0.0s
+ => CACHED [builder 3/6] COPY package.json package-lock.json* ./                                                   0.0s
+ => CACHED [builder 4/6] RUN npm install                                                                           0.0s
+ => [builder 5/6] COPY . .                                                                                         0.1s
+ => [builder 6/6] RUN npm run build                                                                               22.8s
+ => CACHED [runner 4/8] RUN npm install --omit=dev                                                                 0.0s
+ => [runner 5/8] COPY --from=builder /app/dist ./dist                                                              0.1s
+ => [runner 6/8] COPY drizzle.config.ts ./                                                                         0.1s
+ => [runner 7/8] COPY shared ./shared                                                                              0.0s
+ => [runner 8/8] RUN npm install drizzle-kit tsx                                                                  12.0s
+ => exporting to image                                                                                            16.2s
+ => => exporting layers                                                                                           13.0s
+ => => exporting manifest sha256:b224149c755eab78ca45bd9f4aeb217cb33aaa2a515843ffa2d20851b07c2f52                  0.0s
+ => => exporting config sha256:a5740baaf6d276a49a75abd8e3ba8d4694717b413a542e1fcf82561f60f75c6d                    0.0s
+ => => exporting attestation manifest sha256:32ca1edf64fb5ae63d4e9e81ef441f2fd776504dc2df0dd98844fcc117e1a3cb      0.0s
+ => => exporting manifest list sha256:0e0ea06e1718cd69f9094c32f60c6d31e1630168667aca48493e6b9ba8decb89             0.0s
+ => => naming to docker.io/library/tpl-factory-app:latest                                                          0.0s
+ => => unpacking to docker.io/library/tpl-factory-app:latest                                                       3.1s
+ => resolving provenance for metadata file                                                                         0.0s
+[+] up 3/3
+ ✔ Image tpl-factory-app       Built                                                                               54.0s
+ ✔ Container tpl-factory-db-1  Healthy                                                                             11.4s
+ ✔ Container tpl-factory-app-1 Recreated                                                                           10.8s
+✅ Application rebuilt
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✅ Update completed successfully!
+📦 Backup: /root/backups/pre_git_update_20260216_144758.sql
+🌐 Website: https://tplorders.com
+root@TPL:~#
