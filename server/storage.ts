@@ -28,6 +28,7 @@ export interface IStorage {
   updateOrderItemCompletedQuantity(itemId: number, completedQuantity: number): Promise<OrderItem | undefined>;
   updateOrderItemShippedQuantity(itemId: number, shippedQuantity: number): Promise<OrderItem | undefined>;
   updateOrderItemReceivedQuantity(itemId: number, receivedQuantity: number): Promise<OrderItem | undefined>;
+  adminCorrectItem(itemId: number, data: { completedQuantity?: number; shippedQuantity?: number; itemStatus?: string }): Promise<OrderItem | undefined>;
   syncOrderStatusFromItems(orderId: number): Promise<void>;
   dismissOrderAlert(orderId: number): Promise<Order | undefined>;
 
@@ -377,6 +378,34 @@ export class DatabaseStorage implements IStorage {
             .where(eq(orders.id, updated.orderId));
         }
       }
+    }
+
+    return updated;
+  }
+
+  async adminCorrectItem(itemId: number, data: { completedQuantity?: number; shippedQuantity?: number; itemStatus?: string }): Promise<OrderItem | undefined> {
+    const updateData: any = {};
+    if (data.completedQuantity !== undefined) {
+      updateData.completedQuantity = data.completedQuantity;
+      updateData.lastCompletedUpdate = new Date();
+    }
+    if (data.shippedQuantity !== undefined) {
+      updateData.shippedQuantity = data.shippedQuantity;
+    }
+    if (data.itemStatus !== undefined) {
+      updateData.itemStatus = data.itemStatus;
+    }
+
+    if (Object.keys(updateData).length === 0) return undefined;
+
+    const [updated] = await db
+      .update(orderItems)
+      .set(updateData)
+      .where(eq(orderItems.id, itemId))
+      .returning();
+
+    if (updated) {
+      await this.syncOrderStatusFromItems(updated.orderId);
     }
 
     return updated;

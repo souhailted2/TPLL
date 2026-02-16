@@ -138,6 +138,28 @@ export function useConfirmItemReceived() {
   });
 }
 
+export function useAdminCorrectItem() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ itemId, corrections }: { itemId: number; corrections: { completedQuantity?: number; shippedQuantity?: number; itemStatus?: string } }) => {
+      const res = await fetch(`/api/order-items/${itemId}/admin-correct`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(corrections),
+        credentials: "include",
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ message: "فشل تصحيح الصنف" }));
+        throw new Error(err.message);
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [api.orders.list.path] });
+    },
+  });
+}
+
 export function useUpdateItemStatus() {
   const queryClient = useQueryClient();
   return useMutation({
