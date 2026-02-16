@@ -1,20 +1,37 @@
 import admin from 'firebase-admin';
+import fs from 'fs';
 
 let initialized = false;
 
 export function initializeFirebaseAdmin() {
   if (initialized) return;
   
-  const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT;
+  let serviceAccount: any = null;
   
-  if (!serviceAccountJson) {
-    console.warn('FIREBASE_SERVICE_ACCOUNT not set - push notifications disabled');
-    return;
+  const filePath = process.env.FIREBASE_SERVICE_ACCOUNT_FILE;
+  if (filePath && fs.existsSync(filePath)) {
+    try {
+      serviceAccount = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+    } catch (e) {
+      console.error('Failed to read Firebase key file:', e);
+    }
+  }
+  
+  if (!serviceAccount) {
+    const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT;
+    if (!serviceAccountJson) {
+      console.warn('Firebase credentials not found - push notifications disabled');
+      return;
+    }
+    try {
+      serviceAccount = JSON.parse(serviceAccountJson);
+    } catch (e) {
+      console.error('Failed to parse FIREBASE_SERVICE_ACCOUNT:', e);
+      return;
+    }
   }
 
   try {
-    const serviceAccount = JSON.parse(serviceAccountJson);
-    
     admin.initializeApp({
       credential: admin.credential.cert(serviceAccount),
     });

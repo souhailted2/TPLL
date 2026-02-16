@@ -19,11 +19,13 @@ services:
     restart: always
     ports:
       - "5000:5000"
+    volumes:
+      - ./firebase-key.json:/app/firebase-key.json:ro
     environment:
       DATABASE_URL: postgresql://tpl_user:${DB_PASSWORD:-changeme_strong_password}@db:5432/tpl_factory
       SESSION_SECRET: ${SESSION_SECRET:-change_this_to_a_random_string}
       NODE_ENV: production
-      FIREBASE_SERVICE_ACCOUNT: ${FIREBASE_SERVICE_ACCOUNT:-}
+      FIREBASE_SERVICE_ACCOUNT_FILE: /app/firebase-key.json
     depends_on:
       db:
         condition: service_healthy
