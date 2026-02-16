@@ -1,0 +1,44 @@
+root@TPL:~/tpl-factory# docker compose down && docker compose up -d --build
+[+] down 4/4
+ ✔ Container tpl-factory-nginx-1 Removed                                                                            0.5s
+ ✔ Container tpl-factory-app-1   Removed                                                                            0.0s
+ ✔ Container tpl-factory-db-1    Removed                                                                            0.3s
+ ✔ Network tpl-factory_default   Removed                                                                            0.1s
+[+] Building 56.7s (18/18) FINISHED
+ => [internal] load local bake definitions                                                                         0.0s
+ => => reading from stdin 482B                                                                                     0.0s
+ => [internal] load build definition from Dockerfile                                                               0.0s
+ => => transferring dockerfile: 484B                                                                               0.0s
+ => [internal] load metadata for docker.io/library/node:20-alpine                                                  0.7s
+ => [internal] load .dockerignore                                                                                  0.0s
+ => => transferring context: 141B                                                                                  0.0s
+ => [builder 1/6] FROM docker.io/library/node:20-alpine@sha256:09e2b3d9726018aecf269bd35325f46bf75046a643a66d2836  0.0s
+ => => resolve docker.io/library/node:20-alpine@sha256:09e2b3d9726018aecf269bd35325f46bf75046a643a66d28360ec71132  0.0s
+ => [internal] load build context                                                                                  0.0s
+ => => transferring context: 15.17kB                                                                               0.0s
+ => CACHED [builder 2/6] WORKDIR /app                                                                              0.0s
+ => CACHED [builder 3/6] COPY package.json package-lock.json* ./                                                   0.0s
+ => CACHED [builder 4/6] RUN npm install                                                                           0.0s
+ => [builder 5/6] COPY . .                                                                                         0.1s
+ => [builder 6/6] RUN npm run build                                                                               22.5s
+ => CACHED [runner 4/8] RUN npm install --omit=dev                                                                 0.0s
+ => [runner 5/8] COPY --from=builder /app/dist ./dist                                                              0.1s
+ => [runner 6/8] COPY drizzle.config.ts ./                                                                         0.1s
+ => [runner 7/8] COPY shared ./shared                                                                              0.0s
+ => [runner 8/8] RUN npm install drizzle-kit tsx                                                                  13.7s
+ => exporting to image                                                                                            16.6s
+ => => exporting layers                                                                                           13.4s
+ => => exporting manifest sha256:327ed7e6b93db4be8694c34c21ea7b12bffef79a0da0509ba034f92336dfbe22                  0.0s
+ => => exporting config sha256:5135ac7500006a3de77e4d0b4d52ea749e86308989fa75a5c09cf9569df2d3c8                    0.0s
+ => => exporting attestation manifest sha256:ed35adb494eab6becf3dffd65304c9921e90bedb86c9f977f14d40ad13e5d0f4      0.0s
+ => => exporting manifest list sha256:8794dc7b22b6df3e694175b9ec978fa4b10c003066ed205c1c4691f3a3a43a8a             0.0s
+ => => naming to docker.io/library/tpl-factory-app:latest                                                          0.0s
+ => => unpacking to docker.io/library/tpl-factory-app:latest                                                       3.0s
+ => resolving provenance for metadata file                                                                         0.0s
+[+] up 5/5
+ ✔ Image tpl-factory-app         Built                                                                             56.9s
+ ✔ Network tpl-factory_default   Created                                                                           0.1s
+ ✔ Container tpl-factory-db-1    Healthy                                                                           6.4s
+ ✔ Container tpl-factory-app-1   Created                                                                           0.1s
+ ✔ Container tpl-factory-nginx-1 Created                                                                           0.1s
+root@TPL:~/tpl-factory#
