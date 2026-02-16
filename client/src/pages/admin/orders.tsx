@@ -361,7 +361,7 @@ export default function AdminOrders() {
                       </div>
 
                       {isEditing ? (
-                        <div className="mt-2 pt-2 border-t border-orange-200 bg-orange-50 rounded-lg p-3 space-y-3">
+                        <div className="mt-2 pt-2 border-t border-orange-200 bg-white rounded-lg p-3 space-y-3">
                           <p className="text-xs font-bold text-orange-800">تصحيح الصنف</p>
                           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                             <div>
