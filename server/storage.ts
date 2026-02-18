@@ -60,6 +60,7 @@ export interface IStorage {
   updateMachine(id: number, data: Partial<InsertMachine>): Promise<Machine | undefined>;
   deleteMachine(id: number): Promise<void>;
   seedMachines(machinesList: InsertMachine[]): Promise<void>;
+  deleteAllMachinesAndLogs(): Promise<void>;
 
   // Production Logs
   getProductionLogs(filters?: { machineId?: number; date?: string; workerName?: string }): Promise<(ProductionLog & { machine?: Machine })[]>;
@@ -550,6 +551,11 @@ export class DatabaseStorage implements IStorage {
         set: { name: m.name, section: m.section, posX: m.posX, posY: m.posY, width: m.width, height: m.height },
       });
     }
+  }
+
+  async deleteAllMachinesAndLogs(): Promise<void> {
+    await db.delete(productionLogs);
+    await db.delete(machines);
   }
 
   // Production Logs

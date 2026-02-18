@@ -1,13 +1,25 @@
 import { Sidebar } from "@/components/layout-sidebar";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { queryClient, apiRequest, formatMaghrebDate } from "@/lib/queryClient";
+import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, FileText, Trash2, Search } from "lucide-react";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useToast } from "@/hooks/use-toast";
+
+const WORKSHOP_SECTIONS = [
+  "الفيلتاج",
+  "البلون بوالي",
+  "العيد للبلون العادي",
+  "بلقاسم",
+  "Ecrou",
+  "Tige Filetée",
+  "السنسلة",
+  "الشبكة",
+];
 
 function getTodayDate() {
   const d = new Date();
@@ -18,6 +30,7 @@ export default function FactoryLogs() {
   const { toast } = useToast();
   const [dateFilter, setDateFilter] = useState(getTodayDate());
   const [workerFilter, setWorkerFilter] = useState("");
+  const [workshopFilter, setWorkshopFilter] = useState("all");
 
   const queryParams = new URLSearchParams();
   if (dateFilter) queryParams.set('date', dateFilter);
@@ -42,19 +55,23 @@ export default function FactoryLogs() {
     },
   });
 
-  const totalQuantity = logs?.reduce((s: number, l: any) => s + l.quantity, 0) || 0;
+  const filteredLogs = useMemo(() => {
+    if (!logs) return [];
+    if (workshopFilter === "all") return logs;
+    return logs.filter((log: any) => log.machine?.section === workshopFilter);
+  }, [logs, workshopFilter]);
+
+  const totalQuantity = filteredLogs.reduce((s: number, l: any) => s + l.quantity, 0);
 
   const logsByMachine: Record<string, any[]> = {};
-  if (logs) {
-    for (const log of logs) {
-      const code = log.machine?.code || 'غير معروف';
-      if (!logsByMachine[code]) logsByMachine[code] = [];
-      logsByMachine[code].push(log);
-    }
+  for (const log of filteredLogs) {
+    const code = log.machine?.code || 'غير معروف';
+    if (!logsByMachine[code]) logsByMachine[code] = [];
+    logsByMachine[code].push(log);
   }
 
   return (
-    <div className="min-h-screen bg-slate-50" dir="rtl">
+    <div className="min-h-screen bg-slate-50 dark:bg-background" dir="rtl">
       <Sidebar role="factory_monitor" />
       <main className="md:mr-64 pt-20 md:pt-0">
         <div className="p-4 md:p-6 space-y-4">
@@ -67,7 +84,7 @@ export default function FactoryLogs() {
             <CardContent className="p-4">
               <div className="flex flex-wrap items-center gap-3">
                 <div>
-                  <label className="text-xs text-slate-500 block mb-1">التاريخ</label>
+                  <label className="text-xs text-muted-foreground block mb-1">التاريخ</label>
                   <Input
                     type="date"
                     value={dateFilter}
@@ -77,9 +94,23 @@ export default function FactoryLogs() {
                   />
                 </div>
                 <div>
-                  <label className="text-xs text-slate-500 block mb-1">اسم العامل</label>
+                  <label className="text-xs text-muted-foreground block mb-1">الورشة</label>
+                  <Select value={workshopFilter} onValueChange={setWorkshopFilter}>
+                    <SelectTrigger className="w-48" data-testid="select-filter-workshop">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">كل الورشات</SelectItem>
+                      {WORKSHOP_SECTIONS.map((section) => (
+                        <SelectItem key={section} value={section}>{section}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground block mb-1">اسم العامل</label>
                   <div className="relative">
-                    <Search className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                    <Search className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
                       value={workerFilter}
                       onChange={(e) => setWorkerFilter(e.target.value)}
@@ -91,12 +122,12 @@ export default function FactoryLogs() {
                 </div>
                 <div className="mr-auto flex items-center gap-3">
                   <div className="text-center">
-                    <p className="text-xs text-slate-500">إجمالي القطع</p>
-                    <p className="text-2xl font-bold text-green-700" data-testid="text-total">{totalQuantity}</p>
+                    <p className="text-xs text-muted-foreground">إجمالي القطع</p>
+                    <p className="text-2xl font-bold text-green-700 dark:text-green-400" data-testid="text-total">{totalQuantity}</p>
                   </div>
                   <div className="text-center">
-                    <p className="text-xs text-slate-500">عدد التسجيلات</p>
-                    <p className="text-2xl font-bold" data-testid="text-count">{logs?.length || 0}</p>
+                    <p className="text-xs text-muted-foreground">عدد التسجيلات</p>
+                    <p className="text-2xl font-bold" data-testid="text-count">{filteredLogs.length}</p>
                   </div>
                 </div>
               </div>
@@ -107,11 +138,11 @@ export default function FactoryLogs() {
             <div className="flex items-center justify-center py-12">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
-          ) : logs && logs.length === 0 ? (
+          ) : filteredLogs.length === 0 ? (
             <Card>
               <CardContent className="p-8 text-center">
-                <FileText className="h-12 w-12 text-slate-300 mx-auto mb-3" />
-                <p className="text-slate-500">لا توجد تسجيلات لهذا التاريخ</p>
+                <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+                <p className="text-muted-foreground">لا توجد تسجيلات لهذا التاريخ</p>
               </CardContent>
             </Card>
           ) : (
@@ -123,24 +154,24 @@ export default function FactoryLogs() {
                 return (
                   <Card key={machineCode} data-testid={`card-machine-logs-${machineCode}`}>
                     <CardContent className="p-4 space-y-3">
-                      <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center justify-between gap-2 flex-wrap">
                         <div className="flex items-center gap-2">
                           <Badge variant="secondary" className="font-mono font-bold">{machineCode}</Badge>
-                          {section && <span className="text-xs text-slate-400">{section}</span>}
+                          {section && <span className="text-xs text-muted-foreground">{section}</span>}
                         </div>
-                        <Badge className="bg-green-100 text-green-800">{machineTotal} قطعة</Badge>
+                        <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">{machineTotal} قطعة</Badge>
                       </div>
 
                       <div className="space-y-2">
                         {machineLogs.map((log: any) => (
-                          <div key={log.id} className="flex items-center justify-between gap-2 bg-slate-50 rounded-lg p-3" data-testid={`log-row-${log.id}`}>
+                          <div key={log.id} className="flex items-center justify-between gap-2 bg-muted rounded-lg p-3" data-testid={`log-row-${log.id}`}>
                             <div className="flex-1 min-w-0">
                               <div className="flex flex-wrap items-center gap-2">
                                 <span className="font-bold text-sm">{log.workerName}</span>
                                 <Badge variant="outline" className="text-[10px]">{log.quantity} قطعة</Badge>
                               </div>
                               {log.productDescription && (
-                                <p className="text-xs text-slate-400 mt-1">{log.productDescription}</p>
+                                <p className="text-xs text-muted-foreground mt-1">{log.productDescription}</p>
                               )}
                             </div>
                             <Button
