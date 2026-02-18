@@ -5,9 +5,11 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2, Save, Factory, ArrowRight, Wrench, Settings, CircleDot, Hexagon, Circle, Ruler, Link, Grid3X3 } from "lucide-react";
+import { Loader2, Save, Factory, ArrowRight, Wrench, Settings, CircleDot, Hexagon, Circle, Ruler, Link, Grid3X3, Plus } from "lucide-react";
 import { useState, useMemo } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { LucideIcon } from "lucide-react";
 
 const WORKSHOPS: { id: string; name: string; icon: LucideIcon; color: string }[] = [
@@ -34,6 +36,10 @@ export default function FactoryMap() {
   const [quantity, setQuantity] = useState("");
   const [productDesc, setProductDesc] = useState("");
   const [logDate, setLogDate] = useState(getTodayDate());
+  const [addMachineOpen, setAddMachineOpen] = useState(false);
+  const [newMachineCode, setNewMachineCode] = useState("");
+  const [newMachineName, setNewMachineName] = useState("");
+  const [addMachineWorkshop, setAddMachineWorkshop] = useState<string>("");
 
   const { data: machinesData, isLoading: machinesLoading } = useQuery<any[]>({
     queryKey: ['/api/machines'],
@@ -55,6 +61,22 @@ export default function FactoryMap() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/machines'] });
       toast({ title: "تم إضافة جميع الماكينات" });
+    },
+  });
+
+  const addMachineMutation = useMutation({
+    mutationFn: async (data: { code: string; name: string; section: string }) => {
+      await apiRequest('POST', '/api/machines', { ...data, posX: null, posY: null, width: null, height: null });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/machines'] });
+      toast({ title: "تم إضافة الماكينة بنجاح" });
+      setNewMachineCode("");
+      setNewMachineName("");
+      setAddMachineOpen(false);
+    },
+    onError: () => {
+      toast({ title: "فشل إضافة الماكينة", variant: "destructive" });
     },
   });
 
@@ -247,13 +269,79 @@ export default function FactoryMap() {
                     {WORKSHOPS.find(w => w.id === selectedWorkshop)?.name || selectedWorkshop}
                   </h1>
                 </div>
-                <Input
-                  type="date"
-                  value={logDate}
-                  onChange={(e) => setLogDate(e.target.value)}
-                  className="w-40 text-sm"
-                  data-testid="input-log-date"
-                />
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Input
+                    type="date"
+                    value={logDate}
+                    onChange={(e) => setLogDate(e.target.value)}
+                    className="w-40 text-sm"
+                    data-testid="input-log-date"
+                  />
+                  <Dialog open={addMachineOpen} onOpenChange={(open) => {
+                    setAddMachineOpen(open);
+                    if (open && selectedWorkshop) setAddMachineWorkshop(selectedWorkshop);
+                  }}>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" className="gap-2" data-testid="button-add-machine">
+                        <Plus className="h-4 w-4" />
+                        إضافة ماكينة
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent dir="rtl">
+                      <DialogHeader>
+                        <DialogTitle>إضافة ماكينة جديدة</DialogTitle>
+                      </DialogHeader>
+                      <div className="space-y-4 pt-2">
+                        <div>
+                          <label className="text-sm text-muted-foreground block mb-1">الورشة</label>
+                          <Select value={addMachineWorkshop} onValueChange={setAddMachineWorkshop}>
+                            <SelectTrigger data-testid="select-machine-workshop">
+                              <SelectValue placeholder="اختر الورشة" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {WORKSHOPS.map(w => (
+                                <SelectItem key={w.id} value={w.id}>{w.name}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <label className="text-sm text-muted-foreground block mb-1">رمز الماكينة *</label>
+                          <Input
+                            value={newMachineCode}
+                            onChange={(e) => setNewMachineCode(e.target.value)}
+                            placeholder="مثال: FIL-M20"
+                            data-testid="input-new-machine-code"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-sm text-muted-foreground block mb-1">اسم العرض *</label>
+                          <Input
+                            value={newMachineName}
+                            onChange={(e) => setNewMachineName(e.target.value)}
+                            placeholder="مثال: M20"
+                            data-testid="input-new-machine-name"
+                          />
+                        </div>
+                        <Button
+                          className="w-full gap-2"
+                          disabled={!newMachineCode.trim() || !newMachineName.trim() || !addMachineWorkshop || addMachineMutation.isPending}
+                          onClick={() => {
+                            addMachineMutation.mutate({
+                              code: newMachineCode.trim(),
+                              name: newMachineName.trim(),
+                              section: addMachineWorkshop,
+                            });
+                          }}
+                          data-testid="button-confirm-add-machine"
+                        >
+                          {addMachineMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+                          إضافة
+                        </Button>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
