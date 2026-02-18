@@ -2,7 +2,7 @@ import { Sidebar } from "@/components/layout-sidebar";
 import { useOrders, useUpdateOrderStatus, useDismissOrderAlert, useAdminCorrectItem } from "@/hooks/use-orders";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Loader2, Package, User, AlertTriangle, BellOff, Pencil, Save, X as XIcon } from "lucide-react";
+import { Loader2, Package, User, AlertTriangle, BellOff, Pencil, Save, X as XIcon, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -91,6 +91,7 @@ export default function AdminOrders() {
   const [activeFilter, setActiveFilter] = useState<string>(filterParam || 'all');
   const [editingItem, setEditingItem] = useState<number | null>(null);
   const [editValues, setEditValues] = useState<{ completedQuantity: number; shippedQuantity: number; itemStatus: string }>({ completedQuantity: 0, shippedQuantity: 0, itemStatus: 'pending' });
+  const [searchTerm, setSearchTerm] = useState("");
 
   const alertCount = useMemo(() => {
     if (!orders) return 0;
@@ -188,6 +189,18 @@ export default function AdminOrders() {
         return orders.map((o: any) => ({ ...o }));
     }
   }, [orders, activeFilter]);
+
+  const searchFilteredData = useMemo(() => {
+    if (!searchTerm.trim()) return filteredData;
+    const term = searchTerm.trim().toLowerCase();
+    return filteredData.filter((order: any) => {
+      const items = order._filteredItems || order.items || [];
+      return items.some((item: any) =>
+        (item.product?.name || '').toLowerCase().includes(term) ||
+        (item.product?.sku || '').toLowerCase().includes(term)
+      );
+    });
+  }, [filteredData, searchTerm]);
   
   const handleFilterChange = (filter: string) => {
     setActiveFilter(filter);
@@ -504,6 +517,17 @@ export default function AdminOrders() {
             <h1 className="text-3xl font-bold" data-testid="text-page-title">سجل الطلبات</h1>
             <p className="text-slate-500">متابعة وتحديث حالات طلبات الفروع</p>
           </div>
+
+          <div className="relative">
+            <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="بحث بالاسم أو الكود..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pr-9 max-w-md"
+              data-testid="input-search-orders"
+            />
+          </div>
           
           <div className="flex flex-wrap gap-2">
             {[
@@ -542,8 +566,8 @@ export default function AdminOrders() {
             <div className="p-12 flex justify-center"><Loader2 className="animate-spin text-primary" /></div>
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {filteredData?.map((order: any) => renderOrderCard(order))}
-              {filteredData?.length === 0 && (
+              {searchFilteredData?.map((order: any) => renderOrderCard(order))}
+              {searchFilteredData?.length === 0 && (
                 <div className="col-span-full text-center py-12 text-slate-400">لا توجد طلبات بعد</div>
               )}
             </div>

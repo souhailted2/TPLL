@@ -2,7 +2,8 @@ import { Sidebar } from "@/components/layout-sidebar";
 import { useOrders, useUpdateOrderStatus, useUpdateItemStatus, useDismissOrderAlert } from "@/hooks/use-orders";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Loader2, Check, X as XIcon, AlertTriangle, BellOff, PlayCircle, CheckCircle2, Package, Printer } from "lucide-react";
+import { Loader2, Check, X as XIcon, AlertTriangle, BellOff, PlayCircle, CheckCircle2, Package, Printer, Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { formatMaghrebDate } from "@/lib/queryClient";
 import { useState, useMemo } from "react";
@@ -71,6 +72,7 @@ export default function ReceptionOrders() {
   const dismissAlert = useDismissOrderAlert();
   const [activeFilter, setActiveFilter] = useState<string>('pending');
   const [printItem, setPrintItem] = useState<{ order: any; item: any } | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
   const { toast } = useToast();
 
   const alertCount = useMemo(() => {
@@ -166,6 +168,18 @@ export default function ReceptionOrders() {
         return orders.map((o: any) => ({ ...o }));
     }
   }, [orders, activeFilter]);
+
+  const searchFilteredData = useMemo(() => {
+    if (!searchTerm.trim()) return filteredData;
+    const term = searchTerm.trim().toLowerCase();
+    return filteredData.filter((order: any) => {
+      const items = order._filteredItems || order.items || [];
+      return items.some((item: any) =>
+        (item.product?.name || '').toLowerCase().includes(term) ||
+        (item.product?.sku || '').toLowerCase().includes(term)
+      );
+    });
+  }, [filteredData, searchTerm]);
 
   const handleItemStatusChange = async (itemId: number, newStatus: string) => {
     try {
@@ -454,6 +468,17 @@ export default function ReceptionOrders() {
             <p className="text-slate-500">قبول ورفض الأصناف وإدارة حالة الإنتاج</p>
           </div>
 
+          <div className="relative">
+            <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="بحث بالاسم أو الكود..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pr-9 max-w-md"
+              data-testid="input-search-orders"
+            />
+          </div>
+
           <div className="flex flex-wrap gap-2">
             {[
               { key: 'pending', label: 'في الانتظار', count: countItemsByStatus(orders || [], 'pending') },
@@ -476,8 +501,8 @@ export default function ReceptionOrders() {
             <div className="p-12 flex justify-center"><Loader2 className="animate-spin text-primary" /></div>
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {filteredData?.map((order: any) => renderOrderCard(order))}
-              {filteredData?.length === 0 && (
+              {searchFilteredData?.map((order: any) => renderOrderCard(order))}
+              {searchFilteredData?.length === 0 && (
                 <div className="col-span-full text-center py-12 text-slate-400">لا توجد طلبات</div>
               )}
             </div>
