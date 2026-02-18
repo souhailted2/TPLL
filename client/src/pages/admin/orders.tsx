@@ -496,12 +496,12 @@ export default function AdminOrders() {
   }, [orders]);
 
   return (
-    <div className="min-h-screen bg-slate-50 flex" dir="rtl">
+    <div className="min-h-screen bg-background flex" dir="rtl">
       <Sidebar role="admin" />
       <main className="flex-1 md:mr-64 p-4 md:p-8 pt-24 md:pt-8 overflow-x-hidden">
         <div className="max-w-7xl mx-auto space-y-6">
           <div className="flex flex-col gap-2">
-            <h1 className="text-3xl font-bold text-slate-900" data-testid="text-page-title">سجل الطلبات</h1>
+            <h1 className="text-3xl font-bold" data-testid="text-page-title">سجل الطلبات</h1>
             <p className="text-slate-500">متابعة وتحديث حالات طلبات الفروع</p>
           </div>
           

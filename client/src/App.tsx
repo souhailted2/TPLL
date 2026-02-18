@@ -13,6 +13,7 @@ import LandingPage from "@/pages/landing";
 import AdminDashboard from "@/pages/admin/dashboard";
 import AdminProducts from "@/pages/admin/products";
 import AdminOrders from "@/pages/admin/orders";
+import AdminProduction from "@/pages/admin/production";
 import ReceptionOrders from "@/pages/reception/orders";
 import ReceptionProducts from "@/pages/reception/products";
 import ShippingOrders from "@/pages/shipping/orders";
@@ -65,6 +66,7 @@ function Router() {
           <Route path="/admin" component={AdminDashboard} />
           <Route path="/admin/products" component={AdminProducts} />
           <Route path="/admin/orders" component={AdminOrders} />
+          <Route path="/admin/production" component={AdminProduction} />
         </>
       )}
 

@@ -49,6 +49,7 @@ export function Sidebar({ role }: SidebarProps) {
     { href: "/admin", label: "لوحة التحكم", icon: LayoutDashboard },
     { href: "/admin/orders", label: "الطلبات", icon: ClipboardList },
     { href: "/admin/products", label: "المنتجات", icon: Package },
+    { href: "/admin/production", label: "مراقبة الإنتاج", icon: Factory },
   ];
 
   const factoryMonitorLinks = [
