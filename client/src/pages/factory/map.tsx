@@ -95,7 +95,16 @@ export default function FactoryMap() {
 
   const workshopMachines = useMemo(() => {
     if (!machinesData || !selectedWorkshop) return [];
-    return machinesData.filter((m: any) => m.section === selectedWorkshop);
+    const filtered = machinesData.filter((m: any) => m.section === selectedWorkshop);
+    filtered.sort((a: any, b: any) => {
+      const numA = parseInt((a.name || '').match(/\d+/)?.[0] || '999', 10);
+      const numB = parseInt((b.name || '').match(/\d+/)?.[0] || '999', 10);
+      if (numA !== numB) return numA - numB;
+      const subA = parseInt((a.name || '').match(/\d+-(\d+)/)?.[1] || '0', 10);
+      const subB = parseInt((b.name || '').match(/\d+-(\d+)/)?.[1] || '0', 10);
+      return subA - subB;
+    });
+    return filtered;
   }, [machinesData, selectedWorkshop]);
 
   const workshopMachineCounts = useMemo(() => {

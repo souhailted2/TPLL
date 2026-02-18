@@ -601,13 +601,13 @@ export async function registerRoutes(
       await storage.deleteAllMachinesAndLogs();
 
       const allMachines = [
-        ...["FIL-M4-1","FIL-M4-2","FIL-M4-3","FIL-M5-1","FIL-M5-2","FIL-M6-1","FIL-M6-2","FIL-M6-3","FIL-M8-1","FIL-M8-2","FIL-M8-3","FIL-M10","FIL-M16","FIL-M12"].map(code => ({ code, name: code.replace(/^FIL-/, ''), section: "الفيلتاج" })),
+        ...["FIL-M4-1","FIL-M4-2","FIL-M4-3","FIL-M5-1","FIL-M5-2","FIL-M6-1","FIL-M6-2","FIL-M6-3","FIL-M8-1","FIL-M8-2","FIL-M8-3","FIL-M10","FIL-M12","FIL-M16"].map(code => ({ code, name: code.replace(/^FIL-/, ''), section: "الفيلتاج" })),
         ...["BB-M4-1","BB-M4-2","BB-M5-1","BB-M5-2","BB-M5-3","BB-M5-4","BB-M5-5","BB-M6-1","BB-M6-2","BB-M6-3","BB-M6-4","BB-M6-5","BB-M6-6","BB-M6-7","BB-M6-8","BB-M8-1"].map(code => ({ code, name: code.replace(/^BB-/, ''), section: "البلون بوالي" })),
-        ...["AID-M6","AID-M8","AID-M10","AID-M12","AID-M14-M16","AID-S63","AID-S83","AID-3OP5","AID-3OP6","AID-3OP8"].map(code => ({ code, name: code.replace(/^AID-/, ''), section: "العيد للبلون العادي" })),
+        ...["AID-3OP5","AID-3OP6","AID-3OP8","AID-M6","AID-M8","AID-M10","AID-M12","AID-M14-M16","AID-S63","AID-S83"].map(code => ({ code, name: code.replace(/^AID-/, ''), section: "العيد للبلون العادي" })),
         ...["BLK-M5","BLK-M6","BLK-M8","BLK-M10","BLK-M12-14","BLK-M16-22"].map(code => ({ code, name: code.replace(/^BLK-/, ''), section: "بلقاسم" })),
-        ...["ECR-M6","ECR-M8-1","ECR-M8-2","ECR-M10","ECR-M16","ECR-M14","ECR-M12","ECR-M24"].map(code => ({ code, name: code.replace(/^ECR-/, ''), section: "Ecrou" })),
-        ...["TF-CT06","TF-CT08-1","TF-CT08-2","TF-CT10","TF-CT12-1","TF-CT12-2","TF-CT14","TF-CT16-24","TF-TP08-14","TF-TP12-14-1","TF-TP12-14-2","TF-TP12-14-3","TF-TP12-16-1","TF-TP12-16-2","TF-TP12-16-3","TF-TP12-16-4","TF-TP16-30","TF-TP18-20","TF-TP22-24-1","TF-TP22-24-2","TF-TP8-1","TF-TP8-2","TF-TP8-3","TF-TP10","TF-TP6-1","TF-TP6-2","TF-TP6-3","TF-TP6-4","TF-TP6-5","TF-COUFF"].map(code => ({ code, name: code.replace(/^TF-/, ''), section: "Tige Filetée" })),
-        ...["CH-CH4","CH-CH5","CH-CH3-1","CH-CH3-2","CH-CH3-3","CH-CH6","CH-CH8","CH-CH10"].map(code => ({ code, name: code.replace(/^CH-/, ''), section: "السنسلة" })),
+        ...["ECR-M6","ECR-M8-1","ECR-M8-2","ECR-M10","ECR-M12","ECR-M14","ECR-M16","ECR-M24"].map(code => ({ code, name: code.replace(/^ECR-/, ''), section: "Ecrou" })),
+        ...["TF-CT06","TF-CT08-1","TF-CT08-2","TF-CT10","TF-CT12-1","TF-CT12-2","TF-CT14","TF-CT16-24","TF-TP6-1","TF-TP6-2","TF-TP6-3","TF-TP6-4","TF-TP6-5","TF-TP8-1","TF-TP8-2","TF-TP8-3","TF-TP08-14","TF-TP10","TF-TP12-14-1","TF-TP12-14-2","TF-TP12-14-3","TF-TP12-16-1","TF-TP12-16-2","TF-TP12-16-3","TF-TP12-16-4","TF-TP16-30","TF-TP18-20","TF-TP22-24-1","TF-TP22-24-2","TF-COUFF"].map(code => ({ code, name: code.replace(/^TF-/, ''), section: "Tige Filetée" })),
+        ...["CH-CH3-1","CH-CH3-2","CH-CH3-3","CH-CH4","CH-CH5","CH-CH6","CH-CH8","CH-CH10"].map(code => ({ code, name: code.replace(/^CH-/, ''), section: "السنسلة" })),
         ...["GR-B1","GR-B2","GR-B3","GR-B4","GR-SH1K","GR-QATIA","GR-MKOU"].map(code => ({ code, name: code.replace(/^GR-/, ''), section: "الشبكة" })),
       ];
 
