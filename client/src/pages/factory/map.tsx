@@ -5,22 +5,21 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2, Save, Factory, ArrowRight, Wrench, Settings, CircleDot, Hexagon, Circle, Ruler, Link, Grid3X3, Plus } from "lucide-react";
+import { Loader2, Save, Factory, ArrowRight, Plus } from "lucide-react";
 import { useState, useMemo } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import type { LucideIcon } from "lucide-react";
 
-const WORKSHOPS: { id: string; name: string; icon: LucideIcon; color: string }[] = [
-  { id: "الفيلتاج", name: "ورشة الفيلتاج", icon: Wrench, color: "bg-blue-500" },
-  { id: "البلون بوالي", name: "ورشة البلون بوالي", icon: Settings, color: "bg-green-500" },
-  { id: "العيد للبلون العادي", name: "ورشة العيد للبلون العادي", icon: CircleDot, color: "bg-orange-500" },
-  { id: "بلقاسم", name: "ورشة بلقاسم", icon: Hexagon, color: "bg-purple-500" },
-  { id: "Ecrou", name: "ورشة Ecrou", icon: Circle, color: "bg-red-500" },
-  { id: "Tige Filetée", name: "ورشة Tige Filetée", icon: Ruler, color: "bg-indigo-500" },
-  { id: "السنسلة", name: "ورشة السنسلة", icon: Link, color: "bg-teal-500" },
-  { id: "الشبكة", name: "ورشة الشبكة", icon: Grid3X3, color: "bg-amber-500" },
+const WORKSHOPS = [
+  { id: "الفيلتاج", name: "ورشة الفيلتاج", emoji: "\u2699\uFE0F", color: "from-blue-500 to-blue-600" },
+  { id: "البلون بوالي", name: "ورشة البلون بوالي", emoji: "\uD83D\uDD29", color: "from-green-500 to-green-600" },
+  { id: "العيد للبلون العادي", name: "ورشة العيد للبلون العادي", emoji: "\uD83D\uDD27", color: "from-orange-500 to-orange-600" },
+  { id: "بلقاسم", name: "ورشة بلقاسم", emoji: "\uD83D\uDD33", color: "from-purple-500 to-purple-600" },
+  { id: "Ecrou", name: "ورشة Ecrou", emoji: "\u26D3\uFE0F", color: "from-red-500 to-red-600" },
+  { id: "Tige Filetée", name: "ورشة Tige Filetée", emoji: "\uD83D\uDCCF", color: "from-indigo-500 to-indigo-600" },
+  { id: "السنسلة", name: "ورشة السنسلة", emoji: "\uD83D\uDD17", color: "from-teal-500 to-teal-600" },
+  { id: "الشبكة", name: "ورشة الشبكة", emoji: "\uD83D\uDED6", color: "from-amber-500 to-amber-600" },
 ];
 
 function getTodayDate() {
@@ -60,7 +59,7 @@ export default function FactoryMap() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/machines'] });
-      toast({ title: "تم إضافة جميع الماكينات" });
+      toast({ title: "\u2705 تم إضافة جميع الماكينات" });
     },
   });
 
@@ -70,13 +69,13 @@ export default function FactoryMap() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/machines'] });
-      toast({ title: "تم إضافة الماكينة بنجاح" });
+      toast({ title: "\u2705 تم إضافة الماكينة بنجاح" });
       setNewMachineCode("");
       setNewMachineName("");
       setAddMachineOpen(false);
     },
     onError: () => {
-      toast({ title: "فشل إضافة الماكينة", variant: "destructive" });
+      toast({ title: "\u274C فشل إضافة الماكينة", variant: "destructive" });
     },
   });
 
@@ -87,7 +86,7 @@ export default function FactoryMap() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/production-logs'] });
-      toast({ title: "تم تسجيل الإنتاج بنجاح" });
+      toast({ title: "\u2705 تم تسجيل الإنتاج بنجاح" });
       setQuantity("");
       setProductDesc("");
     },
@@ -160,12 +159,12 @@ export default function FactoryMap() {
 
   const handleSubmitLog = async () => {
     if (!selectedMachine || !workerName.trim() || !quantity.trim()) {
-      toast({ title: "يرجى ملء جميع الحقول المطلوبة", variant: "destructive" });
+      toast({ title: "\u26A0\uFE0F يرجى ملء جميع الحقول المطلوبة", variant: "destructive" });
       return;
     }
     const dbMachine = machineDbMap[selectedMachine];
     if (!dbMachine) {
-      toast({ title: "الماكينة غير موجودة في قاعدة البيانات", variant: "destructive" });
+      toast({ title: "\u274C الماكينة غير موجودة في قاعدة البيانات", variant: "destructive" });
       return;
     }
     await addLogMutation.mutateAsync({
@@ -186,9 +185,10 @@ export default function FactoryMap() {
   }
 
   const hasMachines = machinesData && machinesData.length > 0;
+  const currentWorkshop = WORKSHOPS.find(w => w.id === selectedWorkshop);
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-background" dir="rtl">
+    <div className="min-h-screen bg-background" dir="rtl">
       <Sidebar role="factory_monitor" />
       <main className="md:mr-64 pt-20 md:pt-0">
         <div className="p-4 md:p-6 space-y-4">
@@ -196,7 +196,7 @@ export default function FactoryMap() {
             <>
               <div className="flex items-center justify-between gap-2 flex-wrap">
                 <div className="flex items-center gap-3">
-                  <Factory className="h-6 w-6 text-primary" />
+                  <span className="text-2xl">{"\uD83C\uDFED"}</span>
                   <h1 className="text-xl font-bold">ورشات المصنع</h1>
                 </div>
                 {!hasMachines && (
@@ -205,21 +205,20 @@ export default function FactoryMap() {
                     disabled={seedMachinesMutation.isPending}
                     data-testid="button-seed-machines"
                   >
-                    {seedMachinesMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "تهيئة الماكينات"}
+                    {seedMachinesMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "\u2699\uFE0F تهيئة الماكينات"}
                   </Button>
                 )}
               </div>
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {WORKSHOPS.map((workshop) => {
-                  const Icon = workshop.icon;
                   const machineCount = workshopMachineCounts[workshop.id] || 0;
                   const logInfo = workshopLogCounts[workshop.id];
 
                   return (
                     <Card
                       key={workshop.id}
-                      className="cursor-pointer hover-elevate transition-all"
+                      className="cursor-pointer hover-elevate transition-all overflow-visible"
                       onClick={() => {
                         setSelectedWorkshop(workshop.id);
                         setSelectedMachine(null);
@@ -227,22 +226,24 @@ export default function FactoryMap() {
                       data-testid={`card-workshop-${workshop.id}`}
                     >
                       <CardContent className="p-4 space-y-3">
-                        <div className={`w-10 h-10 rounded-lg ${workshop.color} flex items-center justify-center`}>
-                          <Icon className="h-5 w-5 text-white" />
+                        <div className={`w-12 h-12 rounded-lg bg-gradient-to-br ${workshop.color} flex items-center justify-center shadow-sm`}>
+                          <span className="text-xl">{workshop.emoji}</span>
                         </div>
                         <div>
                           <h3 className="font-bold text-sm">{workshop.name}</h3>
-                          <p className="text-xs text-muted-foreground mt-1">{machineCount} ماكينة</p>
+                          <p className="text-xs text-muted-foreground mt-1">{"\uD83D\uDD27"} {machineCount} ماكينة</p>
                         </div>
-                        {logInfo && (
-                          <div className="flex items-center gap-2">
+                        {logInfo ? (
+                          <div className="flex items-center gap-2 flex-wrap">
                             <Badge variant="secondary" className="text-[10px]">
-                              {logInfo.qty} قطعة
+                              {"\uD83D\uDCE6"} {logInfo.qty} قطعة
                             </Badge>
                             <Badge variant="secondary" className="text-[10px]">
-                              {logInfo.activeMachines.size} نشطة
+                              {"\u2705"} {logInfo.activeMachines.size} نشطة
                             </Badge>
                           </div>
+                        ) : (
+                          <p className="text-[10px] text-muted-foreground">{"\uD83D\uDCA4"} لا يوجد إنتاج اليوم</p>
                         )}
                       </CardContent>
                     </Card>
@@ -265,8 +266,9 @@ export default function FactoryMap() {
                   >
                     <ArrowRight className="h-4 w-4" />
                   </Button>
+                  <span className="text-xl">{currentWorkshop?.emoji}</span>
                   <h1 className="text-xl font-bold">
-                    {WORKSHOPS.find(w => w.id === selectedWorkshop)?.name || selectedWorkshop}
+                    {currentWorkshop?.name || selectedWorkshop}
                   </h1>
                 </div>
                 <div className="flex items-center gap-2 flex-wrap">
@@ -287,39 +289,41 @@ export default function FactoryMap() {
                         إضافة ماكينة
                       </Button>
                     </DialogTrigger>
-                    <DialogContent dir="rtl">
+                    <DialogContent dir="rtl" className="bg-card border-border">
                       <DialogHeader>
-                        <DialogTitle>إضافة ماكينة جديدة</DialogTitle>
+                        <DialogTitle>{"\u2795"} إضافة ماكينة جديدة</DialogTitle>
                       </DialogHeader>
                       <div className="space-y-4 pt-2">
                         <div>
-                          <label className="text-sm text-muted-foreground block mb-1">الورشة</label>
+                          <label className="text-sm text-muted-foreground block mb-1">{"\uD83C\uDFED"} الورشة</label>
                           <Select value={addMachineWorkshop} onValueChange={setAddMachineWorkshop}>
-                            <SelectTrigger data-testid="select-machine-workshop">
+                            <SelectTrigger data-testid="select-machine-workshop" className="bg-background">
                               <SelectValue placeholder="اختر الورشة" />
                             </SelectTrigger>
-                            <SelectContent>
+                            <SelectContent className="bg-card border-border">
                               {WORKSHOPS.map(w => (
-                                <SelectItem key={w.id} value={w.id}>{w.name}</SelectItem>
+                                <SelectItem key={w.id} value={w.id}>{w.emoji} {w.name}</SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
                         </div>
                         <div>
-                          <label className="text-sm text-muted-foreground block mb-1">رمز الماكينة *</label>
+                          <label className="text-sm text-muted-foreground block mb-1">{"\uD83C\uDD94"} رمز الماكينة *</label>
                           <Input
                             value={newMachineCode}
                             onChange={(e) => setNewMachineCode(e.target.value)}
                             placeholder="مثال: FIL-M20"
+                            className="bg-background"
                             data-testid="input-new-machine-code"
                           />
                         </div>
                         <div>
-                          <label className="text-sm text-muted-foreground block mb-1">اسم العرض *</label>
+                          <label className="text-sm text-muted-foreground block mb-1">{"\uD83C\uDFF7\uFE0F"} اسم العرض *</label>
                           <Input
                             value={newMachineName}
                             onChange={(e) => setNewMachineName(e.target.value)}
                             placeholder="مثال: M20"
+                            className="bg-background"
                             data-testid="input-new-machine-name"
                           />
                         </div>
@@ -363,6 +367,7 @@ export default function FactoryMap() {
                           onClick={() => handleMachineClick(machine.code)}
                           data-testid={`button-machine-${machine.code}`}
                         >
+                          <span className="text-base">{hasLog ? "\u2705" : "\u2699\uFE0F"}</span>
                           <span className="font-bold text-sm">{displayName}</span>
                           {hasLog && (
                             <span className="text-[10px] opacity-80">{totalQty} قطعة</span>
@@ -375,7 +380,7 @@ export default function FactoryMap() {
                   {workshopMachines.length === 0 && (
                     <Card>
                       <CardContent className="p-8 text-center">
-                        <Factory className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+                        <span className="text-4xl block mb-3">{"\uD83D\uDD27"}</span>
                         <p className="text-muted-foreground">لا توجد ماكينات في هذه الورشة</p>
                         {!hasMachines && (
                           <Button
@@ -384,7 +389,7 @@ export default function FactoryMap() {
                             disabled={seedMachinesMutation.isPending}
                             data-testid="button-seed-machines-workshop"
                           >
-                            {seedMachinesMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "تهيئة الماكينات"}
+                            {seedMachinesMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "\u2699\uFE0F تهيئة الماكينات"}
                           </Button>
                         )}
                       </CardContent>
@@ -396,7 +401,8 @@ export default function FactoryMap() {
                   {selectedMachine ? (
                     <Card data-testid="card-machine-input">
                       <CardContent className="p-4 space-y-4">
-                        <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-lg">{"\u2699\uFE0F"}</span>
                           <h2 className="font-bold text-lg">
                             ماكينة {machineDbMap[selectedMachine]?.name || selectedMachine}
                           </h2>
@@ -404,7 +410,7 @@ export default function FactoryMap() {
 
                         <div className="space-y-3">
                           <div>
-                            <label className="text-xs text-muted-foreground block mb-1">اسم العامل *</label>
+                            <label className="text-xs text-muted-foreground block mb-1">{"\uD83D\uDC77"} اسم العامل *</label>
                             <Input
                               value={workerName}
                               onChange={(e) => setWorkerName(e.target.value)}
@@ -413,7 +419,7 @@ export default function FactoryMap() {
                             />
                           </div>
                           <div>
-                            <label className="text-xs text-muted-foreground block mb-1">الكمية المنجزة *</label>
+                            <label className="text-xs text-muted-foreground block mb-1">{"\uD83D\uDCE6"} الكمية المنجزة *</label>
                             <Input
                               type="number"
                               min={0}
@@ -424,7 +430,7 @@ export default function FactoryMap() {
                             />
                           </div>
                           <div>
-                            <label className="text-xs text-muted-foreground block mb-1">وصف المنتج</label>
+                            <label className="text-xs text-muted-foreground block mb-1">{"\uD83D\uDCDD"} وصف المنتج</label>
                             <Input
                               value={productDesc}
                               onChange={(e) => setProductDesc(e.target.value)}
@@ -446,15 +452,15 @@ export default function FactoryMap() {
 
                         {todayLogsByMachine[selectedMachine]?.length > 0 && (
                           <div className="border-t pt-3 space-y-2">
-                            <p className="text-xs font-bold text-muted-foreground">سجل اليوم لهذه الماكينة:</p>
+                            <p className="text-xs font-bold text-muted-foreground">{"\uD83D\uDCCB"} سجل اليوم لهذه الماكينة:</p>
                             {todayLogsByMachine[selectedMachine].map((log: any) => (
                               <div key={log.id} className="bg-muted rounded-lg p-2 text-xs space-y-1" data-testid={`log-entry-${log.id}`}>
                                 <div className="flex items-center justify-between gap-2 flex-wrap">
-                                  <span className="font-bold">{log.workerName}</span>
-                                  <Badge variant="secondary" className="text-[10px]">{log.quantity} قطعة</Badge>
+                                  <span className="font-bold">{"\uD83D\uDC77"} {log.workerName}</span>
+                                  <Badge variant="secondary" className="text-[10px]">{"\uD83D\uDCE6"} {log.quantity} قطعة</Badge>
                                 </div>
                                 {log.productDescription && (
-                                  <p className="text-muted-foreground">{log.productDescription}</p>
+                                  <p className="text-muted-foreground">{"\uD83D\uDCDD"} {log.productDescription}</p>
                                 )}
                               </div>
                             ))}
@@ -465,15 +471,15 @@ export default function FactoryMap() {
                   ) : (
                     <Card>
                       <CardContent className="p-6 text-center space-y-3">
-                        <Factory className="h-12 w-12 text-muted-foreground mx-auto" />
+                        <span className="text-4xl block">{"\uD83D\uDC46"}</span>
                         <p className="text-sm text-muted-foreground">اضغط على أي ماكينة لتسجيل الإنتاج</p>
                         <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground">
                           <div className="flex items-center gap-1">
-                            <div className="w-3 h-3 rounded border-2 border-green-500 bg-green-50 dark:bg-green-950" />
+                            <span>{"\u2705"}</span>
                             <span>تم التسجيل اليوم</span>
                           </div>
                           <div className="flex items-center gap-1">
-                            <div className="w-3 h-3 rounded border-2 border-muted-foreground" />
+                            <span>{"\u2699\uFE0F"}</span>
                             <span>لم يتم التسجيل</span>
                           </div>
                         </div>
@@ -483,24 +489,24 @@ export default function FactoryMap() {
 
                   <Card>
                     <CardContent className="p-4">
-                      <h3 className="font-bold text-sm mb-3">ملخص الورشة</h3>
-                      <div className="space-y-2 text-xs">
+                      <h3 className="font-bold text-sm mb-3">{"\uD83D\uDCCA"} ملخص الورشة</h3>
+                      <div className="space-y-3 text-xs">
                         <div className="flex items-center justify-between gap-2">
-                          <span className="text-muted-foreground">إجمالي القطع المنجزة</span>
+                          <span className="text-muted-foreground">{"\uD83D\uDCE6"} إجمالي القطع المنجزة</span>
                           <span className="font-bold text-lg text-green-700 dark:text-green-400" data-testid="text-total-quantity">
                             {workshopLogCounts[selectedWorkshop]?.qty || 0}
                           </span>
                         </div>
                         <div className="flex items-center justify-between gap-2">
-                          <span className="text-muted-foreground">عدد التسجيلات</span>
+                          <span className="text-muted-foreground">{"\uD83D\uDCCB"} عدد التسجيلات</span>
                           <span className="font-bold" data-testid="text-total-logs">
                             {workshopLogCounts[selectedWorkshop]?.logs || 0}
                           </span>
                         </div>
                         <div className="flex items-center justify-between gap-2">
-                          <span className="text-muted-foreground">ماكينات نشطة</span>
+                          <span className="text-muted-foreground">{"\u2705"} ماكينات نشطة</span>
                           <span className="font-bold" data-testid="text-active-machines">
-                            {workshopLogCounts[selectedWorkshop]?.activeMachines.size || 0}
+                            {workshopLogCounts[selectedWorkshop]?.activeMachines.size || 0} / {workshopMachineCounts[selectedWorkshop] || 0}
                           </span>
                         </div>
                       </div>
