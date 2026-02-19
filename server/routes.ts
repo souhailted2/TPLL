@@ -628,6 +628,8 @@ export async function registerRoutes(
       const filters: any = {};
       if (req.query.machineId) filters.machineId = Number(req.query.machineId);
       if (req.query.date) filters.date = req.query.date as string;
+      if (req.query.from) filters.from = req.query.from as string;
+      if (req.query.to) filters.to = req.query.to as string;
       if (req.query.workerName) filters.workerName = req.query.workerName as string;
       const logs = await storage.getProductionLogs(filters);
       res.json(logs);

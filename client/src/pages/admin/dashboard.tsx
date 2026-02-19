@@ -157,7 +157,7 @@ export default function AdminDashboard() {
                 href="/admin/production"
               />
               <StatCard
-                title="📦 إجمالي الإنتاج اليوم"
+                title="⚖️ إجمالي الإنتاج (كلغ)"
                 value={totalProductionQty}
                 icon={Factory}
                 color="orange"
@@ -187,7 +187,7 @@ export default function AdminDashboard() {
                           <span className="text-xs font-bold truncate">{workshop.name}</span>
                         </div>
                         <p className="text-sm font-bold text-muted-foreground">
-                          📦 {logInfo?.qty || 0} قطعة
+                          ⚖️ {logInfo?.qty || 0} كلغ
                         </p>
                       </CardContent>
                     </Card>

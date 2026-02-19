@@ -122,7 +122,7 @@ export default function FactoryLogs() {
                 </div>
                 <div className="mr-auto flex items-center gap-3">
                   <div className="text-center">
-                    <p className="text-xs text-muted-foreground">إجمالي القطع</p>
+                    <p className="text-xs text-muted-foreground">إجمالي الإنتاج (كلغ)</p>
                     <p className="text-2xl font-bold text-green-700 dark:text-green-400" data-testid="text-total">{totalQuantity}</p>
                   </div>
                   <div className="text-center">
@@ -159,7 +159,7 @@ export default function FactoryLogs() {
                           <Badge variant="secondary" className="font-mono font-bold">{machineCode}</Badge>
                           {section && <span className="text-xs text-muted-foreground">{section}</span>}
                         </div>
-                        <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">{machineTotal} قطعة</Badge>
+                        <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">{machineTotal} كلغ</Badge>
                       </div>
 
                       <div className="space-y-2">
@@ -168,7 +168,7 @@ export default function FactoryLogs() {
                             <div className="flex-1 min-w-0">
                               <div className="flex flex-wrap items-center gap-2">
                                 <span className="font-bold text-sm">{log.workerName}</span>
-                                <Badge variant="outline" className="text-[10px]">{log.quantity} قطعة</Badge>
+                                <Badge variant="outline" className="text-[10px]">{log.quantity} كلغ</Badge>
                               </div>
                               {log.productDescription && (
                                 <p className="text-xs text-muted-foreground mt-1">{log.productDescription}</p>

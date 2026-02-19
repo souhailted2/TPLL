@@ -63,7 +63,7 @@ export interface IStorage {
   deleteAllMachinesAndLogs(): Promise<void>;
 
   // Production Logs
-  getProductionLogs(filters?: { machineId?: number; date?: string; workerName?: string }): Promise<(ProductionLog & { machine?: Machine })[]>;
+  getProductionLogs(filters?: { machineId?: number; date?: string; from?: string; to?: string; workerName?: string }): Promise<(ProductionLog & { machine?: Machine })[]>;
   createProductionLog(userId: string, log: InsertProductionLog): Promise<ProductionLog>;
   deleteProductionLog(id: number): Promise<void>;
 }
@@ -559,10 +559,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Production Logs
-  async getProductionLogs(filters?: { machineId?: number; date?: string; workerName?: string }): Promise<any[]> {
+  async getProductionLogs(filters?: { machineId?: number; date?: string; from?: string; to?: string; workerName?: string }): Promise<any[]> {
     const conditions: any[] = [];
     if (filters?.machineId) conditions.push(eq(productionLogs.machineId, filters.machineId));
     if (filters?.date) conditions.push(eq(productionLogs.logDate, filters.date));
+    if (filters?.from) conditions.push(sql`${productionLogs.logDate} >= ${filters.from}`);
+    if (filters?.to) conditions.push(sql`${productionLogs.logDate} <= ${filters.to}`);
     if (filters?.workerName) conditions.push(ilike(productionLogs.workerName, `%${filters.workerName}%`));
 
     const query = db

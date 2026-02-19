@@ -236,7 +236,7 @@ export default function FactoryMap() {
                         {logInfo ? (
                           <div className="flex items-center gap-2 flex-wrap">
                             <Badge variant="secondary" className="text-[10px]">
-                              {"\uD83D\uDCE6"} {logInfo.qty} قطعة
+                              {"\u2696\uFE0F"} {logInfo.qty} كلغ
                             </Badge>
                             <Badge variant="secondary" className="text-[10px]">
                               {"\u2705"} {logInfo.activeMachines.size} نشطة
@@ -370,7 +370,7 @@ export default function FactoryMap() {
                           <span className="text-base">{hasLog ? "\u2705" : "\u2699\uFE0F"}</span>
                           <span className="font-bold text-sm">{displayName}</span>
                           {hasLog && (
-                            <span className="text-[10px] opacity-80">{totalQty} قطعة</span>
+                            <span className="text-[10px] opacity-80">{totalQty} كلغ</span>
                           )}
                         </Button>
                       );
@@ -419,13 +419,13 @@ export default function FactoryMap() {
                             />
                           </div>
                           <div>
-                            <label className="text-xs text-muted-foreground block mb-1">{"\uD83D\uDCE6"} الكمية المنجزة *</label>
+                            <label className="text-xs text-muted-foreground block mb-1">{"\u2696\uFE0F"} الوزن بالكيلو *</label>
                             <Input
                               type="number"
                               min={0}
                               value={quantity}
                               onChange={(e) => setQuantity(e.target.value)}
-                              placeholder="الكمية"
+                              placeholder="الوزن بالكيلو"
                               data-testid="input-quantity"
                             />
                           </div>
@@ -457,7 +457,7 @@ export default function FactoryMap() {
                               <div key={log.id} className="bg-muted rounded-lg p-2 text-xs space-y-1" data-testid={`log-entry-${log.id}`}>
                                 <div className="flex items-center justify-between gap-2 flex-wrap">
                                   <span className="font-bold">{"\uD83D\uDC77"} {log.workerName}</span>
-                                  <Badge variant="secondary" className="text-[10px]">{"\uD83D\uDCE6"} {log.quantity} قطعة</Badge>
+                                  <Badge variant="secondary" className="text-[10px]">{"\u2696\uFE0F"} {log.quantity} كلغ</Badge>
                                 </div>
                                 {log.productDescription && (
                                   <p className="text-muted-foreground">{"\uD83D\uDCDD"} {log.productDescription}</p>
@@ -492,7 +492,7 @@ export default function FactoryMap() {
                       <h3 className="font-bold text-sm mb-3">{"\uD83D\uDCCA"} ملخص الورشة</h3>
                       <div className="space-y-3 text-xs">
                         <div className="flex items-center justify-between gap-2">
-                          <span className="text-muted-foreground">{"\uD83D\uDCE6"} إجمالي القطع المنجزة</span>
+                          <span className="text-muted-foreground">{"\u2696\uFE0F"} إجمالي الإنتاج (كلغ)</span>
                           <span className="font-bold text-lg text-green-700 dark:text-green-400" data-testid="text-total-quantity">
                             {workshopLogCounts[selectedWorkshop]?.qty || 0}
                           </span>
