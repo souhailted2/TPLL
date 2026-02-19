@@ -29,6 +29,10 @@ function getTodayDate() {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
+function getUnit(section?: string) {
+  return section === "Tige Filetée" ? "قطعة" : "كلغ";
+}
+
 function getDateRange(period: StatsPeriod): { from: string; to: string } {
   const now = new Date();
   const to = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
@@ -323,7 +327,7 @@ export default function AdminProduction() {
                   <div className="grid grid-cols-3 gap-4">
                     <div className="text-center p-3 bg-green-50 dark:bg-green-950 rounded-lg">
                       <p className="text-xs text-muted-foreground">⚖️ إجمالي الإنتاج</p>
-                      <p className="text-2xl font-bold text-green-700 dark:text-green-400" data-testid="text-stats-total-qty">{statsData.totalQty} كلغ</p>
+                      <p className="text-2xl font-bold text-green-700 dark:text-green-400" data-testid="text-stats-total-qty">{statsData.totalQty}</p>
                     </div>
                     <div className="text-center p-3 bg-blue-50 dark:bg-blue-950 rounded-lg">
                       <p className="text-xs text-muted-foreground">📋 عدد التسجيلات</p>
@@ -343,7 +347,7 @@ export default function AdminProduction() {
                           <div key={w.id} className="bg-muted rounded-lg p-2 text-center">
                             <span className="text-sm">{w.emoji}</span>
                             <p className="text-[10px] font-bold truncate">{w.name}</p>
-                            <p className="text-sm font-bold text-green-700 dark:text-green-400">{w.qty} كلغ</p>
+                            <p className="text-sm font-bold text-green-700 dark:text-green-400">{w.qty} {getUnit(w.id)}</p>
                             <p className="text-[10px] text-muted-foreground">{w.logs} سجل | {w.machines} ماكينة</p>
                           </div>
                         ))}
@@ -387,7 +391,7 @@ export default function AdminProduction() {
                         {logInfo ? (
                           <div className="flex items-center gap-2 flex-wrap">
                             <Badge variant="secondary" className="text-[10px]">
-                              ⚖️ {logInfo.qty} كلغ
+                              ⚖️ {logInfo.qty} {getUnit(workshop.id)}
                             </Badge>
                             <Badge variant="secondary" className="text-[10px]">
                               ✅ {logInfo.activeMachines.size} نشطة
@@ -435,7 +439,7 @@ export default function AdminProduction() {
                     </div>
                     <div className="mr-auto flex items-center gap-3">
                       <div className="text-center">
-                        <p className="text-xs text-muted-foreground">إجمالي الإنتاج (كلغ)</p>
+                        <p className="text-xs text-muted-foreground">إجمالي الإنتاج</p>
                         <p className="text-2xl font-bold text-green-700 dark:text-green-400" data-testid="text-logs-total">{totalFilteredQty}</p>
                       </div>
                       <div className="text-center">
@@ -462,7 +466,7 @@ export default function AdminProduction() {
                                 <Badge variant="secondary" className="font-mono font-bold">{machineCode}</Badge>
                                 {section && <span className="text-xs text-muted-foreground">{section}</span>}
                               </div>
-                              <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">{machineTotal} كلغ</Badge>
+                              <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">{machineTotal} {getUnit(section)}</Badge>
                             </div>
                             <div className="space-y-1">
                               {machineLogs.map((log: any) => (
@@ -470,7 +474,7 @@ export default function AdminProduction() {
                                   <div className="flex-1 min-w-0">
                                     <div className="flex flex-wrap items-center gap-2">
                                       <span className="font-bold">👷 {log.workerName}</span>
-                                      <Badge variant="outline" className="text-[10px]">⚖️ {log.quantity} كلغ</Badge>
+                                      <Badge variant="outline" className="text-[10px]">⚖️ {log.quantity} {getUnit(section)}</Badge>
                                     </div>
                                     {log.productDescription && (
                                       <p className="text-muted-foreground mt-1">📝 {log.productDescription}</p>
@@ -532,7 +536,7 @@ export default function AdminProduction() {
                             <p className="font-bold text-sm">{displayName}</p>
                             {hasLog && (
                               <Badge variant="secondary" className="text-[10px]">
-                                ⚖️ {totalQty} كلغ
+                                ⚖️ {totalQty} {getUnit(selectedWorkshop || '')}
                               </Badge>
                             )}
                           </CardContent>
@@ -565,7 +569,7 @@ export default function AdminProduction() {
                                     <span className="text-muted-foreground">|</span>
                                     <span>👷 {log.workerName}</span>
                                   </div>
-                                  <Badge variant="secondary" className="text-[10px]">⚖️ {log.quantity} كلغ</Badge>
+                                  <Badge variant="secondary" className="text-[10px]">⚖️ {log.quantity} {getUnit(selectedWorkshop || '')}</Badge>
                                 </div>
                                 {log.productDescription && (
                                   <p className="text-muted-foreground">📝 {log.productDescription}</p>
@@ -602,7 +606,7 @@ export default function AdminProduction() {
                               </div>
                               <div className="flex items-center justify-between">
                                 <span className="text-muted-foreground">⚖️ إجمالي الإنتاج</span>
-                                <span className="font-bold text-green-600">{logInfo?.qty || 0} كلغ</span>
+                                <span className="font-bold text-green-600">{logInfo?.qty || 0} {getUnit(selectedWorkshop || '')}</span>
                               </div>
                             </>
                           );

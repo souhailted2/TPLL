@@ -24,6 +24,10 @@ function getTodayDate() {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
+function getUnit(section?: string) {
+  return section === "Tige Filetée" ? "قطعة" : "كلغ";
+}
+
 export default function AdminDashboard() {
   const { data: orders, isLoading: ordersLoading } = useOrders();
   const { data: products, isLoading: productsLoading } = useProducts();
@@ -157,7 +161,7 @@ export default function AdminDashboard() {
                 href="/admin/production"
               />
               <StatCard
-                title="⚖️ إجمالي الإنتاج (كلغ)"
+                title="⚖️ إجمالي الإنتاج"
                 value={totalProductionQty}
                 icon={Factory}
                 color="orange"
@@ -187,7 +191,7 @@ export default function AdminDashboard() {
                           <span className="text-xs font-bold truncate">{workshop.name}</span>
                         </div>
                         <p className="text-sm font-bold text-muted-foreground">
-                          ⚖️ {logInfo?.qty || 0} كلغ
+                          ⚖️ {logInfo?.qty || 0} {getUnit(workshop.id)}
                         </p>
                       </CardContent>
                     </Card>
