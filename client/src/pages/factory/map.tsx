@@ -423,13 +423,13 @@ export default function FactoryMap() {
                             />
                           </div>
                           <div>
-                            <label className="text-xs text-muted-foreground block mb-1">{"\u2696\uFE0F"} الوزن بالكيلو *</label>
+                            <label className="text-xs text-muted-foreground block mb-1">{"\u2696\uFE0F"} {selectedWorkshop === "Tige Filetée" ? "عدد القطع *" : "الوزن بالكيلو *"}</label>
                             <Input
                               type="number"
                               min={0}
                               value={quantity}
                               onChange={(e) => setQuantity(e.target.value)}
-                              placeholder="الوزن بالكيلو"
+                              placeholder={selectedWorkshop === "Tige Filetée" ? "عدد القطع" : "الوزن بالكيلو"}
                               data-testid="input-quantity"
                             />
                           </div>
