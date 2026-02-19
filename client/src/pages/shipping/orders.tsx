@@ -379,8 +379,10 @@ export default function ShippingOrders() {
     if (!searchTerm.trim()) return list;
     const term = searchTerm.trim().toLowerCase();
     return list.filter((order: any) => {
-      const items = order._filteredItems || order.items || [];
-      return items.some((item: any) =>
+      if (String(order.id).includes(term)) return true;
+      if ((order.salesPoint?.name || '').toLowerCase().includes(term)) return true;
+      const allItems = order.items || [];
+      return allItems.some((item: any) =>
         (item.product?.name || '').toLowerCase().includes(term) ||
         (item.product?.sku || '').toLowerCase().includes(term)
       );
@@ -443,7 +445,7 @@ export default function ShippingOrders() {
           <div className="relative">
             <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="بحث بالاسم أو الكود..."
+              placeholder="بحث بالمنتج، الكود، أو الفرع..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pr-9 max-w-md"
