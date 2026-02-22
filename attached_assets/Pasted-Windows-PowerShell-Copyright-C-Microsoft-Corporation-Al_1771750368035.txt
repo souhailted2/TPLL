@@ -1,0 +1,157 @@
+Windows PowerShell
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+Try the new cross-platform PowerShell https://aka.ms/pscore6
+
+PS C:\Users\TR> ssh root@5.75.144.100
+The authenticity of host '5.75.144.100 (5.75.144.100)' can't be established.
+ED25519 key fingerprint is SHA256:XS4zmKCmHULz/hU+hlEwehjieOogJHsYyRj1yiXWSmo.
+This key is not known by any other names.
+Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+Warning: Permanently added '5.75.144.100' (ED25519) to the list of known hosts.
+root@5.75.144.100's password:
+Welcome to Ubuntu 24.04.3 LTS (GNU/Linux 6.8.0-90-generic x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/pro
+
+ System information as of Sun Feb 22 08:42:01 AM UTC 2026
+
+  System load:  0.0                Processes:             153
+  Usage of /:   39.9% of 37.23GB   Users logged in:       0
+  Memory usage: 51%                IPv4 address for eth0: 5.75.144.100
+  Swap usage:   0%                 IPv6 address for eth0: 2a01:4f8:1c19:b326::1
+
+ * Strictly confined Kubernetes makes edge and IoT secure. Learn how MicroK8s
+   just raised the bar for easy, resilient and secure K8s cluster deployment.
+
+   https://ubuntu.com/engage/secure-kubernetes-at-the-edge
+
+Expanded Security Maintenance for Applications is not enabled.
+
+26 updates can be applied immediately.
+To see these additional updates run: apt list --upgradable
+
+Enable ESM Apps to receive additional future security updates.
+See https://ubuntu.com/esm or run: sudo pro status
+
+
+*** System restart required ***
+Last login: Mon Feb 16 14:47:44 2026 from 197.205.98.167
+root@TPL:~# cd ~/tpl-factory && git pull origin main
+remote: Enumerating objects: 253, done.
+remote: Counting objects: 100% (253/253), done.
+remote: Compressing objects: 100% (46/46), done.
+remote: Total 217 (delta 169), reused 216 (delta 168), pack-reused 0 (from 0)
+Receiving objects: 100% (217/217), 2.00 MiB | 24.13 MiB/s, done.
+Resolving deltas: 100% (169/169), completed with 29 local objects.
+From https://github.com/souhailted2/TPLL
+ * branch            main       -> FETCH_HEAD
+   2c11e4b..b292c76  main       -> origin/main
+Updating 2c11e4b..b292c76
+Fast-forward
+ attached_assets/222_1771427208928.pdf                                       | Bin 0 -> 222559 bytes
+ attached_assets/image_1771527575068.png                                     | Bin 0 -> 96825 bytes
+ attached_assets/photo_2026-02-16_15-55-13_1771254950323.jpg                 | Bin 0 -> 182497 bytes
+ attached_assets/photo_2026-02-16_15-55-555_1771257537995.JPG                | Bin 0 -> 25329 bytes
+ "attached_assets/photo_2026-02-\331\207\331\206-55-13_1771257876146.JPG"    | Bin 0 -> 24361 bytes
+ ...12_\330\250\331\204\331\202\330\247\330\263\331\205_1_1771427422331.pdf" | Bin 0 -> 134994 bytes
+ ...247\331\204\330\250\330\261\330\250\330\247\330\254_1_1771427560106.pdf" | Bin 0 -> 160992 bytes
+ ...247\331\204\330\263\331\204\330\263\331\204\330\251_1_1771427521336.pdf" | Bin 0 -> 239232 bytes
+ .../\330\247\331\204\330\264\330\250\331\203\330\251_1_1771427508166.pdf"   | Bin 0 -> 307021 bytes
+ ...10\331\206_\330\250\331\210\330\247\331\204\331\212_1_1771427372437.pdf" | Bin 0 -> 220684 bytes
+ ...52\331\212\330\254_\331\201\331\204\330\252\331\212_1_1771427469783.pdf" | Bin 0 -> 480447 bytes
+ client/src/App.tsx                                                          |  12 +
+ client/src/components/layout-sidebar.tsx                                    |  15 +-
+ client/src/hooks/use-auth.ts                                                |  49 ++-
+ client/src/hooks/use-orders.ts                                              |  27 +-
+ client/src/hooks/use-products.ts                                            |  13 +-
+ client/src/hooks/use-push-notifications.ts                                  |   8 +-
+ client/src/hooks/use-user-role.ts                                           |   6 +-
+ client/src/index.css                                                        |   7 +
+ client/src/lib/queryClient.ts                                               |  20 +-
+ client/src/pages/admin/dashboard.tsx                                        | 190 ++++++++---
+ client/src/pages/admin/orders.tsx                                           |  38 ++-
+ client/src/pages/admin/production.tsx                                       | 626 ++++++++++++++++++++++++++++++++++++
+ client/src/pages/admin/products.tsx                                         |   7 +-
+ client/src/pages/factory/logs.tsx                                           | 205 ++++++++++++
+ client/src/pages/factory/map.tsx                                            | 528 ++++++++++++++++++++++++++++++
+ client/src/pages/landing.tsx                                                |   2 +-
+ client/src/pages/reception/orders.tsx                                       |  33 +-
+ client/src/pages/reception/products.tsx                                     |   6 +-
+ client/src/pages/sales/new-order.tsx                                        |  23 +-
+ client/src/pages/shipping/orders.tsx                                        |  34 +-
+ server/auth.ts                                                              | 146 +++++----
+ server/routes.ts                                                            | 226 +++++++++----
+ server/storage.ts                                                           |  96 ++++++
+ shared/models/auth.ts                                                       |   7 +
+ shared/schema.ts                                                            |  47 +++
+ 36 files changed, 2145 insertions(+), 226 deletions(-)
+ create mode 100644 attached_assets/222_1771427208928.pdf
+ create mode 100644 attached_assets/image_1771527575068.png
+ create mode 100644 attached_assets/photo_2026-02-16_15-55-13_1771254950323.jpg
+ create mode 100644 attached_assets/photo_2026-02-16_15-55-555_1771257537995.JPG
+ create mode 100644 "attached_assets/photo_2026-02-\331\207\331\206-55-13_1771257876146.JPG"
+ create mode 100644 "attached_assets/\330\247\331\204\330\250\330\261\330\247\330\272\331\212_\330\250\331\204\331\202\330\247\330\263\331\205_1_1771427422331.pdf"
+ create mode 100644 "attached_assets/\330\247\331\204\330\250\330\261\330\250\330\247\330\254_1_1771427560106.pdf"
+ create mode 100644 "attached_assets/\330\247\331\204\330\263\331\204\330\263\331\204\330\251_1_1771427521336.pdf"
+ create mode 100644 "attached_assets/\330\247\331\204\330\264\330\250\331\203\330\251_1_1771427508166.pdf"
+ create mode 100644 "attached_assets/\330\250\331\210\331\204\331\210\331\206_\330\250\331\210\330\247\331\204\331\212_1_1771427372437.pdf"
+ create mode 100644 "attached_assets/\330\252\331\212\330\254_\331\201\331\204\330\252\331\212_1_1771427469783.pdf"
+ create mode 100644 client/src/pages/admin/production.tsx
+ create mode 100644 client/src/pages/factory/logs.tsx
+ create mode 100644 client/src/pages/factory/map.tsx
+root@TPL:~/tpl-factory# /root/git-update.sh
+🔄 Starting safe GitHub update...
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📦 Step 1: Creating pre-update backup...
+✅ Backup saved: /root/backups/pre_git_update_20260222_085018.sql (296K)
+
+📥 Step 2: Pulling latest changes from GitHub...
+HEAD is now at b292c76 Saved progress at the end of the loop
+✅ Code updated from GitHub
+
+🔨 Step 3: Rebuilding application...
+[+] Building 50.7s (18/18) FINISHED
+ => [internal] load local bake definitions                                                                         0.0s
+ => => reading from stdin 482B                                                                                     0.0s
+ => [internal] load build definition from Dockerfile                                                               0.0s
+ => => transferring dockerfile: 484B                                                                               0.0s
+ => [internal] load metadata for docker.io/library/node:20-alpine                                                  0.7s
+ => [internal] load .dockerignore                                                                                  0.0s
+ => => transferring context: 141B                                                                                  0.0s
+ => [builder 1/6] FROM docker.io/library/node:20-alpine@sha256:09e2b3d9726018aecf269bd35325f46bf75046a643a66d2836  0.0s
+ => => resolve docker.io/library/node:20-alpine@sha256:09e2b3d9726018aecf269bd35325f46bf75046a643a66d28360ec71132  0.0s
+ => [internal] load build context                                                                                  0.0s
+ => => transferring context: 326.74kB                                                                              0.0s
+ => CACHED [builder 2/6] WORKDIR /app                                                                              0.0s
+ => CACHED [builder 3/6] COPY package.json package-lock.json* ./                                                   0.0s
+ => CACHED [builder 4/6] RUN npm install                                                                           0.0s
+ => [builder 5/6] COPY . .                                                                                         0.1s
+ => [builder 6/6] RUN npm run build                                                                               20.6s
+ => CACHED [runner 4/8] RUN npm install --omit=dev                                                                 0.0s
+ => [runner 5/8] COPY --from=builder /app/dist ./dist                                                              0.1s
+ => [runner 6/8] COPY drizzle.config.ts ./                                                                         0.0s
+ => [runner 7/8] COPY shared ./shared                                                                              0.3s
+ => [runner 8/8] RUN npm install drizzle-kit tsx                                                                  11.3s
+ => exporting to image                                                                                            15.6s
+ => => exporting layers                                                                                           12.6s
+ => => exporting manifest sha256:2097e1fd831ee23ca1d3b8fdbb31d40e101f88cab4e96ef3761087625b4b6cba                  0.0s
+ => => exporting config sha256:761c1447602e3b817f8da5ef101fca52f20570029536130a81b9019251c9db59                    0.0s
+ => => exporting attestation manifest sha256:e847eea40946909ad3c803baa77073c844fd7297ec327c3f056332c49c89307e      0.0s
+ => => exporting manifest list sha256:d8b33bee3eea15d5908616b158c0ca1a53abe09dc08aa6f7dcb4ce7e7651eb5d             0.0s
+ => => naming to docker.io/library/tpl-factory-app:latest                                                          0.0s
+ => => unpacking to docker.io/library/tpl-factory-app:latest                                                       2.9s
+ => resolving provenance for metadata file                                                                         0.0s
+[+] up 3/3
+ ✔ Image tpl-factory-app       Built                                                                               50.9s
+ ✔ Container tpl-factory-db-1  Healthy                                                                             11.4s
+ ✔ Container tpl-factory-app-1 Recreated                                                                           10.8s
+✅ Application rebuilt
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✅ Update completed successfully!
+📦 Backup: /root/backups/pre_git_update_20260222_085018.sql
+🌐 Website: https://tplorders.com
+root@TPL:~/tpl-factory#
