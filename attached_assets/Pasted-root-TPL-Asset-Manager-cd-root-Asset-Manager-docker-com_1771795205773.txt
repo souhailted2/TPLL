@@ -1,0 +1,39 @@
+root@TPL:~/Asset-Manager# cd /root/Asset-Manager && docker compose -p asset-manager up -d --build
+[+] Building 87.3s (18/18) FINISHED
+ => [internal] load local bake definitions                                                                         0.0s
+ => => reading from stdin 490B                                                                                     0.0s
+ => [internal] load build definition from Dockerfile                                                               0.0s
+ => => transferring dockerfile: 474B                                                                               0.0s
+ => [internal] load metadata for docker.io/library/node:20-alpine                                                  0.7s
+ => [internal] load .dockerignore                                                                                  0.0s
+ => => transferring context: 82B                                                                                   0.0s
+ => [builder 1/6] FROM docker.io/library/node:20-alpine@sha256:09e2b3d9726018aecf269bd35325f46bf75046a643a66d2836  0.0s
+ => => resolve docker.io/library/node:20-alpine@sha256:09e2b3d9726018aecf269bd35325f46bf75046a643a66d28360ec71132  0.0s
+ => [internal] load build context                                                                                  0.2s
+ => => transferring context: 15.83MB                                                                               0.2s
+ => CACHED [builder 2/6] WORKDIR /app                                                                              0.0s
+ => [builder 3/6] COPY package.json package-lock.json* ./                                                          0.1s
+ => [runner 4/8] RUN npm install --omit=dev                                                                       21.7s
+ => [builder 4/6] RUN npm install                                                                                 25.4s
+ => [builder 5/6] COPY . .                                                                                         0.7s
+ => [builder 6/6] RUN npm run build                                                                               15.3s
+ => [runner 5/8] COPY --from=builder /app/dist ./dist                                                              0.3s
+ => [runner 6/8] COPY drizzle.config.ts ./                                                                         0.1s
+ => [runner 7/8] COPY shared ./shared                                                                              0.1s
+ => [runner 8/8] RUN npm install drizzle-kit tsx                                                                   8.6s
+ => exporting to image                                                                                            34.5s
+ => => exporting layers                                                                                           23.3s
+ => => exporting manifest sha256:1ffd40a1dd74d9ce1e08554155d154355aea519f62abcc8f17d4999bc104a839                  0.0s
+ => => exporting config sha256:d47ee4b956de925e9a1712c40efd0747077294d481720a3ade3bd9aa676f8487                    0.0s
+ => => exporting attestation manifest sha256:9e6731ec9569542195c2979a9d742a9ab4cdac3fd298ea56592be9bff7ba9f87      0.0s
+ => => exporting manifest list sha256:1e29cb93e8c2ec35933b5ba97908aa8fe97f7d51d0226d9834ad8ec20053a401             0.0s
+ => => naming to docker.io/library/asset-manager-app:latest                                                        0.0s
+ => => unpacking to docker.io/library/asset-manager-app:latest                                                    11.1s
+ => resolving provenance for metadata file                                                                         0.0s
+[+] up 5/5
+ ✔ Image asset-manager-app           Built                                                                         87.4s
+ ✔ Network asset-manager_default     Created                                                                       0.1s
+ ✔ Volume asset-manager_asset_pgdata Created                                                                       0.0s
+ ✔ Container asset-manager-db        Healthy                                                                       6.4s
+ ✔ Container asset-manager-app       Created                                                                       0.1s
+root@TPL:~/Asset-Manager#
