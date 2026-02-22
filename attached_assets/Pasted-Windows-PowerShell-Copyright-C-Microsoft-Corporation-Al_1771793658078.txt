@@ -1,0 +1,354 @@
+Windows PowerShell
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+Install the latest PowerShell for new features and improvements! https://aka.ms/PSWindows
+
+PS C:\Users\ASUS> cd "C:\Users\ASUS\OneDrive\Desktop\DFDF\Asset-Manager\Asset-Manager"
+PS C:\Users\ASUS\OneDrive\Desktop\DFDF\Asset-Manager\Asset-Manager> rmdir /s /q .git
+Remove-Item : A positional parameter cannot be found that accepts argument '/q'.
+At line:1 char:1
++ rmdir /s /q .git
++ ~~~~~~~~~~~~~~~~
+    + CategoryInfo          : InvalidArgument: (:) [Remove-Item], ParameterBindingException
+    + FullyQualifiedErrorId : PositionalParameterNotFound,Microsoft.PowerShell.Commands.RemoveItemCommand
+
+PS C:\Users\ASUS\OneDrive\Desktop\DFDF\Asset-Manager\Asset-Manager> Remove-Item -Recurse -Force .git
+PS C:\Users\ASUS\OneDrive\Desktop\DFDF\Asset-Manager\Asset-Manager> git init
+Initialized empty Git repository in C:/Users/ASUS/OneDrive/Desktop/DFDF/Asset-Manager/Asset-Manager/.git/
+PS C:\Users\ASUS\OneDrive\Desktop\DFDF\Asset-Manager\Asset-Manager> git remote add origin https://github.com/souhailted2/Asset-Manager.git
+PS C:\Users\ASUS\OneDrive\Desktop\DFDF\Asset-Manager\Asset-Manager> git add .
+warning: in the working copy of '.gitignore', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of '.replit', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/index.html', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/App.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/components/app-sidebar.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/components/ui/accordion.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/components/ui/alert-dialog.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/components/ui/alert.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/components/ui/aspect-ratio.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/components/ui/avatar.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/components/ui/badge.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/components/ui/breadcrumb.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/components/ui/button.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/components/ui/calendar.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/components/ui/card.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/components/ui/carousel.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/components/ui/chart.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/components/ui/checkbox.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/components/ui/collapsible.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/components/ui/command.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/components/ui/context-menu.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/components/ui/dialog.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/components/ui/drawer.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/components/ui/dropdown-menu.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/components/ui/form.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/components/ui/hover-card.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/components/ui/input-otp.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/components/ui/input.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/components/ui/label.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/components/ui/menubar.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/components/ui/navigation-menu.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/components/ui/pagination.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/components/ui/popover.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/components/ui/progress.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/components/ui/radio-group.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/components/ui/resizable.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/components/ui/scroll-area.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/components/ui/select.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/components/ui/separator.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/components/ui/sheet.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/components/ui/sidebar.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/components/ui/skeleton.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/components/ui/slider.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/components/ui/switch.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/components/ui/table.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/components/ui/tabs.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/components/ui/textarea.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/components/ui/toast.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/components/ui/toaster.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/components/ui/toggle-group.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/components/ui/toggle.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/components/ui/tooltip.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/hooks/use-mobile.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/hooks/use-status-alerts.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/hooks/use-toast.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/index.css', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/lib/language-context.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/lib/printStyles.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/lib/queryClient.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/lib/translations.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/lib/utils.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/main.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/pages/arrivals.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/pages/cashbox.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/pages/categories.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/pages/container-invoices.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/pages/dashboard.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/pages/deliveries.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/pages/expenses.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/pages/login.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/pages/not-found.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/pages/orders.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/pages/products.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/pages/shipping-accounts.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/pages/shipping.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/pages/supplier-accounts.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/pages/suppliers.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/pages/user-management.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/pages/warehouse-inventory.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/pages/warehouses.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'components.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'drizzle.config.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'package-lock.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'package.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'postcss.config.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'replit.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'script/build.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'server/db.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'server/index.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'server/routes.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'server/seed.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'server/static.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'server/storage.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'server/vite.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'shared/schema.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'tailwind.config.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'tsconfig.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'vite.config.ts', LF will be replaced by CRLF the next time Git touches it
+PS C:\Users\ASUS\OneDrive\Desktop\DFDF\Asset-Manager\Asset-Manager> git commit -m "Upload project files"
+[master (root-commit) 2a6107a] Upload project files
+ 222 files changed, 26789 insertions(+)
+ create mode 100644 .gitignore
+ create mode 100644 .local/state/replit/agent/.agent_state_03f23d9eaa05f14bb8a47d7c68631aeb018e90de.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_0419349660b5736fd854e3335ca595db7e028921.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_047700c2120d56a8ced2c17041bdbd1d7f5ed6e4.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_06f6a7da74c809be26b3f6d8ee74701718a4252c.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_08c8c6acb92aae231092cb1de721afb0d1a6362e.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_0a39f1c11424ea10bc274e7819ec0fc49c112d74.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_0c4879a4c859dd95a11a36c822f26e35e6fec546.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_0da589398aaa1ba4c97ab4bbe12ab7e0952fed87.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_0ea068a7c8a331631cdae758da600e7cd2332aa0.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_0eef20f7790b869c9e4022dc03adc9b9abe73ad3.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_133d074aba1010236bfdecf7f5f6e1ef1486d2df.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_13f675c479a503cd8ed9c5b972fea62bbb62eb24.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_14cc71a17b42d59e9d59daae23734e64030a1573.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_1eb25aaecb13a12f88855a035f3a2cb576474647.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_218ad07d7a78a11950fa2b76cfc07eb331ec88a2.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_2222f4b9945237ea29ebe7bbd0406341f9591e42.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_230fa0dc38e149ccd79f89fb326151055809177b.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_2aa459a86096e3477ad03f4493600f86ac530b79.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_2b7ea87bf30efe224848bf80a5ff58c6a70e5182.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_2dc945b24151f0bacdf208b21a7444963c144dc7.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_2dcc33b2ad3dfa73606c270887fb3585abd8fc92.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_2eb3df86ad9b0ce8b41099f3066d17d88d971793.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_38d5ce40d65ff92408e08591cb3a6b7edff6f2ca.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_3bc56c77efe392e94269029f96ca63f5b169cc7b.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_3cd065b64a6b518f20968eea1a28d60a3a9faf36.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_3e01bb6dda5df2fc2728c2bc7c14ae9b6c544475.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_3e2f2b34a8226e4604d864444059a6cdb25c9bf7.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_3e60c4bee648c01e0d3c420b90e9ca25deb1eeeb.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_3f3be63f82fd4a4e276a3913647d2d2dd74a3809.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_40557ef31c605ff24b4f3d08f34be9d8dca09dc0.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_41847bce68a44493685b648680bb466fa30dc69a.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_41cffffef90b6c07a3815022541f85efe979dfcc.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_44b5f9fa3a1613cbcbbb20c59f24d9c834d3915b.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_452e720fee7121346c015ac81420fba3c886bfb7.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_4652a300325232ee8d8e69921356813f2697cc7e.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_466271a87abf68d3e6db173bd11b01c20ba5d50b.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_466e26b1e4c5a36e5dcb09ec22ff5b0c289b8a62.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_4844294dd0baddacdfda0190b47462c2f26cb12c.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_49e8be6df9bb86c39cf826aa0866c56e384a2868.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_4bc3f43b050625acc69a82271ccf671deb6fd070.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_4bc8a97497aeb619aea9000ab5a6c1c35af1b54e.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_4f302ac8b58de05534a661a6c3fd7e6551eea94d.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_4f3dc2161fc565c50263d93245e12246f31daba8.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_507d6eb5d33f07b4f0bde936697712073eecbb73.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_538bd2ea954a1c791c99b5cf50544fb6de15bd4e.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_54b6b1413ae17c7e642b67d0ff24f80e216f5360.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_55d02cb2b6f2b082108a4c87269ebae206a4e527.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_56008117a806ae620f6121762c66c6d43fbee48a.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_5960a4d4a54bd912c988fdd802a023cd72ee4ebf.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_5c8529719960afc5e6dc92e776ac248089478204.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_5e5f6423ceb147f7f039d8d267076a17ab66d69a.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_5ea8f8f2a8e9f74b69430a4e9f59eba50120ec30.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_5fd09e24314f9ea4a9045be6ef00953b6a09c85d.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_5feb9c6c3ee6f5a23a711c39016d0e5415b1a7c1.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_60903192f3b6f249839853a52e2bed5b86e667d2.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_6160fc72d4f2c91509e5e06f4c6cff09af63bfc1.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_646366b00cc3e4b07855eed4ff0b25570fb917b7.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_64d7d54035806fae60efd747fb3fb8de57fe13c4.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_68e3d371c58396446ce6040167c2e860292c798d.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_69640563ad471983342e7795c445d4c5bd131fb8.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_6a87d180256ad2f12fb2d515c8da0fe132722b80.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_6b2df2edb98444630894ea03a06a771d19395a50.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_6c39b376f2dc48c6aaaf1bee823e1a1d76234c6e.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_6c921ab3cbb20d6690839a9bdb21af70ccc29da9.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_6e6b351bd1181f4f4104e87b4f28566b137aff70.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_7214e94789cbc6a045ebcfd3ed8e7b2c575fa356.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_72c5089d27628f01986497a9c03cbe53797bb6a1.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_7411a0a0b03a7cf71be8ab9b4bd16eb4bf8da982.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_7713a939dc6e7d50e51fb714e65d966f9bd7accc.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_77b9c18788365c2089bea2db08f6099c67cd73e2.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_7939e8c47c656d57512f1c755395d966a02842e3.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_79bf2de34e173f737e66ead1f5075eeb8a63a03f.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_7f499bfa4199b206bc7630f51f5f9f56cd40a5e1.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_8065ab71fa056c0b55d504fa63ce0b4460230f7f.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_871542d27da5173d184a19644b897ecde4b89395.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_8c8fdd788490c076bc73675224b38888ce6cf008.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_8d442b133e00f86c0093610acd85a031bc8ef4b9.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_8f902b528c5346e09f13307a6a53a230c2ff0a4c.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_96bcc2f6821fd6f0f757ee8f911cce81702cf67d.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_9f25e8183bad4cce7ad7b2114f8ba3349c367df1.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_a1e9a06fa6c636356cdeb5cc3dcba5c0de2b926a.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_a22853c08dff4ca59c3cd75a37f11eca02c348c6.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_a2b8150ee1574b667c4b9d02c4846a722b57cd99.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_a5b66b60e16a2f11fcd1a61ef3186983d5d85f75.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_a9eb40fbaf50a55229be350b7e7582854e01bc78.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_abecddca5de3b072d0bc48e3f35164c6763cda20.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_ac2420a870f7257300da987cbebd0600b62985ab.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_b1184185b83b133937b0f8a7bfcfadb84bf6abc5.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_b274b6be41b4f90d0a70bac9752150e6af7d8c04.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_c2ae788ce4f7c5eef0d2300472e7e07367396215.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_c401820060f357db5a663dc8cf6b85ee80182b1a.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_c56b10987caed5d50fe8f2b39b0fdc10c82998c4.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_c93355d68fecdf32cf2555772ade2217e978788e.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_cd609dacaf8a0197c13414b1569ae2a6eaaba8da.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_ce93853c889e136ff1f90b17593ce68e79d0f94e.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_db571579708448121da3f3196184a266c1bdca68.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_e0eba2307501d1dbd50fa4fd5fdce4c731ea930f.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_e2d26c81ad98d4892ede18205bd6bddd6265b88b.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_e42a266153dd4e5345ef7aa5f6ec72468317b8c2.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_e48865b870a177f5857583f6819ae4cb3ca146fe.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_e5451d334ecf9aeb67c4017227742c0e56e8b215.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_e5bae788992222192a540f0d6ed1bcf3d0e13503.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_eebccca1b278c923875363976ba898025113bf54.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_ef4738959c2e2858c83b7f166a4157fe5b718666.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_f1e2eb9eb9645a69d98dca50bbde4876c78a8baa.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_f49277a4f4c52e7a388e076558057d910199453e.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_f90da0cecf7e390e2c0424c0bc40b59010cdcbaa.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_fa381fc2407d94f29eb73182e68f2348effc14f8.bin
+ create mode 100644 .local/state/replit/agent/.agent_state_main.bin
+ create mode 100644 .local/state/replit/agent/.latest.json
+ create mode 100644 .local/state/replit/agent/filesystem/filesystem_state.json
+ create mode 100644 .local/state/replit/agent/repl_state.bin
+ create mode 100644 .local/state/replit/log-query.db
+ create mode 100644 .local/state/replit/log-query.db-shm
+ create mode 100644 .local/state/replit/log-query.db-wal
+ create mode 100644 .replit
+ create mode 100644 attached_assets/Capture_1771181735498.PNG
+ create mode 100644 attached_assets/Pasted---1771109401218_1771109401219.txt
+ create mode 100644 attached_assets/ch1_1771180578448.xlsx
+ create mode 100644 attached_assets/image_1771186303095.png
+ create mode 100644 attached_assets/image_1771192102816.png
+ create mode 100644 attached_assets/image_1771192134966.png
+ create mode 100644 client/index.html
+ create mode 100644 client/public/favicon.png
+ create mode 100644 client/public/images/gnt-logo.png
+ create mode 100644 client/src/App.tsx
+ create mode 100644 client/src/components/app-sidebar.tsx
+ create mode 100644 client/src/components/ui/accordion.tsx
+ create mode 100644 client/src/components/ui/alert-dialog.tsx
+ create mode 100644 client/src/components/ui/alert.tsx
+ create mode 100644 client/src/components/ui/aspect-ratio.tsx
+ create mode 100644 client/src/components/ui/avatar.tsx
+ create mode 100644 client/src/components/ui/badge.tsx
+ create mode 100644 client/src/components/ui/breadcrumb.tsx
+ create mode 100644 client/src/components/ui/button.tsx
+ create mode 100644 client/src/components/ui/calendar.tsx
+ create mode 100644 client/src/components/ui/card.tsx
+ create mode 100644 client/src/components/ui/carousel.tsx
+ create mode 100644 client/src/components/ui/chart.tsx
+ create mode 100644 client/src/components/ui/checkbox.tsx
+ create mode 100644 client/src/components/ui/collapsible.tsx
+ create mode 100644 client/src/components/ui/command.tsx
+ create mode 100644 client/src/components/ui/context-menu.tsx
+ create mode 100644 client/src/components/ui/dialog.tsx
+ create mode 100644 client/src/components/ui/drawer.tsx
+ create mode 100644 client/src/components/ui/dropdown-menu.tsx
+ create mode 100644 client/src/components/ui/form.tsx
+ create mode 100644 client/src/components/ui/hover-card.tsx
+ create mode 100644 client/src/components/ui/input-otp.tsx
+ create mode 100644 client/src/components/ui/input.tsx
+ create mode 100644 client/src/components/ui/label.tsx
+ create mode 100644 client/src/components/ui/menubar.tsx
+ create mode 100644 client/src/components/ui/navigation-menu.tsx
+ create mode 100644 client/src/components/ui/pagination.tsx
+ create mode 100644 client/src/components/ui/popover.tsx
+ create mode 100644 client/src/components/ui/progress.tsx
+ create mode 100644 client/src/components/ui/radio-group.tsx
+ create mode 100644 client/src/components/ui/resizable.tsx
+ create mode 100644 client/src/components/ui/scroll-area.tsx
+ create mode 100644 client/src/components/ui/select.tsx
+ create mode 100644 client/src/components/ui/separator.tsx
+ create mode 100644 client/src/components/ui/sheet.tsx
+ create mode 100644 client/src/components/ui/sidebar.tsx
+ create mode 100644 client/src/components/ui/skeleton.tsx
+ create mode 100644 client/src/components/ui/slider.tsx
+ create mode 100644 client/src/components/ui/switch.tsx
+ create mode 100644 client/src/components/ui/table.tsx
+ create mode 100644 client/src/components/ui/tabs.tsx
+ create mode 100644 client/src/components/ui/textarea.tsx
+ create mode 100644 client/src/components/ui/toast.tsx
+ create mode 100644 client/src/components/ui/toaster.tsx
+ create mode 100644 client/src/components/ui/toggle-group.tsx
+ create mode 100644 client/src/components/ui/toggle.tsx
+ create mode 100644 client/src/components/ui/tooltip.tsx
+ create mode 100644 client/src/hooks/use-mobile.tsx
+ create mode 100644 client/src/hooks/use-status-alerts.ts
+ create mode 100644 client/src/hooks/use-toast.ts
+ create mode 100644 client/src/index.css
+ create mode 100644 client/src/lib/language-context.ts
+ create mode 100644 client/src/lib/printStyles.ts
+ create mode 100644 client/src/lib/queryClient.ts
+ create mode 100644 client/src/lib/translations.ts
+ create mode 100644 client/src/lib/utils.ts
+ create mode 100644 client/src/main.tsx
+ create mode 100644 client/src/pages/arrivals.tsx
+ create mode 100644 client/src/pages/cashbox.tsx
+ create mode 100644 client/src/pages/categories.tsx
+ create mode 100644 client/src/pages/container-invoices.tsx
+ create mode 100644 client/src/pages/dashboard.tsx
+ create mode 100644 client/src/pages/deliveries.tsx
+ create mode 100644 client/src/pages/expenses.tsx
+ create mode 100644 client/src/pages/login.tsx
+ create mode 100644 client/src/pages/not-found.tsx
+ create mode 100644 client/src/pages/orders.tsx
+ create mode 100644 client/src/pages/products.tsx
+ create mode 100644 client/src/pages/shipping-accounts.tsx
+ create mode 100644 client/src/pages/shipping.tsx
+ create mode 100644 client/src/pages/supplier-accounts.tsx
+ create mode 100644 client/src/pages/suppliers.tsx
+ create mode 100644 client/src/pages/user-management.tsx
+ create mode 100644 client/src/pages/warehouse-inventory.tsx
+ create mode 100644 client/src/pages/warehouses.tsx
+ create mode 100644 components.json
+ create mode 100644 drizzle.config.ts
+ create mode 100644 excel
+ create mode 100644 package-lock.json
+ create mode 100644 package.json
+ create mode 100644 postcss.config.js
+ create mode 100644 replit.md
+ create mode 100644 script/build.ts
+ create mode 100644 server/db.ts
+ create mode 100644 server/index.ts
+ create mode 100644 server/routes.ts
+ create mode 100644 server/seed.ts
+ create mode 100644 server/static.ts
+ create mode 100644 server/storage.ts
+ create mode 100644 server/vite.ts
+ create mode 100644 shared/schema.ts
+ create mode 100644 tailwind.config.ts
+ create mode 100644 tsconfig.json
+ create mode 100644 vite.config.ts
+PS C:\Users\ASUS\OneDrive\Desktop\DFDF\Asset-Manager\Asset-Manager> git branch -M main
+PS C:\Users\ASUS\OneDrive\Desktop\DFDF\Asset-Manager\Asset-Manager> git push --force origin main
+Enumerating objects: 242, done.
+Counting objects: 100% (242/242), done.
+Delta compression using up to 16 threads
+Compressing objects: 100% (234/234), done.
+Writing objects: 100% (242/242), 13.25 MiB | 1.19 MiB/s, done.
+Total 242 (delta 15), reused 0 (delta 0), pack-reused 0 (from 0)
+remote: Resolving deltas: 100% (15/15), done.
+To https://github.com/souhailted2/Asset-Manager.git
+ + 5136041...2a6107a main -> main (forced update)
+PS C:\Users\ASUS\OneDrive\Desktop\DFDF\Asset-Manager\Asset-Manager>
