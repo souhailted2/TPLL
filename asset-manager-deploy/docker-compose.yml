@@ -1,0 +1,36 @@
+name: asset-manager
+
+services:
+  db:
+    container_name: asset-manager-db
+    image: postgres:16-alpine
+    restart: always
+    environment:
+      POSTGRES_DB: asset_manager
+      POSTGRES_USER: asset_user
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-changeme_strong_password}
+    volumes:
+      - asset_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U asset_user -d asset_manager"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  app:
+    container_name: asset-manager-app
+    build: .
+    restart: always
+    ports:
+      - "3001:3001"
+    environment:
+      DATABASE_URL: postgresql://asset_user:${DB_PASSWORD:-changeme_strong_password}@db:5432/asset_manager
+      SESSION_SECRET: ${SESSION_SECRET:-change_this_to_a_random_string}
+      NODE_ENV: production
+      PORT: "3001"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  asset_pgdata:
