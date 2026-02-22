@@ -64,8 +64,14 @@ export async function setupAuth(app: Express) {
 
       req.session.userId = user.id;
       
-      const { password: _, ...userWithoutPassword } = user;
-      res.json(userWithoutPassword);
+      req.session.save((err) => {
+        if (err) {
+          console.error("Session save error:", err);
+          return res.status(500).json({ message: "حدث خطأ أثناء تسجيل الدخول" });
+        }
+        const { password: _, ...userWithoutPassword } = user;
+        res.json(userWithoutPassword);
+      });
     } catch (error) {
       console.error("Login error:", error);
       res.status(500).json({ message: "حدث خطأ أثناء تسجيل الدخول" });
