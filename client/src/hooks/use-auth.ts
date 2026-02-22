@@ -17,7 +17,7 @@ async function fetchUser(): Promise<User | null> {
   return response.json();
 }
 
-async function login(credentials: { username: string; password: string }): Promise<User> {
+async function login(credentials: { username: string; password: string }): Promise<{ user: User; role: any }> {
   const response = await fetch("/api/login", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -46,15 +46,14 @@ export function useAuth() {
     queryKey: ["/api/auth/user"],
     queryFn: fetchUser,
     retry: false,
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: 1000 * 60 * 5,
   });
 
   const loginMutation = useMutation({
     mutationFn: login,
-    onSuccess: (user) => {
-      queryClient.setQueryData(["/api/auth/user"], user);
-      // Invalidate user-role query to trigger refetch
-      queryClient.invalidateQueries({ queryKey: ["/api/user-role"] });
+    onSuccess: (data) => {
+      queryClient.setQueryData(["/api/auth/user"], data.user);
+      queryClient.setQueryData(["/api/user-role"], data.role);
     },
   });
 

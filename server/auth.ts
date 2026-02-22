@@ -63,13 +63,18 @@ export async function setupAuth(app: Express) {
 
       req.session.userId = user.id;
       
+      const [role] = await db.select().from(userRoles).where(eq(userRoles.userId, user.id));
+      
       req.session.save((err) => {
         if (err) {
           console.error("Session save error:", err);
           return res.status(500).json({ message: "حدث خطأ أثناء تسجيل الدخول" });
         }
         const { password: _, ...userWithoutPassword } = user;
-        res.json(userWithoutPassword);
+        res.json({
+          user: userWithoutPassword,
+          role: role || null,
+        });
       });
     } catch (error) {
       console.error("Login error:", error);
