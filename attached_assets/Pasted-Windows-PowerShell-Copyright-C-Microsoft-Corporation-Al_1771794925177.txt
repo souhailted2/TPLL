@@ -1,0 +1,70 @@
+Windows PowerShell
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+Install the latest PowerShell for new features and improvements! https://aka.ms/PSWindows
+
+PS C:\Users\ASUS> cd /root
+cd : Cannot find path 'C:\root' because it does not exist.
+At line:1 char:1
++ cd /root
++ ~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (C:\root:String) [Set-Location], ItemNotFoundException
+    + FullyQualifiedErrorId : PathNotFound,Microsoft.PowerShell.Commands.SetLocationCommand
+
+PS C:\Users\ASUS> ssh root@5.75.144.100
+root@5.75.144.100's password:
+Welcome to Ubuntu 24.04.3 LTS (GNU/Linux 6.8.0-90-generic x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/pro
+
+ System information as of Sun Feb 22 09:14:06 PM UTC 2026
+
+  System load:  0.08               Processes:             153
+  Usage of /:   40.8% of 37.23GB   Users logged in:       0
+  Memory usage: 52%                IPv4 address for eth0: 5.75.144.100
+  Swap usage:   0%                 IPv6 address for eth0: 2a01:4f8:1c19:b326::1
+
+  => There is 1 zombie process.
+
+ * Strictly confined Kubernetes makes edge and IoT secure. Learn how MicroK8s
+   just raised the bar for easy, resilient and secure K8s cluster deployment.
+
+   https://ubuntu.com/engage/secure-kubernetes-at-the-edge
+
+Expanded Security Maintenance for Applications is not enabled.
+
+26 updates can be applied immediately.
+To see these additional updates run: apt list --upgradable
+
+Enable ESM Apps to receive additional future security updates.
+See https://ubuntu.com/esm or run: sudo pro status
+
+
+*** System restart required ***
+Last login: Sun Feb 22 08:42:02 2026 from 197.205.210.192
+root@TPL:~# cd /root
+root@TPL:~# git clone https://github.com/souhailted2/Asset-Manager.git
+Cloning into 'Asset-Manager'...
+remote: Enumerating objects: 247, done.
+remote: Counting objects: 100% (247/247), done.
+remote: Compressing objects: 100% (222/222), done.
+remote: Total 247 (delta 16), reused 247 (delta 16), pack-reused 0 (from 0)
+Receiving objects: 100% (247/247), 13.25 MiB | 20.85 MiB/s, done.
+Resolving deltas: 100% (16/16), done.
+root@TPL:~# ufw allow 3001/tcp
+Rule added
+Rule added (v6)
+root@TPL:~# cd /root/Asset-Manager
+root@TPL:~/Asset-Manager# docker compose -p asset-manager up -d --build
+[+] Building 0.3s (2/2) FINISHED
+ => [internal] load local bake definitions                                                                         0.0s
+ => => reading from stdin 490B                                                                                     0.0s
+ => [internal] load build definition from Dockerfile                                                               0.0s
+ => => transferring dockerfile: 2B                                                                                 0.0s
+[+] up 0/1
+ ⠙ Image asset-manager-app Building                                                                                 0.5s
+failed to solve: failed to read dockerfile: open Dockerfile: no such file or directory
+
+root@TPL:~/Asset-Manager#
