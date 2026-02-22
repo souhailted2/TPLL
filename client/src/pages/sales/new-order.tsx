@@ -40,7 +40,17 @@ export default function NewOrder() {
   const { toast } = useToast();
   
   const queryClient = useQueryClient();
-  const [cart, setCart] = useState<CartItem[]>([]);
+  const CART_STORAGE_KEY = "tpl_sales_cart";
+  const [cart, setCart] = useState<CartItem[]>(() => {
+    try {
+      if (typeof window === "undefined") return [];
+      const saved = localStorage.getItem(CART_STORAGE_KEY);
+      if (!saved) return [];
+      const parsed = JSON.parse(saved);
+      if (!Array.isArray(parsed)) return [];
+      return parsed.filter((item: any) => item.productId && item.productName && item.quantity);
+    } catch { return []; }
+  });
   const [cartOpen, setCartOpen] = useState(false);
   const [quantityPrompt, setQuantityPrompt] = useState<QuantityPrompt | null>(null);
   const [promptQuantity, setPromptQuantity] = useState("");
@@ -50,6 +60,12 @@ export default function NewOrder() {
   const [newProductSku, setNewProductSku] = useState("");
   const [isAddingProduct, setIsAddingProduct] = useState(false);
   const newProductNameRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
+    } catch {}
+  }, [cart]);
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(searchTerm), 300);
@@ -165,6 +181,7 @@ export default function NewOrder() {
         description: "تم إرسال طلبك إلى المصنع بنجاح",
       });
       setCart([]);
+      try { localStorage.removeItem(CART_STORAGE_KEY); } catch {}
       setCartOpen(false);
     } catch (error) {
       toast({
