@@ -1,0 +1,32 @@
+root@TPL:~/Asset-Manager# docker compose -p asset-manager logs app | tail -30
+asset-manager-app  |     at async open (node:internal/fs/promises:634:25)
+asset-manager-app  |     at async Object.readFile (node:internal/fs/promises:1236:14)
+asset-manager-app  |     at async e._rawEnsureSessionStoreTable (/app/dist/index.cjs:74:28828)
+asset-manager-app  |     at async e._asyncQuery (/app/dist/index.cjs:74:29913)
+asset-manager-app  | 9:29:07 PM [express] GET /api/suppliers 401 in 1ms :: {"message":"غير مصرح"}
+asset-manager-app  | 9:29:07 PM [express] GET /api/dashboard/summary 403 in 2ms :: {"message":"صلاحيات غير كافية"}
+asset-manager-app  | 9:29:08 PM [express] GET /api/containers 401 in 2ms :: {"message":"غير مصرح"}
+asset-manager-app  | 9:29:08 PM [express] GET /api/products 401 in 2ms :: {"message":"غير مصرح"}
+asset-manager-app  | 9:29:15 PM [express] GET /api/auth/me 401 in 2ms :: {"message":"غير مصرح"}
+asset-manager-app  | 9:29:17 PM [express] GET /api/products 401 in 2ms :: {"message":"غير مصرح"}
+asset-manager-app  | 9:29:36 PM [express] POST /api/auth/login 200 in 166ms :: {"id":1,"username":"admin","displayName":"المدير","role":"admin","active":true,"createdAt":"2026-02-22T21:23:43.909Z","allowedCategories":[]}
+asset-manager-app  | Internal Server Error: Error: ENOENT: no such file or directory, open '/app/dist/table.sql'
+asset-manager-app  |     at async open (node:internal/fs/promises:634:25)
+asset-manager-app  |     at async Object.readFile (node:internal/fs/promises:1236:14)
+asset-manager-app  |     at async e._rawEnsureSessionStoreTable (/app/dist/index.cjs:74:28828)
+asset-manager-app  |     at async e._asyncQuery (/app/dist/index.cjs:74:29913) {
+asset-manager-app  |   errno: -2,
+asset-manager-app  |   code: 'ENOENT',
+asset-manager-app  |   syscall: 'open',
+asset-manager-app  |   path: '/app/dist/table.sql'
+asset-manager-app  | }
+asset-manager-app  | Error: ENOENT: no such file or directory, open '/app/dist/table.sql'
+asset-manager-app  |     at async open (node:internal/fs/promises:634:25)
+asset-manager-app  |     at async Object.readFile (node:internal/fs/promises:1236:14)
+asset-manager-app  |     at async e._rawEnsureSessionStoreTable (/app/dist/index.cjs:74:28828)
+asset-manager-app  |     at async e._asyncQuery (/app/dist/index.cjs:74:29913)
+asset-manager-app  | 9:29:36 PM [express] GET /api/products 401 in 1ms :: {"message":"غير مصرح"}
+asset-manager-app  | 9:29:37 PM [express] GET /api/categories 401 in 2ms :: {"message":"غير مصرح"}
+asset-manager-app  | 9:29:57 PM [express] GET /api/auth/me 401 in 2ms :: {"message":"غير مصرح"}
+asset-manager-app  | 9:30:24 PM [express] GET /api/auth/me 401 in 1ms :: {"message":"غير مصرح"}
+root@TPL:~/Asset-Manager#
