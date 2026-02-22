@@ -2,22 +2,19 @@ import type { Express, RequestHandler } from "express";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { db } from "./db";
-import { users, userRoles } from "@shared/schema";
-import { eq } from "drizzle-orm";
-
-const tokenStore = new Map<string, { userId: string; expiresAt: number }>();
+import { users, userRoles, authTokens } from "@shared/schema";
+import { eq, lt } from "drizzle-orm";
 
 function generateToken(): string {
   return crypto.randomBytes(32).toString("hex");
 }
 
-function cleanExpiredTokens() {
-  const now = Date.now();
-  tokenStore.forEach((data, token) => {
-    if (data.expiresAt < now) {
-      tokenStore.delete(token);
-    }
-  });
+async function cleanExpiredTokens() {
+  try {
+    await db.delete(authTokens).where(lt(authTokens.expiresAt, new Date()));
+  } catch (error) {
+    console.error("Error cleaning expired tokens:", error);
+  }
 }
 
 setInterval(cleanExpiredTokens, 60 * 60 * 1000);
@@ -45,7 +42,13 @@ export async function setupAuth(app: Express) {
 
       const token = generateToken();
       const ttl = 7 * 24 * 60 * 60 * 1000;
-      tokenStore.set(token, { userId: user.id, expiresAt: Date.now() + ttl });
+      const expiresAt = new Date(Date.now() + ttl);
+
+      await db.insert(authTokens).values({
+        token,
+        userId: user.id,
+        expiresAt,
+      });
 
       const [role] = await db.select().from(userRoles).where(eq(userRoles.userId, user.id));
 
@@ -61,10 +64,14 @@ export async function setupAuth(app: Express) {
     }
   });
 
-  app.post("/api/logout", (req, res) => {
+  app.post("/api/logout", async (req, res) => {
     const token = req.headers.authorization?.replace("Bearer ", "");
     if (token) {
-      tokenStore.delete(token);
+      try {
+        await db.delete(authTokens).where(eq(authTokens.token, token));
+      } catch (error) {
+        console.error("Logout error:", error);
+      }
     }
     res.json({ success: true });
   });
@@ -75,17 +82,20 @@ export async function setupAuth(app: Express) {
       return res.status(401).json({ message: "غير مسجل الدخول" });
     }
 
-    const session = tokenStore.get(token);
-    if (!session || session.expiresAt < Date.now()) {
-      if (session) tokenStore.delete(token);
-      return res.status(401).json({ message: "غير مسجل الدخول" });
-    }
-
     try {
+      const [session] = await db.select().from(authTokens).where(eq(authTokens.token, token));
+
+      if (!session || session.expiresAt < new Date()) {
+        if (session) {
+          await db.delete(authTokens).where(eq(authTokens.token, token));
+        }
+        return res.status(401).json({ message: "غير مسجل الدخول" });
+      }
+
       const [user] = await db.select().from(users).where(eq(users.id, session.userId));
 
       if (!user) {
-        tokenStore.delete(token);
+        await db.delete(authTokens).where(eq(authTokens.token, token));
         return res.status(401).json({ message: "المستخدم غير موجود" });
       }
 
@@ -98,19 +108,27 @@ export async function setupAuth(app: Express) {
   });
 }
 
-export function getUserIdFromRequest(req: any): string | null {
+export async function getUserIdFromRequest(req: any): Promise<string | null> {
   const token = req.headers.authorization?.replace("Bearer ", "");
   if (!token) return null;
-  const session = tokenStore.get(token);
-  if (!session || session.expiresAt < Date.now()) {
-    if (session) tokenStore.delete(token);
+
+  try {
+    const [session] = await db.select().from(authTokens).where(eq(authTokens.token, token));
+    if (!session || session.expiresAt < new Date()) {
+      if (session) {
+        await db.delete(authTokens).where(eq(authTokens.token, token));
+      }
+      return null;
+    }
+    return session.userId;
+  } catch (error) {
+    console.error("Token lookup error:", error);
     return null;
   }
-  return session.userId;
 }
 
-export const isAuthenticated: RequestHandler = (req: any, res, next) => {
-  const userId = getUserIdFromRequest(req);
+export const isAuthenticated: RequestHandler = async (req: any, res, next) => {
+  const userId = await getUserIdFromRequest(req);
   if (!userId) {
     return res.status(401).json({ message: "غير مسجل الدخول" });
   }

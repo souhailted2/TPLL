@@ -9,7 +9,6 @@ import { startAlertChecker } from "./alert-checker";
 import { execSync } from "child_process";
 import path from "path";
 import fs from "fs";
-import { fileURLToPath } from "url";
 
 import { createGzip } from "zlib";
 import archiver from "archiver";
@@ -26,43 +25,8 @@ export async function registerRoutes(
   // Auth setup
   await setupAuth(app);
 
-  app.get('/download/tpl-factory.zip', (req: any, res: any) => {
-    const archive = archiver('zip', { zlib: { level: 9 } });
-    const projectRoot = path.resolve(process.cwd());
-
-    res.setHeader('Content-Type', 'application/zip');
-    res.setHeader('Content-Disposition', 'attachment; filename=tpl-factory.zip');
-
-    archive.pipe(res);
-
-    const excludeDirs = ['node_modules', '.git', 'dist', '.cache', '.config', '.upm', '.local', '.npm', 'drizzle', 'migrations', '*.sql', 'db_backup*', 'pgdata'];
-
-    archive.glob('**/*', {
-      cwd: projectRoot,
-      ignore: [...excludeDirs.map(d => d.includes('*') ? d : `${d}/**`), '*.sql', 'db_backup*'],
-      dot: false,
-    });
-
-    archive.finalize();
-  });
-
-  app.get('/download/:filename', (req, res) => {
-    const allowed = ['tpl-factory-hetzner.tar.gz', 'db_backup.sql'];
-    const filename = req.params.filename;
-    if (!allowed.includes(filename)) return res.status(404).send('Not found');
-    const currentDir = path.dirname(fileURLToPath(import.meta.url));
-    const searchPaths = [
-      path.resolve(process.cwd(), filename),
-      path.resolve('/home/runner/workspace', filename),
-      path.resolve(currentDir, '..', filename),
-    ];
-    const filePath = searchPaths.find(p => fs.existsSync(p));
-    if (!filePath) return res.status(404).send('File not found');
-    res.download(filePath, filename);
-  });
-
-  const requireAuth = (req: any, res: any, next: any) => {
-    const userId = getUserIdFromRequest(req);
+  const requireAuth = async (req: any, res: any, next: any) => {
+    const userId = await getUserIdFromRequest(req);
     if (!userId) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -71,7 +35,7 @@ export async function registerRoutes(
   };
 
   const requireAdmin = async (req: any, res: any, next: any) => {
-    const userId = getUserIdFromRequest(req);
+    const userId = await getUserIdFromRequest(req);
     if (!userId) return res.status(401).json({ message: "Unauthorized" });
     req.userId = userId;
     const role = await storage.getUserRole(userId);
@@ -82,7 +46,7 @@ export async function registerRoutes(
   };
 
   const requireFactory = async (req: any, res: any, next: any) => {
-    const userId = getUserIdFromRequest(req);
+    const userId = await getUserIdFromRequest(req);
     if (!userId) return res.status(401).json({ message: "Unauthorized" });
     req.userId = userId;
     const role = await storage.getUserRole(userId);
@@ -92,9 +56,36 @@ export async function registerRoutes(
     next();
   };
 
-  // === Products API (Admin only for mutations, Public/Auth for list?) ===
-  // Let's make list public or auth required, but mutations admin only.
-  
+  // === Protected Download Endpoints (Admin only) ===
+  app.get('/download/tpl-factory.zip', requireAdmin, (req: any, res: any) => {
+    const archive = archiver('zip', { zlib: { level: 9 } });
+    const projectRoot = path.resolve(process.cwd());
+    res.setHeader('Content-Type', 'application/zip');
+    res.setHeader('Content-Disposition', 'attachment; filename=tpl-factory.zip');
+    archive.pipe(res);
+    const excludeDirs = ['node_modules', '.git', 'dist', '.cache', '.config', '.upm', '.local', '.npm', 'drizzle', 'migrations', '*.sql', 'db_backup*', 'pgdata'];
+    archive.glob('**/*', {
+      cwd: projectRoot,
+      ignore: [...excludeDirs.map(d => d.includes('*') ? d : `${d}/**`), '*.sql', 'db_backup*'],
+      dot: false,
+    });
+    archive.finalize();
+  });
+
+  app.get('/download/:filename', requireAdmin, (req: any, res: any) => {
+    const allowed = ['tpl-factory-hetzner.tar.gz', 'db_backup.sql'];
+    const filename = req.params.filename;
+    if (!allowed.includes(filename)) return res.status(404).send('Not found');
+    const searchPaths = [
+      path.resolve(process.cwd(), filename),
+      path.resolve('/home/runner/workspace', filename),
+    ];
+    const filePath = searchPaths.find((p: string) => fs.existsSync(p));
+    if (!filePath) return res.status(404).send('File not found');
+    res.download(filePath, filename);
+  });
+
+  // === Products API ===
   app.get(api.products.list.path, requireAuth, async (req, res) => {
     const search = req.query.search as string | undefined;
     const limit = req.query.limit ? parseInt(req.query.limit as string) : 50;
@@ -554,7 +545,7 @@ export async function registerRoutes(
 
   // === Machines API ===
   const requireFactoryMonitor = async (req: any, res: any, next: any) => {
-    const userId = getUserIdFromRequest(req);
+    const userId = await getUserIdFromRequest(req);
     if (!userId) return res.status(401).json({ message: "Unauthorized" });
     req.userId = userId;
     const role = await storage.getUserRole(userId);
