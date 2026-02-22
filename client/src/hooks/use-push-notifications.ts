@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { requestNotificationPermission, onForegroundMessage } from '@/lib/firebase';
 import { useToast } from './use-toast';
-import { useAuth } from './use-auth';
+import { useAuth, authHeaders } from './use-auth';
 
 export function usePushNotifications() {
   const [isSupported, setIsSupported] = useState(false);
@@ -39,8 +39,7 @@ export function usePushNotifications() {
         if (token) {
           const response = await fetch('/api/push-token', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
+            headers: { 'Content-Type': 'application/json', ...authHeaders() },
             body: JSON.stringify({ token }),
           });
 
@@ -106,8 +105,7 @@ export function usePushNotifications() {
       console.log('Got FCM token, saving to server...');
       const response = await fetch('/api/push-token', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
         body: JSON.stringify({ token }),
       });
 

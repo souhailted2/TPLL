@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Loader2, Save, Factory, ArrowRight, Plus } from "lucide-react";
 import { useState, useMemo } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { authHeaders } from "@/hooks/use-auth";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -51,7 +52,7 @@ export default function FactoryMap() {
   const { data: todayLogs } = useQuery<any[]>({
     queryKey: ['/api/production-logs', { date: logDate }],
     queryFn: async () => {
-      const res = await fetch(`/api/production-logs?date=${logDate}`, { credentials: 'include' });
+      const res = await fetch(`/api/production-logs?date=${logDate}`, { headers: { ...authHeaders() } });
       if (!res.ok) throw new Error('Failed');
       return res.json();
     },

@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Loader2, ArrowRight, Plus, Search } from "lucide-react";
 import { useState, useMemo } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { authHeaders } from "@/hooks/use-auth";
 
 const WORKSHOPS = [
   { id: "الفيلتاج", name: "ورشة الفيلتاج", emoji: "⚙️", color: "from-blue-500 to-blue-600" },
@@ -78,7 +79,7 @@ export default function AdminProduction() {
   const { data: todayLogs } = useQuery<any[]>({
     queryKey: ['/api/production-logs', { date: selectedDate }],
     queryFn: async () => {
-      const res = await fetch(`/api/production-logs?date=${selectedDate}`, { credentials: 'include' });
+      const res = await fetch(`/api/production-logs?date=${selectedDate}`, { headers: { ...authHeaders() } });
       if (!res.ok) throw new Error('Failed');
       return res.json();
     },
@@ -89,7 +90,7 @@ export default function AdminProduction() {
   const { data: statsLogs } = useQuery<any[]>({
     queryKey: ['/api/production-logs', { from: statsRange.from, to: statsRange.to }],
     queryFn: async () => {
-      const res = await fetch(`/api/production-logs?from=${statsRange.from}&to=${statsRange.to}`, { credentials: 'include' });
+      const res = await fetch(`/api/production-logs?from=${statsRange.from}&to=${statsRange.to}`, { headers: { ...authHeaders() } });
       if (!res.ok) throw new Error('Failed');
       return res.json();
     },

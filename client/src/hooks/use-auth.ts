@@ -1,12 +1,43 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { User } from "@shared/models/auth";
 
+const TOKEN_KEY = "tpl_auth_token";
+
+export function getAuthToken(): string | null {
+  try {
+    return localStorage.getItem(TOKEN_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function setAuthToken(token: string) {
+  try {
+    localStorage.setItem(TOKEN_KEY, token);
+  } catch {}
+}
+
+function clearAuthToken() {
+  try {
+    localStorage.removeItem(TOKEN_KEY);
+  } catch {}
+}
+
+export function authHeaders(): Record<string, string> {
+  const token = getAuthToken();
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
 async function fetchUser(): Promise<User | null> {
+  const token = getAuthToken();
+  if (!token) return null;
+
   const response = await fetch("/api/auth/user", {
-    credentials: "include",
+    headers: authHeaders(),
   });
 
   if (response.status === 401) {
+    clearAuthToken();
     return null;
   }
 
@@ -17,11 +48,10 @@ async function fetchUser(): Promise<User | null> {
   return response.json();
 }
 
-async function login(credentials: { username: string; password: string }): Promise<{ user: User; role: any }> {
+async function login(credentials: { username: string; password: string }): Promise<{ user: User; role: any; token: string }> {
   const response = await fetch("/api/login", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    credentials: "include",
     body: JSON.stringify(credentials),
   });
 
@@ -36,8 +66,9 @@ async function login(credentials: { username: string; password: string }): Promi
 async function logout(): Promise<void> {
   await fetch("/api/logout", {
     method: "POST",
-    credentials: "include",
+    headers: authHeaders(),
   });
+  clearAuthToken();
 }
 
 export function useAuth() {
@@ -52,6 +83,7 @@ export function useAuth() {
   const loginMutation = useMutation({
     mutationFn: login,
     onSuccess: (data) => {
+      setAuthToken(data.token);
       queryClient.setQueryData(["/api/auth/user"], data.user);
       queryClient.setQueryData(["/api/user-role"], data.role);
     },

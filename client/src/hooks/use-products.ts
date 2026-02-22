@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, buildUrl } from "@shared/routes";
+import { authHeaders } from "@/hooks/use-auth";
 
 interface UseProductsOptions {
   search?: string;
@@ -19,7 +20,7 @@ export function useProducts(options?: UseProductsOptions) {
       params.set('offset', String(offset));
       
       const url = `${api.products.list.path}?${params.toString()}`;
-      const res = await fetch(url, { credentials: "include" });
+      const res = await fetch(url, { headers: { ...authHeaders() } });
       if (!res.ok) throw new Error("فشل تحميل المنتجات");
       return res.json() as Promise<{ products: any[]; total: number }>;
     },
@@ -31,7 +32,7 @@ export function useProduct(id: number) {
     queryKey: [api.products.get.path, id],
     queryFn: async () => {
       const url = buildUrl(api.products.get.path, { id });
-      const res = await fetch(url, { credentials: "include" });
+      const res = await fetch(url, { headers: { ...authHeaders() } });
       if (res.status === 404) return null;
       if (!res.ok) throw new Error("فشل تحميل المنتج");
       return api.products.get.responses[200].parse(await res.json());
@@ -46,9 +47,8 @@ export function useCreateProduct() {
     mutationFn: async (data: any) => {
       const res = await fetch(api.products.create.path, {
         method: api.products.create.method,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
         body: JSON.stringify(data),
-        credentials: "include",
       });
       if (!res.ok) throw new Error("فشل إضافة المنتج");
       return api.products.create.responses[201].parse(await res.json());
@@ -66,9 +66,8 @@ export function useUpdateProduct() {
       const url = buildUrl(api.products.update.path, { id });
       const res = await fetch(url, {
         method: api.products.update.method,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
         body: JSON.stringify(updates),
-        credentials: "include",
       });
       if (!res.ok) throw new Error("فشل تحديث المنتج");
       return api.products.update.responses[200].parse(await res.json());
@@ -86,7 +85,7 @@ export function useDeleteProduct() {
       const url = buildUrl(api.products.delete.path, { id });
       const res = await fetch(url, {
         method: api.products.delete.method,
-        credentials: "include",
+        headers: { ...authHeaders() },
       });
       if (!res.ok) throw new Error("فشل حذف المنتج");
     },

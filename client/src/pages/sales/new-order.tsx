@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import { api } from "@shared/routes";
+import { authHeaders } from "@/hooks/use-auth";
 
 type UnitType = "piece" | "bag";
 
@@ -96,8 +97,7 @@ export default function NewOrder() {
     try {
       const res = await fetch(api.products.create.path, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
+        headers: { "Content-Type": "application/json", ...authHeaders() },
         body: JSON.stringify({ name: newProductName.trim(), sku: newProductSku.trim(), finish: "none" }),
       });
       if (!res.ok) {

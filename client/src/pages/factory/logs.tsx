@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Loader2, FileText, Trash2, Search } from "lucide-react";
 import { useState, useMemo } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { authHeaders } from "@/hooks/use-auth";
 
 const WORKSHOP_SECTIONS = [
   "الفيلتاج",
@@ -43,7 +44,7 @@ export default function FactoryLogs() {
   const { data: logs, isLoading } = useQuery<any[]>({
     queryKey: ['/api/production-logs', dateFilter, workerFilter],
     queryFn: async () => {
-      const res = await fetch(`/api/production-logs?${queryParams.toString()}`, { credentials: 'include' });
+      const res = await fetch(`/api/production-logs?${queryParams.toString()}`, { headers: { ...authHeaders() } });
       if (!res.ok) throw new Error('Failed');
       return res.json();
     },

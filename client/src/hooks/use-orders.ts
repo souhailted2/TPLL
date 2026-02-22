@@ -1,11 +1,12 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, buildUrl } from "@shared/routes";
+import { authHeaders } from "@/hooks/use-auth";
 
 export function useOrders() {
   return useQuery({
     queryKey: [api.orders.list.path],
     queryFn: async () => {
-      const res = await fetch(api.orders.list.path, { credentials: "include" });
+      const res = await fetch(api.orders.list.path, { headers: { ...authHeaders() } });
       if (!res.ok) throw new Error("فشل تحميل الطلبات");
       return res.json();
     },
@@ -18,9 +19,8 @@ export function useCreateOrder() {
     mutationFn: async (data: { items: { productId: number; quantity: number; unit: string }[] }) => {
       const res = await fetch(api.orders.create.path, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
         body: JSON.stringify(data),
-        credentials: "include",
       });
       if (!res.ok) throw new Error("فشل إنشاء الطلب");
       return res.json();
@@ -38,9 +38,8 @@ export function useUpdateOrderStatus() {
       const url = buildUrl(api.orders.updateStatus.path, { id });
       const res = await fetch(url, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
         body: JSON.stringify({ status }),
-        credentials: "include",
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({ message: "فشل تحديث حالة الطلب" }));
@@ -60,8 +59,7 @@ export function useDismissOrderAlert() {
     mutationFn: async (orderId: number) => {
       const res = await fetch(`/api/orders/${orderId}/dismiss-alert`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: "include",
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
       });
       if (!res.ok) throw new Error("فشل إبطال الإنذار");
       return res.json();
@@ -78,9 +76,8 @@ export function useUpdateCompletedQuantity() {
     mutationFn: async ({ itemId, completedQuantity }: { itemId: number; completedQuantity: number }) => {
       const res = await fetch(`/api/order-items/${itemId}/completed`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
         body: JSON.stringify({ completedQuantity }),
-        credentials: "include",
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({ message: "فشل تحديث الكمية المستلمة" }));
@@ -100,9 +97,8 @@ export function useShipItem() {
     mutationFn: async ({ itemId, shippedQuantity }: { itemId: number; shippedQuantity: number }) => {
       const res = await fetch(`/api/order-items/${itemId}/ship`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
         body: JSON.stringify({ shippedQuantity }),
-        credentials: "include",
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({ message: "فشل شحن الصنف" }));
@@ -122,9 +118,8 @@ export function useConfirmItemReceived() {
     mutationFn: async ({ itemId, receivedQuantity }: { itemId: number; receivedQuantity: number }) => {
       const res = await fetch(`/api/order-items/${itemId}/receive`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
         body: JSON.stringify({ receivedQuantity }),
-        credentials: "include",
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({ message: "فشل تأكيد الاستلام" }));
@@ -144,9 +139,8 @@ export function useAdminCorrectItem() {
     mutationFn: async ({ itemId, corrections }: { itemId: number; corrections: { completedQuantity?: number; shippedQuantity?: number; itemStatus?: string } }) => {
       const res = await fetch(`/api/order-items/${itemId}/admin-correct`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
         body: JSON.stringify(corrections),
-        credentials: "include",
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({ message: "فشل تصحيح الصنف" }));
@@ -166,9 +160,8 @@ export function useUpdateItemStatus() {
     mutationFn: async ({ itemId, itemStatus }: { itemId: number; itemStatus: string }) => {
       const res = await fetch(`/api/order-items/${itemId}/status`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
         body: JSON.stringify({ itemStatus }),
-        credentials: "include",
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({ message: "فشل تحديث حالة الصنف" }));

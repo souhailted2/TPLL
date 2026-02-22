@@ -1,8 +1,8 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { arSA } from "date-fns/locale";
+import { getAuthToken } from "@/hooks/use-auth";
 
-// Custom months for Maghreb region
 const maghrebMonths = [
   "جانفي", "فيفري", "مارس", "أفريل", "ماي", "جوان",
   "جويلية", "أوت", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"
@@ -13,7 +13,6 @@ export const formatMaghrebDate = (date: Date | string | number | null | undefine
   const d = new Date(date);
   let result = format(d, formatStr, { locale: arSA });
   
-  // Replace standard Arabic months with Maghreb months
   const standardMonths = [
     "يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو",
     "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"
@@ -25,6 +24,11 @@ export const formatMaghrebDate = (date: Date | string | number | null | undefine
   
   return result;
 };
+
+function getAuthHeaders(): Record<string, string> {
+  const token = getAuthToken();
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
@@ -38,11 +42,17 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
+  const headers: Record<string, string> = {
+    ...getAuthHeaders(),
+  };
+  if (data) {
+    headers["Content-Type"] = "application/json";
+  }
+
   const res = await fetch(url, {
     method,
-    headers: data ? { "Content-Type": "application/json" } : {},
+    headers,
     body: data ? JSON.stringify(data) : undefined,
-    credentials: "include",
   });
 
   await throwIfResNotOk(res);
@@ -56,7 +66,7 @@ export const getQueryFn: <T>(options: {
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
     const res = await fetch(queryKey.join("/") as string, {
-      credentials: "include",
+      headers: getAuthHeaders(),
     });
 
     if (unauthorizedBehavior === "returnNull" && res.status === 401) {

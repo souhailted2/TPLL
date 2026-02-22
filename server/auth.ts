@@ -1,80 +1,59 @@
 import type { Express, RequestHandler } from "express";
-import session from "express-session";
-import connectPg from "connect-pg-simple";
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
 import { db } from "./db";
 import { users, userRoles } from "@shared/schema";
 import { eq } from "drizzle-orm";
 
-declare module "express-session" {
-  interface SessionData {
-    userId: string;
-  }
+const tokenStore = new Map<string, { userId: string; expiresAt: number }>();
+
+function generateToken(): string {
+  return crypto.randomBytes(32).toString("hex");
 }
 
-export function getSession() {
-  const sessionTtl = 7 * 24 * 60 * 60 * 1000; // 1 week
-  const pgStore = connectPg(session);
-  const sessionStore = new pgStore({
-    conString: process.env.DATABASE_URL,
-    createTableIfMissing: false,
-    ttl: sessionTtl,
-    tableName: "sessions",
-  });
-  return session({
-    secret: process.env.SESSION_SECRET!,
-    store: sessionStore,
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      httpOnly: true,
-      secure: true,
-      sameSite: "none",
-      maxAge: sessionTtl,
-    },
-    proxy: true,
+function cleanExpiredTokens() {
+  const now = Date.now();
+  tokenStore.forEach((data, token) => {
+    if (data.expiresAt < now) {
+      tokenStore.delete(token);
+    }
   });
 }
+
+setInterval(cleanExpiredTokens, 60 * 60 * 1000);
 
 export async function setupAuth(app: Express) {
-  app.set("trust proxy", 1);
-  app.use(getSession());
-
-  // Login endpoint
   app.post("/api/login", async (req, res) => {
     try {
       const { username, password } = req.body;
-      
+
       if (!username || !password) {
         return res.status(400).json({ message: "اسم المستخدم وكلمة المرور مطلوبان" });
       }
 
       const [user] = await db.select().from(users).where(eq(users.username, username));
-      
+
       if (!user) {
         return res.status(401).json({ message: "اسم المستخدم أو كلمة المرور غير صحيحة" });
       }
 
       const isValid = await bcrypt.compare(password, user.password);
-      
+
       if (!isValid) {
         return res.status(401).json({ message: "اسم المستخدم أو كلمة المرور غير صحيحة" });
       }
 
-      req.session.userId = user.id;
-      
+      const token = generateToken();
+      const ttl = 7 * 24 * 60 * 60 * 1000;
+      tokenStore.set(token, { userId: user.id, expiresAt: Date.now() + ttl });
+
       const [role] = await db.select().from(userRoles).where(eq(userRoles.userId, user.id));
-      
-      req.session.save((err) => {
-        if (err) {
-          console.error("Session save error:", err);
-          return res.status(500).json({ message: "حدث خطأ أثناء تسجيل الدخول" });
-        }
-        const { password: _, ...userWithoutPassword } = user;
-        res.json({
-          user: userWithoutPassword,
-          role: role || null,
-        });
+
+      const { password: _, ...userWithoutPassword } = user;
+      res.json({
+        user: userWithoutPassword,
+        role: role || null,
+        token,
       });
     } catch (error) {
       console.error("Login error:", error);
@@ -82,28 +61,31 @@ export async function setupAuth(app: Express) {
     }
   });
 
-  // Logout endpoint
   app.post("/api/logout", (req, res) => {
-    req.session.destroy((err) => {
-      if (err) {
-        return res.status(500).json({ message: "حدث خطأ أثناء تسجيل الخروج" });
-      }
-      res.clearCookie("connect.sid");
-      res.json({ success: true });
-    });
+    const token = req.headers.authorization?.replace("Bearer ", "");
+    if (token) {
+      tokenStore.delete(token);
+    }
+    res.json({ success: true });
   });
 
-  // Get current user
   app.get("/api/auth/user", async (req, res) => {
-    if (!req.session.userId) {
+    const token = req.headers.authorization?.replace("Bearer ", "");
+    if (!token) {
+      return res.status(401).json({ message: "غير مسجل الدخول" });
+    }
+
+    const session = tokenStore.get(token);
+    if (!session || session.expiresAt < Date.now()) {
+      if (session) tokenStore.delete(token);
       return res.status(401).json({ message: "غير مسجل الدخول" });
     }
 
     try {
-      const [user] = await db.select().from(users).where(eq(users.id, req.session.userId));
-      
+      const [user] = await db.select().from(users).where(eq(users.id, session.userId));
+
       if (!user) {
-        req.session.destroy(() => {});
+        tokenStore.delete(token);
         return res.status(401).json({ message: "المستخدم غير موجود" });
       }
 
@@ -116,10 +98,23 @@ export async function setupAuth(app: Express) {
   });
 }
 
-export const isAuthenticated: RequestHandler = (req, res, next) => {
-  if (!req.session.userId) {
+export function getUserIdFromRequest(req: any): string | null {
+  const token = req.headers.authorization?.replace("Bearer ", "");
+  if (!token) return null;
+  const session = tokenStore.get(token);
+  if (!session || session.expiresAt < Date.now()) {
+    if (session) tokenStore.delete(token);
+    return null;
+  }
+  return session.userId;
+}
+
+export const isAuthenticated: RequestHandler = (req: any, res, next) => {
+  const userId = getUserIdFromRequest(req);
+  if (!userId) {
     return res.status(401).json({ message: "غير مسجل الدخول" });
   }
+  req.userId = userId;
   next();
 };
 
@@ -138,9 +133,8 @@ export async function seedUsers() {
   for (const userData of defaultUsers) {
     const [existing] = await db.select().from(users).where(eq(users.username, userData.username));
     const hashedPassword = await bcrypt.hash(userData.password, 10);
-    
+
     if (!existing) {
-      // Create new user
       const [newUser] = await db.insert(users).values({
         username: userData.username,
         password: hashedPassword,
@@ -153,10 +147,8 @@ export async function seedUsers() {
         salesPointName: userData.salesPointName,
       }).onConflictDoNothing();
     } else {
-      // Update password and name for existing user
       await db.update(users).set({ password: hashedPassword, firstName: userData.firstName }).where(eq(users.username, userData.username));
-      
-      // Ensure role is correctly set (update or insert)
+
       await db.insert(userRoles).values({
         userId: existing.id,
         role: userData.role,
@@ -170,6 +162,6 @@ export async function seedUsers() {
       });
     }
   }
-  
+
   console.log("Users seeded with correct roles.");
 }

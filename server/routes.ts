@@ -1,6 +1,6 @@
 import type { Express } from "express";
 import type { Server } from "http";
-import { setupAuth, isAuthenticated, seedUsers } from "./auth";
+import { setupAuth, isAuthenticated, getUserIdFromRequest, seedUsers } from "./auth";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
@@ -61,17 +61,19 @@ export async function registerRoutes(
     res.download(filePath, filename);
   });
 
-  // Middleware to check authentication
   const requireAuth = (req: any, res: any, next: any) => {
-    if (!req.session.userId) {
+    const userId = getUserIdFromRequest(req);
+    if (!userId) {
       return res.status(401).json({ message: "Unauthorized" });
     }
+    req.userId = userId;
     next();
   };
 
   const requireAdmin = async (req: any, res: any, next: any) => {
-    if (!req.session.userId) return res.status(401).json({ message: "Unauthorized" });
-    const userId = req.session.userId;
+    const userId = getUserIdFromRequest(req);
+    if (!userId) return res.status(401).json({ message: "Unauthorized" });
+    req.userId = userId;
     const role = await storage.getUserRole(userId);
     if (role?.role !== 'admin' && role?.role !== 'reception') {
       return res.status(403).json({ message: "Forbidden: Admins only" });
@@ -80,8 +82,9 @@ export async function registerRoutes(
   };
 
   const requireFactory = async (req: any, res: any, next: any) => {
-    if (!req.session.userId) return res.status(401).json({ message: "Unauthorized" });
-    const userId = req.session.userId;
+    const userId = getUserIdFromRequest(req);
+    if (!userId) return res.status(401).json({ message: "Unauthorized" });
+    req.userId = userId;
     const role = await storage.getUserRole(userId);
     if (!['admin', 'reception', 'shipping', 'factory_monitor'].includes(role?.role || '')) {
       return res.status(403).json({ message: "Forbidden: Factory staff only" });
@@ -175,7 +178,7 @@ export async function registerRoutes(
   app.post(api.orders.create.path, requireAuth, async (req: any, res) => {
     try {
       const input = api.orders.create.input.parse(req.body);
-      const userId = req.session.userId;
+      const userId = req.userId;
       
       console.log(`Order request from user ${userId}: ${input.items.length} items`, JSON.stringify(input.items.map(i => ({ productId: i.productId, quantity: i.quantity, unit: i.unit }))));
       
@@ -230,7 +233,7 @@ export async function registerRoutes(
     try {
       const { status } = req.body;
       const orderId = Number(req.params.id);
-      const userId = req.session.userId;
+      const userId = req.userId;
       const userRole = await storage.getUserRole(userId);
       const role = userRole?.role;
       
@@ -350,7 +353,7 @@ export async function registerRoutes(
     try {
       const itemId = Number(req.params.id);
       const { itemStatus } = req.body;
-      const userId = req.session.userId;
+      const userId = req.userId;
       const userRole = await storage.getUserRole(userId);
       const role = userRole?.role;
       
@@ -383,7 +386,7 @@ export async function registerRoutes(
     try {
       const itemId = Number(req.params.id);
       const { completedQuantity } = req.body;
-      const userId = req.session.userId;
+      const userId = req.userId;
       const userRole = await storage.getUserRole(userId);
       const role = userRole?.role;
       
@@ -418,7 +421,7 @@ export async function registerRoutes(
     try {
       const itemId = Number(req.params.id);
       const { shippedQuantity } = req.body;
-      const userId = req.session.userId;
+      const userId = req.userId;
       const userRole = await storage.getUserRole(userId);
       const role = userRole?.role;
 
@@ -452,7 +455,7 @@ export async function registerRoutes(
     try {
       const itemId = Number(req.params.itemId);
       const { receivedQuantity } = req.body;
-      const userId = req.session.userId;
+      const userId = req.userId;
       const userRole = await storage.getUserRole(userId);
       const role = userRole?.role;
 
@@ -490,7 +493,7 @@ export async function registerRoutes(
   app.patch("/api/order-items/:id/admin-correct", requireFactory, async (req: any, res) => {
     try {
       const itemId = Number(req.params.id);
-      const userId = req.session.userId;
+      const userId = req.userId;
       const userRole = await storage.getUserRole(userId);
       const role = userRole?.role;
 
@@ -551,8 +554,10 @@ export async function registerRoutes(
 
   // === Machines API ===
   const requireFactoryMonitor = async (req: any, res: any, next: any) => {
-    if (!req.session.userId) return res.status(401).json({ message: "Unauthorized" });
-    const role = await storage.getUserRole(req.session.userId);
+    const userId = getUserIdFromRequest(req);
+    if (!userId) return res.status(401).json({ message: "Unauthorized" });
+    req.userId = userId;
+    const role = await storage.getUserRole(userId);
     if (!['admin', 'factory_monitor'].includes(role?.role || '')) {
       return res.status(403).json({ message: "Forbidden" });
     }
@@ -638,9 +643,9 @@ export async function registerRoutes(
     }
   });
 
-  app.post("/api/production-logs", requireFactoryMonitor, async (req, res) => {
+  app.post("/api/production-logs", requireFactoryMonitor, async (req: any, res) => {
     try {
-      const userId = req.session.userId!;
+      const userId = req.userId!;
       const { machineId, workerName, quantity, productDescription, logDate } = req.body;
       if (!machineId || !workerName || !quantity || !logDate) {
         return res.status(400).json({ message: "جميع الحقول مطلوبة" });
@@ -694,7 +699,7 @@ export async function registerRoutes(
   // === User Role API ===
 
   app.get(api.userRoles.get.path, requireAuth, async (req: any, res) => {
-    const userId = req.session.userId;
+    const userId = req.userId;
     let role = await storage.getUserRole(userId);
 
     if (!role) {
@@ -706,7 +711,7 @@ export async function registerRoutes(
   app.post(api.userRoles.update.path, requireAuth, async (req: any, res) => {
     try {
       const input = api.userRoles.update.input.parse(req.body);
-      const userId = req.session.userId;
+      const userId = req.userId;
       const role = await storage.upsertUserRole(userId, input);
       res.json(role);
     } catch (err) {
@@ -720,20 +725,20 @@ export async function registerRoutes(
   // === Notifications API ===
   
   app.get(api.notifications.list.path, requireAuth, async (req: any, res) => {
-    const userId = req.session.userId;
+    const userId = req.userId;
     const userNotifications = await storage.getNotifications(userId);
     res.json(userNotifications);
   });
 
   app.patch(api.notifications.markRead.path, requireAuth, async (req: any, res) => {
-    const userId = req.session.userId;
+    const userId = req.userId;
     const notification = await storage.markNotificationAsRead(Number(req.params.id), userId);
     if (!notification) return res.status(404).json({ message: "Notification not found" });
     res.json(notification);
   });
 
   app.post(api.notifications.markAllRead.path, requireAuth, async (req: any, res) => {
-    const userId = req.session.userId;
+    const userId = req.userId;
     await storage.markAllNotificationsAsRead(userId);
     res.json({ success: true });
   });
@@ -747,7 +752,7 @@ export async function registerRoutes(
         return res.status(400).json({ message: "Token is required" });
       }
       
-      const userId = req.session.userId;
+      const userId = req.userId;
       await storage.savePushToken(userId, token);
       res.json({ success: true });
     } catch (err) {

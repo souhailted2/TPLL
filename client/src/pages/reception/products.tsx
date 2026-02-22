@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
+import { authHeaders } from "@/hooks/use-auth";
 
 export default function ReceptionProducts() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -47,8 +48,7 @@ export default function ReceptionProducts() {
     try {
       const res = await fetch('/api/products', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
         body: JSON.stringify(newProduct),
       });
       if (!res.ok) throw new Error("فشل إضافة المنتج");
@@ -63,7 +63,7 @@ export default function ReceptionProducts() {
 
   const handleExport = useCallback(async () => {
     try {
-      const res = await fetch('/api/products/export', { credentials: 'include' });
+      const res = await fetch('/api/products/export', { headers: { ...authHeaders() } });
       if (!res.ok) throw new Error("فشل التصدير");
       const data = await res.json();
       const headers = ["الاسم", "الكود", "المقاس", "التشطيب"];

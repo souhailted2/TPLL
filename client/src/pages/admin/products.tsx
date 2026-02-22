@@ -14,6 +14,7 @@ import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { authHeaders } from "@/hooks/use-auth";
 import * as XLSX from "xlsx";
 
 type ProductFormValues = z.infer<typeof insertProductSchema>;
@@ -155,7 +156,7 @@ export default function AdminProducts() {
   const handleExcelExport = async () => {
     setIsExporting(true);
     try {
-      const res = await fetch("/api/products/export", { credentials: "include" });
+      const res = await fetch("/api/products/export", { headers: { ...authHeaders() } });
       if (!res.ok) throw new Error("فشل تحميل المنتجات");
       const allProducts = await res.json();
 
