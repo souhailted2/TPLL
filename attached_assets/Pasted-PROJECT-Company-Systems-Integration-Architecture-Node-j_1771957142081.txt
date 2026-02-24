@@ -1,0 +1,169 @@
+PROJECT: Company Systems Integration Architecture (Node.js Micro-ERP Integration Layer)
+
+OBJECTIVE:
+Create a central Integration Service that connects multiple existing Node.js applications, each with its own database, without merging or modifying their internal databases directly.
+
+CURRENT SYSTEM STATE:
+The company operates multiple independent web applications, all built using Node.js. Each application has its own separate database.
+
+Existing systems:
+
+1. Orders System
+
+   * Manages customer orders and production requests
+   * Own database
+
+2. Finance & Administration System
+
+   * Manages accounting, expenses, purchases, and financial tracking
+   * Own database
+
+3. Import & Containers System
+
+   * Manages imports from China, containers, spare parts arrivals
+   * Own database
+
+PROBLEM:
+Systems are isolated. Data must be entered multiple times across systems. Actions occurring in one system must automatically affect others.
+
+Examples:
+
+* When spare parts arrive via import system → inventory and finance must update automatically.
+* When a machine consumes a spare part → inventory decreases and maintenance cost is recorded.
+* Purchases must affect pricing and financial reports automatically.
+
+DIRECT DATABASE ACCESS BETWEEN SYSTEMS IS FORBIDDEN.
+
+GOAL:
+Implement an Integration Layer using Event-Driven Architecture so all systems communicate through events instead of direct database connections.
+
+ARCHITECTURE OVERVIEW:
+
+```
+             Integration Service (Central API)
+                          |
+    -------------------------------------------------
+    |                     |                        |
+```
+
+Orders App           Finance App            Import App
+(Own DB)             (Own DB)               (Own DB)
+
+RULES:
+
+* Each system keeps its own database.
+* No system reads another system’s database.
+* All communication happens via Integration API.
+* Systems send EVENTS describing actions.
+* Integration Service coordinates synchronization.
+
+CORE CONCEPT: EVENT-DRIVEN COMMUNICATION
+
+Each application sends events describing business actions.
+
+Example events:
+
+PART_RECEIVED
+PART_USED
+PURCHASE_CREATED
+ORDER_CREATED
+CONTAINER_ARRIVED
+
+EVENT FORMAT (JSON):
+
+{
+"type": "PART_RECEIVED",
+"source": "import-system",
+"timestamp": "ISO_DATE",
+"payload": {
+"partId": 22,
+"quantity": 500,
+"unitPrice": 1200,
+"containerId": "C102"
+}
+}
+
+INTEGRATION SERVICE RESPONSIBILITIES:
+
+1. Receive events from systems.
+2. Validate event schema.
+3. Execute business synchronization logic.
+4. Notify other systems via API calls.
+5. Maintain event logs.
+6. Prevent duplicated processing.
+7. Ensure data consistency between systems.
+
+TECHNICAL REQUIREMENTS:
+
+Backend:
+
+* Node.js
+* Express.js
+* REST API
+* Event controller
+
+Recommended additions:
+
+* Event Queue abstraction (initially in-memory)
+* Retry mechanism
+* Logging middleware
+
+API ENDPOINT:
+
+POST /events
+
+All applications send events to this endpoint.
+
+EXAMPLE FLOW #1 — IMPORT ARRIVAL:
+
+Import System:
+→ sends PART_RECEIVED event
+
+Integration Service:
+→ notifies Finance System (record purchase cost)
+→ notifies Inventory module
+→ logs event
+
+EXAMPLE FLOW #2 — MACHINE PART USAGE:
+
+Admin System:
+→ sends PART_USED event
+
+Integration Service:
+→ updates inventory
+→ records maintenance cost in finance
+→ triggers reporting update
+
+DATA OWNERSHIP RULE:
+
+Each system remains owner of its data.
+Integration Service coordinates state changes only.
+
+SECURITY:
+
+* API key authentication between services
+* Internal network communication only
+* Event validation required
+
+FUTURE EXTENSIONS:
+
+* Message broker (RabbitMQ / Redis Streams)
+* Central reporting dashboard
+* Real-time notifications
+* Unified authentication service (SSO)
+
+DELIVERABLES REQUESTED FROM REPLIT AGENT:
+
+1. Create Integration Service Node.js project.
+2. Implement POST /events endpoint.
+3. Create event handler structure by event type.
+4. Add logging system.
+5. Add example handlers for:
+
+   * PART_RECEIVED
+   * PART_USED
+6. Provide example client request for other apps.
+7. Modular scalable folder structure.
+
+EXPECTED RESULT:
+All company systems remain independent but behave as one synchronized ERP ecosystem through event-based communication.
