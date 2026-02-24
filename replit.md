@@ -40,22 +40,52 @@ Preferred communication style: Simple, everyday language.
 - Sales points create orders and view their own orders
 - Role assignment happens during onboarding after first authentication
 
+### Integration Service (Standalone)
+- **Location**: `integration-service/` — completely separate Node.js project
+- **Purpose**: Central event-driven communication layer between company systems
+- **Port**: 3001 (console output workflow)
+- **Auth**: API key via `X-API-Key` header (env: `INTEGRATION_API_KEY`)
+- **Database Tables**: `integration_events`, `integration_event_logs` (same PostgreSQL, own tables)
+- **Key Rule**: Never directly modifies other systems' databases — all outbound actions via HTTP API calls (simulated via logs for now)
+- **Supported Events**: PART_RECEIVED, PART_USED, PURCHASE_CREATED, ORDER_CREATED, CONTAINER_ARRIVED
+- **Features**: Idempotency check, in-memory event queue with retry (max 3, exponential backoff), audit logging
+- **Endpoints**:
+  - `POST /events` — receive events from external systems
+  - `GET /events` — list events with filters
+  - `GET /events/:id` — event details with processing logs
+  - `GET /stats` — event statistics
+  - `GET /health` — health check
+
 ### Project Structure
 ```
-├── client/           # React frontend
+├── client/               # React frontend
 │   └── src/
-│       ├── components/   # UI components including shadcn/ui
-│       ├── hooks/        # Custom React hooks for data fetching
-│       ├── pages/        # Route components (admin/, sales/)
-│       └── lib/          # Utilities and query client
-├── server/           # Express backend
-│   ├── routes.ts         # API route handlers
-│   ├── storage.ts        # Database operations
+│       ├── components/       # UI components including shadcn/ui
+│       ├── hooks/            # Custom React hooks for data fetching
+│       ├── pages/            # Route components (admin/, sales/)
+│       └── lib/              # Utilities and query client
+├── server/               # Express backend
+│   ├── routes.ts             # API route handlers
+│   ├── storage.ts            # Database operations
 │   └── replit_integrations/  # Replit Auth setup
-├── shared/           # Shared code between frontend/backend
-│   ├── schema.ts         # Drizzle database schema
-│   └── routes.ts         # API endpoint definitions with Zod
-└── migrations/       # Database migrations
+├── shared/               # Shared code between frontend/backend
+│   ├── schema.ts             # Drizzle database schema
+│   └── routes.ts             # API endpoint definitions with Zod
+├── integration-service/  # Standalone Integration Service
+│   ├── src/
+│   │   ├── index.ts          # Express server entry point
+│   │   ├── db.ts             # PostgreSQL connection
+│   │   ├── schema.ts         # Integration-specific tables
+│   │   ├── storage.ts        # Event CRUD operations
+│   │   ├── middleware/       # API key auth, request logger
+│   │   ├── routes/           # Event endpoints
+│   │   ├── handlers/         # PART_RECEIVED, PART_USED handlers
+│   │   └── queue/            # In-memory event queue with retry
+│   ├── package.json
+│   ├── tsconfig.json
+│   ├── drizzle.config.ts
+│   └── Dockerfile
+└── migrations/           # Database migrations
 ```
 
 ## External Dependencies
@@ -76,3 +106,7 @@ Preferred communication style: Simple, everyday language.
 - `zod` / `drizzle-zod`: Schema validation
 - `framer-motion`: Animations
 - `recharts`: Dashboard charts
+
+### Workflows
+- **Start application**: `npm run dev` — main admin app on port 5000
+- **Integration Service**: `cd integration-service && npx tsx src/index.ts` — standalone integration service on port 3001

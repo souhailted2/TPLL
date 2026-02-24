@@ -30,6 +30,22 @@ services:
       db:
         condition: service_healthy
 
+  integration-service:
+    build:
+      context: ./integration-service
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - "3001:3001"
+    environment:
+      DATABASE_URL: postgresql://tpl_user:${DB_PASSWORD:-changeme_strong_password}@db:5432/tpl_factory
+      INTEGRATION_API_KEY: ${INTEGRATION_API_KEY:-change_this_to_a_secure_key}
+      INTEGRATION_PORT: 3001
+      NODE_ENV: production
+    depends_on:
+      db:
+        condition: service_healthy
+
   nginx:
     image: nginx:alpine
     restart: always
@@ -41,6 +57,7 @@ services:
       - /etc/letsencrypt:/etc/letsencrypt:ro
     depends_on:
       - app
+      - integration-service
 
 volumes:
   pgdata:
