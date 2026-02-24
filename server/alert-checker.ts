@@ -85,7 +85,7 @@ async function checkAndSendAlertNotifications() {
     const tokens = await db
       .select({ token: pushTokens.token })
       .from(pushTokens)
-      .where(sql`${pushTokens.userId} IN ${userIds}`);
+      .where(inArray(pushTokens.userId, userIds));
 
     const tokenStrings = tokens.map(t => t.token);
     if (tokenStrings.length === 0) return;

@@ -183,6 +183,7 @@ export async function registerRoutes(
         const adminIds = await storage.getAdminUserIds();
         const receptionIds = await storage.getUserIdsByRole('reception');
         const notifyIds = Array.from(new Set([...adminIds, ...receptionIds]));
+        console.log(`[Push] New order #${order.id} - notifying ${notifyIds.length} users:`, notifyIds);
         
         for (const notifyId of notifyIds) {
           await storage.createNotification({
@@ -196,6 +197,7 @@ export async function registerRoutes(
         }
         
         const notifyTokens = await storage.getPushTokensByUserIds(notifyIds);
+        console.log(`[Push] Found ${notifyTokens.length} push tokens for ${notifyIds.length} users`);
         if (notifyTokens.length > 0) {
           const tokens = notifyTokens.map(t => t.token);
           const invalidTokens = await sendPushToMultipleTokens(
@@ -207,6 +209,8 @@ export async function registerRoutes(
           for (const invalidToken of invalidTokens) {
             await storage.deletePushToken(invalidToken);
           }
+        } else {
+          console.log(`[Push] No push tokens found - users need to enable notifications in browser`);
         }
       } catch (notifErr) {
         console.error("Notification error (order created successfully):", notifErr);
@@ -744,7 +748,9 @@ export async function registerRoutes(
       }
       
       const userId = req.userId;
+      console.log(`[Push] Saving FCM token for user ${userId}`);
       await storage.savePushToken(userId, token);
+      console.log(`[Push] FCM token saved successfully for user ${userId}`);
       res.json({ success: true });
     } catch (err) {
       console.error("Error saving push token:", err);

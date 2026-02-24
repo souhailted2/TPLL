@@ -11,7 +11,7 @@ import {
   type ProductionLog, type InsertProductionLog,
   users
 } from "@shared/schema";
-import { eq, desc, and, or, ilike, sql, aliasedTable } from "drizzle-orm";
+import { eq, desc, and, or, ilike, sql, inArray, aliasedTable } from "drizzle-orm";
 
 export interface IStorage {
   // Products
@@ -512,7 +512,7 @@ export class DatabaseStorage implements IStorage {
     const tokens = await db
       .select()
       .from(pushTokens)
-      .where(sql`${pushTokens.userId} IN ${userIds}`);
+      .where(inArray(pushTokens.userId, userIds));
     return tokens;
   }
 
