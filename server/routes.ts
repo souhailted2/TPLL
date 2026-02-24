@@ -677,6 +677,65 @@ export async function registerRoutes(
     }
   });
 
+  app.get("/api/part-usage-logs", requireFactoryMonitor, async (req: any, res) => {
+    try {
+      const { machineId, date } = req.query;
+      const logs = await storage.getPartUsageLogs({
+        machineId: machineId ? Number(machineId) : undefined,
+        date: date as string,
+      });
+      res.json(logs);
+    } catch (err) {
+      res.status(500).json({ message: "Failed to fetch part usage logs" });
+    }
+  });
+
+  app.post("/api/part-usage-logs", requireFactoryMonitor, async (req: any, res) => {
+    try {
+      const userId = req.userId!;
+      const { machineId, partName, quantity, reason, usedBy, logDate } = req.body;
+      if (!machineId || !partName || !quantity || !usedBy || !logDate) {
+        return res.status(400).json({ message: "جميع الحقول مطلوبة" });
+      }
+      const log = await storage.createPartUsageLog(userId, {
+        machineId: Number(machineId),
+        partName,
+        quantity: Number(quantity),
+        reason: reason || "maintenance",
+        usedBy,
+        logDate,
+      });
+
+      try {
+        const machine = await storage.getMachine(Number(machineId));
+        sendIntegrationEvent("PART_USED", "factory-system", {
+          partName,
+          partId: 0,
+          quantity: Number(quantity),
+          machineId: machine?.code || String(machineId),
+          machineName: machine?.name || "",
+          usedBy,
+          reason: reason || "maintenance",
+        }, `part-used-${log.id}`).catch(() => {});
+      } catch (intErr) {
+        console.warn("[Integration] Failed to send PART_USED event:", intErr);
+      }
+
+      res.status(201).json(log);
+    } catch (err) {
+      res.status(500).json({ message: "Failed to create part usage log" });
+    }
+  });
+
+  app.delete("/api/part-usage-logs/:id", requireFactoryMonitor, async (req, res) => {
+    try {
+      await storage.deletePartUsageLog(Number(req.params.id));
+      res.json({ success: true });
+    } catch (err) {
+      res.status(500).json({ message: "Failed to delete part usage log" });
+    }
+  });
+
   app.post(api.import.products.path, requireAdmin, async (req, res) => {
     try {
       const items = api.import.products.input.parse(req.body);

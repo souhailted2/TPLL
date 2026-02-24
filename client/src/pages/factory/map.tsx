@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2, Save, Factory, ArrowRight, Plus } from "lucide-react";
+import { Loader2, Save, Factory, ArrowRight, Plus, Wrench, Trash2 } from "lucide-react";
 import { useState, useMemo } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { authHeaders } from "@/hooks/use-auth";
@@ -40,6 +40,11 @@ export default function FactoryMap() {
   const [quantity, setQuantity] = useState("");
   const [productDesc, setProductDesc] = useState("");
   const [logDate, setLogDate] = useState(getTodayDate());
+  const [activeTab, setActiveTab] = useState<"production" | "parts">("production");
+  const [partName, setPartName] = useState("");
+  const [partQty, setPartQty] = useState("");
+  const [partReason, setPartReason] = useState("maintenance");
+  const [partWorker, setPartWorker] = useState("");
   const [addMachineOpen, setAddMachineOpen] = useState(false);
   const [newMachineCode, setNewMachineCode] = useState("");
   const [newMachineName, setNewMachineName] = useState("");
@@ -158,8 +163,60 @@ export default function FactoryMap() {
     return counts;
   }, [todayLogs]);
 
+  const selectedMachineDb = selectedMachine ? machineDbMap[selectedMachine] : null;
+
+  const { data: partUsageLogs } = useQuery<any[]>({
+    queryKey: ['/api/part-usage-logs', { machineId: selectedMachineDb?.id, date: logDate }],
+    queryFn: async () => {
+      if (!selectedMachineDb) return [];
+      const res = await fetch(`/api/part-usage-logs?machineId=${selectedMachineDb.id}&date=${logDate}`, { headers: { ...authHeaders() } });
+      if (!res.ok) throw new Error('Failed');
+      return res.json();
+    },
+    enabled: !!selectedMachineDb,
+  });
+
+  const addPartUsageMutation = useMutation({
+    mutationFn: async (data: any) => {
+      return await apiRequest('POST', '/api/part-usage-logs', data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/part-usage-logs'] });
+      toast({ title: "\u2705 تم تسجيل استخدام القطعة بنجاح" });
+      setPartName("");
+      setPartQty("");
+      setPartWorker("");
+    },
+  });
+
+  const deletePartUsageMutation = useMutation({
+    mutationFn: async (id: number) => {
+      await apiRequest('DELETE', `/api/part-usage-logs/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/part-usage-logs'] });
+      toast({ title: "\u2705 تم الحذف" });
+    },
+  });
+
   const handleMachineClick = (code: string) => {
     setSelectedMachine(code === selectedMachine ? null : code);
+    setActiveTab("production");
+  };
+
+  const handleSubmitPartUsage = async () => {
+    if (!selectedMachineDb || !partName.trim() || !partQty.trim() || !partWorker.trim()) {
+      toast({ title: "\u26A0\uFE0F يرجى ملء جميع الحقول المطلوبة", variant: "destructive" });
+      return;
+    }
+    await addPartUsageMutation.mutateAsync({
+      machineId: selectedMachineDb.id,
+      partName: partName.trim(),
+      quantity: Number(partQty),
+      reason: partReason,
+      usedBy: partWorker.trim(),
+      logDate,
+    });
   };
 
   const handleSubmitLog = async () => {
@@ -413,63 +470,172 @@ export default function FactoryMap() {
                           </h2>
                         </div>
 
-                        <div className="space-y-3">
-                          <div>
-                            <label className="text-xs text-muted-foreground block mb-1">{"\uD83D\uDC77"} اسم العامل *</label>
-                            <Input
-                              value={workerName}
-                              onChange={(e) => setWorkerName(e.target.value)}
-                              placeholder="اسم العامل"
-                              data-testid="input-worker-name"
-                            />
-                          </div>
-                          <div>
-                            <label className="text-xs text-muted-foreground block mb-1">{"\u2696\uFE0F"} {selectedWorkshop === "Tige Filetée" ? "عدد القطع *" : "الوزن بالكيلو *"}</label>
-                            <Input
-                              type="number"
-                              min={0}
-                              value={quantity}
-                              onChange={(e) => setQuantity(e.target.value)}
-                              placeholder={selectedWorkshop === "Tige Filetée" ? "عدد القطع" : "الوزن بالكيلو"}
-                              data-testid="input-quantity"
-                            />
-                          </div>
-                          <div>
-                            <label className="text-xs text-muted-foreground block mb-1">{"\uD83D\uDCDD"} وصف المنتج</label>
-                            <Input
-                              value={productDesc}
-                              onChange={(e) => setProductDesc(e.target.value)}
-                              placeholder="مثال: برغي M8"
-                              data-testid="input-product-desc"
-                            />
-                          </div>
-
-                          <Button
-                            className="w-full gap-2"
-                            onClick={handleSubmitLog}
-                            disabled={addLogMutation.isPending}
-                            data-testid="button-save-log"
+                        <div className="flex gap-1 bg-muted rounded-lg p-1">
+                          <button
+                            className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === "production" ? "bg-background shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                            onClick={() => setActiveTab("production")}
+                            data-testid="tab-production"
                           >
-                            {addLogMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                            <Factory className="h-3.5 w-3.5" />
                             تسجيل الإنتاج
-                          </Button>
+                          </button>
+                          <button
+                            className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === "parts" ? "bg-background shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                            onClick={() => setActiveTab("parts")}
+                            data-testid="tab-parts"
+                          >
+                            <Wrench className="h-3.5 w-3.5" />
+                            قطع الغيار
+                          </button>
                         </div>
 
-                        {todayLogsByMachine[selectedMachine]?.length > 0 && (
-                          <div className="border-t pt-3 space-y-2">
-                            <p className="text-xs font-bold text-muted-foreground">{"\uD83D\uDCCB"} سجل اليوم لهذه الماكينة:</p>
-                            {todayLogsByMachine[selectedMachine].map((log: any) => (
-                              <div key={log.id} className="bg-muted rounded-lg p-2 text-xs space-y-1" data-testid={`log-entry-${log.id}`}>
-                                <div className="flex items-center justify-between gap-2 flex-wrap">
-                                  <span className="font-bold">{"\uD83D\uDC77"} {log.workerName}</span>
-                                  <Badge variant="secondary" className="text-[10px]">{"\u2696\uFE0F"} {log.quantity} {getUnit(selectedWorkshop || '')}</Badge>
-                                </div>
-                                {log.productDescription && (
-                                  <p className="text-muted-foreground">{"\uD83D\uDCDD"} {log.productDescription}</p>
-                                )}
+                        {activeTab === "production" ? (
+                          <>
+                            <div className="space-y-3">
+                              <div>
+                                <label className="text-xs text-muted-foreground block mb-1">{"\uD83D\uDC77"} اسم العامل *</label>
+                                <Input
+                                  value={workerName}
+                                  onChange={(e) => setWorkerName(e.target.value)}
+                                  placeholder="اسم العامل"
+                                  data-testid="input-worker-name"
+                                />
                               </div>
-                            ))}
-                          </div>
+                              <div>
+                                <label className="text-xs text-muted-foreground block mb-1">{"\u2696\uFE0F"} {selectedWorkshop === "Tige Filetée" ? "عدد القطع *" : "الوزن بالكيلو *"}</label>
+                                <Input
+                                  type="number"
+                                  min={0}
+                                  value={quantity}
+                                  onChange={(e) => setQuantity(e.target.value)}
+                                  placeholder={selectedWorkshop === "Tige Filetée" ? "عدد القطع" : "الوزن بالكيلو"}
+                                  data-testid="input-quantity"
+                                />
+                              </div>
+                              <div>
+                                <label className="text-xs text-muted-foreground block mb-1">{"\uD83D\uDCDD"} وصف المنتج</label>
+                                <Input
+                                  value={productDesc}
+                                  onChange={(e) => setProductDesc(e.target.value)}
+                                  placeholder="مثال: برغي M8"
+                                  data-testid="input-product-desc"
+                                />
+                              </div>
+
+                              <Button
+                                className="w-full gap-2"
+                                onClick={handleSubmitLog}
+                                disabled={addLogMutation.isPending}
+                                data-testid="button-save-log"
+                              >
+                                {addLogMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                                تسجيل الإنتاج
+                              </Button>
+                            </div>
+
+                            {todayLogsByMachine[selectedMachine]?.length > 0 && (
+                              <div className="border-t pt-3 space-y-2">
+                                <p className="text-xs font-bold text-muted-foreground">{"\uD83D\uDCCB"} سجل اليوم لهذه الماكينة:</p>
+                                {todayLogsByMachine[selectedMachine].map((log: any) => (
+                                  <div key={log.id} className="bg-muted rounded-lg p-2 text-xs space-y-1" data-testid={`log-entry-${log.id}`}>
+                                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                                      <span className="font-bold">{"\uD83D\uDC77"} {log.workerName}</span>
+                                      <Badge variant="secondary" className="text-[10px]">{"\u2696\uFE0F"} {log.quantity} {getUnit(selectedWorkshop || '')}</Badge>
+                                    </div>
+                                    {log.productDescription && (
+                                      <p className="text-muted-foreground">{"\uD83D\uDCDD"} {log.productDescription}</p>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </>
+                        ) : (
+                          <>
+                            <div className="space-y-3">
+                              <div>
+                                <label className="text-xs text-muted-foreground block mb-1">{"\uD83D\uDD27"} اسم القطعة *</label>
+                                <Input
+                                  value={partName}
+                                  onChange={(e) => setPartName(e.target.value)}
+                                  placeholder="مثال: سير ناقل، محمل كروي"
+                                  data-testid="input-part-name"
+                                />
+                              </div>
+                              <div>
+                                <label className="text-xs text-muted-foreground block mb-1">{"\uD83D\uDD22"} الكمية *</label>
+                                <Input
+                                  type="number"
+                                  min={1}
+                                  value={partQty}
+                                  onChange={(e) => setPartQty(e.target.value)}
+                                  placeholder="عدد القطع"
+                                  data-testid="input-part-qty"
+                                />
+                              </div>
+                              <div>
+                                <label className="text-xs text-muted-foreground block mb-1">{"\uD83D\uDCCB"} السبب *</label>
+                                <Select value={partReason} onValueChange={setPartReason}>
+                                  <SelectTrigger data-testid="select-part-reason" className="bg-background">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent className="bg-card border-border">
+                                    <SelectItem value="maintenance">صيانة</SelectItem>
+                                    <SelectItem value="replacement">استبدال</SelectItem>
+                                    <SelectItem value="other">أخرى</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              <div>
+                                <label className="text-xs text-muted-foreground block mb-1">{"\uD83D\uDC77"} اسم العامل *</label>
+                                <Input
+                                  value={partWorker}
+                                  onChange={(e) => setPartWorker(e.target.value)}
+                                  placeholder="اسم العامل"
+                                  data-testid="input-part-worker"
+                                />
+                              </div>
+
+                              <Button
+                                className="w-full gap-2"
+                                onClick={handleSubmitPartUsage}
+                                disabled={addPartUsageMutation.isPending}
+                                data-testid="button-save-part-usage"
+                              >
+                                {addPartUsageMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wrench className="h-4 w-4" />}
+                                تسجيل استخدام القطعة
+                              </Button>
+                            </div>
+
+                            {partUsageLogs && partUsageLogs.length > 0 && (
+                              <div className="border-t pt-3 space-y-2">
+                                <p className="text-xs font-bold text-muted-foreground">{"\uD83D\uDD27"} قطع الغيار المستخدمة اليوم:</p>
+                                {partUsageLogs.map((log: any) => (
+                                  <div key={log.id} className="bg-muted rounded-lg p-2 text-xs space-y-1" data-testid={`part-usage-entry-${log.id}`}>
+                                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                                      <span className="font-bold">{"\uD83D\uDD27"} {log.partName}</span>
+                                      <div className="flex items-center gap-1">
+                                        <Badge variant="secondary" className="text-[10px]">x{log.quantity}</Badge>
+                                        <button
+                                          onClick={() => deletePartUsageMutation.mutate(log.id)}
+                                          className="text-red-400 hover:text-red-600 p-0.5"
+                                          data-testid={`button-delete-part-${log.id}`}
+                                        >
+                                          <Trash2 className="h-3 w-3" />
+                                        </button>
+                                      </div>
+                                    </div>
+                                    <div className="flex items-center gap-2 text-muted-foreground">
+                                      <span>{"\uD83D\uDC77"} {log.usedBy}</span>
+                                      <Badge variant="outline" className="text-[10px]">
+                                        {log.reason === "maintenance" ? "صيانة" : log.reason === "replacement" ? "استبدال" : "أخرى"}
+                                      </Badge>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </>
                         )}
                       </CardContent>
                     </Card>
@@ -477,7 +643,7 @@ export default function FactoryMap() {
                     <Card>
                       <CardContent className="p-6 text-center space-y-3">
                         <span className="text-4xl block">{"\uD83D\uDC46"}</span>
-                        <p className="text-sm text-muted-foreground">اضغط على أي ماكينة لتسجيل الإنتاج</p>
+                        <p className="text-sm text-muted-foreground">اضغط على أي ماكينة لتسجيل الإنتاج أو قطع الغيار</p>
                         <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground">
                           <div className="flex items-center gap-1">
                             <span>{"\u2705"}</span>

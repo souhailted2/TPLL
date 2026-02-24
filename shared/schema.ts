@@ -202,8 +202,21 @@ export const productionLogs = pgTable("production_logs", {
   createdBy: varchar("created_by").references(() => users.id),
 });
 
+export const partUsageLogs = pgTable("part_usage_logs", {
+  id: serial("id").primaryKey(),
+  machineId: integer("machine_id").notNull().references(() => machines.id),
+  partName: text("part_name").notNull(),
+  quantity: integer("quantity").notNull(),
+  reason: text("reason").notNull().default("maintenance"),
+  usedBy: text("used_by").notNull(),
+  logDate: text("log_date").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  createdBy: varchar("created_by").references(() => users.id),
+});
+
 export const machinesRelations = relations(machines, ({ many }) => ({
   productionLogs: many(productionLogs),
+  partUsageLogs: many(partUsageLogs),
 }));
 
 export const productionLogsRelations = relations(productionLogs, ({ one }) => ({
@@ -224,4 +237,19 @@ export type InsertMachine = z.infer<typeof insertMachineSchema>;
 export const insertProductionLogSchema = createInsertSchema(productionLogs).omit({ id: true, createdAt: true, createdBy: true });
 export type ProductionLog = typeof productionLogs.$inferSelect;
 export type InsertProductionLog = z.infer<typeof insertProductionLogSchema>;
+
+export const partUsageLogsRelations = relations(partUsageLogs, ({ one }) => ({
+  machine: one(machines, {
+    fields: [partUsageLogs.machineId],
+    references: [machines.id],
+  }),
+  creator: one(users, {
+    fields: [partUsageLogs.createdBy],
+    references: [users.id],
+  }),
+}));
+
+export const insertPartUsageLogSchema = createInsertSchema(partUsageLogs).omit({ id: true, createdAt: true, createdBy: true });
+export type PartUsageLog = typeof partUsageLogs.$inferSelect;
+export type InsertPartUsageLog = z.infer<typeof insertPartUsageLogSchema>;
 

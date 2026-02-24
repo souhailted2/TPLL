@@ -48,8 +48,9 @@ Preferred communication style: Simple, everyday language.
 - **Database Tables**: `integration_events`, `integration_event_logs` (same PostgreSQL, own tables)
 - **Key Rule**: Never directly modifies other systems' databases — all outbound actions via HTTP API calls (simulated via logs for now)
 - **Supported Events**: PART_RECEIVED, PART_USED, ORDER_CREATED (active handlers); PURCHASE_CREATED, CONTAINER_ARRIVED (logged, no handler yet)
-- **Connected to Main App**: Order creation in main app sends ORDER_CREATED events automatically via `server/integration-client.ts`
+- **Connected to Main App**: Order creation sends ORDER_CREATED events, part usage recording sends PART_USED events — both via `server/integration-client.ts`
 - **Admin Monitor**: `/admin/integration` page shows events, stats, and service health
+- **Part Usage Tracking**: Factory monitors can record part usage per machine in `/factory/map` (Parts tab), stored in `part_usage_logs` table
 - **Features**: Idempotency check, in-memory event queue with retry (max 3, exponential backoff), audit logging
 - **Endpoints**:
   - `POST /events` — receive events from external systems

@@ -1,7 +1,7 @@
 import { db } from "./db";
 import {
   products, orders, orderItems, userRoles, notifications, pushTokens,
-  machines, productionLogs,
+  machines, productionLogs, partUsageLogs,
   type Product, type InsertProduct, type UpdateProductRequest,
   type Order, type CreateOrderRequest, type OrderItem,
   type UserRole, type UpdateUserRoleRequest,
@@ -9,6 +9,7 @@ import {
   type PushToken, type InsertPushToken,
   type Machine, type InsertMachine,
   type ProductionLog, type InsertProductionLog,
+  type PartUsageLog, type InsertPartUsageLog,
   users
 } from "@shared/schema";
 import { eq, desc, and, or, ilike, sql, inArray, aliasedTable } from "drizzle-orm";
@@ -66,6 +67,11 @@ export interface IStorage {
   getProductionLogs(filters?: { machineId?: number; date?: string; from?: string; to?: string; workerName?: string }): Promise<(ProductionLog & { machine?: Machine })[]>;
   createProductionLog(userId: string, log: InsertProductionLog): Promise<ProductionLog>;
   deleteProductionLog(id: number): Promise<void>;
+
+  // Part Usage Logs
+  getPartUsageLogs(filters?: { machineId?: number; date?: string }): Promise<any[]>;
+  createPartUsageLog(userId: string, log: InsertPartUsageLog): Promise<PartUsageLog>;
+  deletePartUsageLog(id: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -597,6 +603,43 @@ export class DatabaseStorage implements IStorage {
 
   async deleteProductionLog(id: number): Promise<void> {
     await db.delete(productionLogs).where(eq(productionLogs.id, id));
+  }
+
+  async getPartUsageLogs(filters?: { machineId?: number; date?: string }): Promise<any[]> {
+    const conditions: any[] = [];
+    if (filters?.machineId) conditions.push(eq(partUsageLogs.machineId, filters.machineId));
+    if (filters?.date) conditions.push(eq(partUsageLogs.logDate, filters.date));
+
+    const query = db
+      .select({
+        id: partUsageLogs.id,
+        machineId: partUsageLogs.machineId,
+        partName: partUsageLogs.partName,
+        quantity: partUsageLogs.quantity,
+        reason: partUsageLogs.reason,
+        usedBy: partUsageLogs.usedBy,
+        logDate: partUsageLogs.logDate,
+        createdAt: partUsageLogs.createdAt,
+        createdBy: partUsageLogs.createdBy,
+        machine: machines,
+      })
+      .from(partUsageLogs)
+      .leftJoin(machines, eq(partUsageLogs.machineId, machines.id))
+      .orderBy(desc(partUsageLogs.createdAt));
+
+    if (conditions.length > 0) {
+      return query.where(and(...conditions));
+    }
+    return query;
+  }
+
+  async createPartUsageLog(userId: string, log: InsertPartUsageLog): Promise<PartUsageLog> {
+    const [created] = await db.insert(partUsageLogs).values({ ...log, createdBy: userId }).returning();
+    return created;
+  }
+
+  async deletePartUsageLog(id: number): Promise<void> {
+    await db.delete(partUsageLogs).where(eq(partUsageLogs.id, id));
   }
 }
 
