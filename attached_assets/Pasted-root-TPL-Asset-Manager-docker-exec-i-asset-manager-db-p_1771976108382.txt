@@ -1,0 +1,97 @@
+root@TPL:~/Asset-Manager# docker exec -i asset-manager-db psql -U asset_user -d asset_manager < script/restore_backup.sql
+-bash: script/restore_backup.sql: No such file or directory
+root@TPL:~/Asset-Manager# rm Dockerfile && git pull
+Updating c3aa05d..2593898
+Fast-forward
+ Dockerfile.txt => Dockerfile |   0
+ script/restore_backup.sql    | 375 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ server/index.ts              |  71 ++++++++--------
+ 3 files changed, 410 insertions(+), 36 deletions(-)
+ rename Dockerfile.txt => Dockerfile (100%)
+ create mode 100644 script/restore_backup.sql
+root@TPL:~/Asset-Manager# docker exec -i asset-manager-db psql -U asset_user -d asset_manager < script/restore_backup.sql
+ERROR:  cannot insert a non-DEFAULT value into column "id"
+DETAIL:  Column "id" is an identity column defined as GENERATED ALWAYS.
+HINT:  Use OVERRIDING SYSTEM VALUE to override.
+ERROR:  cannot insert a non-DEFAULT value into column "id"
+DETAIL:  Column "id" is an identity column defined as GENERATED ALWAYS.
+HINT:  Use OVERRIDING SYSTEM VALUE to override.
+ERROR:  cannot insert a non-DEFAULT value into column "id"
+DETAIL:  Column "id" is an identity column defined as GENERATED ALWAYS.
+HINT:  Use OVERRIDING SYSTEM VALUE to override.
+ERROR:  cannot insert a non-DEFAULT value into column "id"
+DETAIL:  Column "id" is an identity column defined as GENERATED ALWAYS.
+HINT:  Use OVERRIDING SYSTEM VALUE to override.
+ERROR:  cannot insert a non-DEFAULT value into column "id"
+DETAIL:  Column "id" is an identity column defined as GENERATED ALWAYS.
+HINT:  Use OVERRIDING SYSTEM VALUE to override.
+ERROR:  cannot insert a non-DEFAULT value into column "id"
+DETAIL:  Column "id" is an identity column defined as GENERATED ALWAYS.
+HINT:  Use OVERRIDING SYSTEM VALUE to override.
+ERROR:  cannot insert a non-DEFAULT value into column "id"
+DETAIL:  Column "id" is an identity column defined as GENERATED ALWAYS.
+HINT:  Use OVERRIDING SYSTEM VALUE to override.
+ERROR:  cannot insert a non-DEFAULT value into column "id"
+DETAIL:  Column "id" is an identity column defined as GENERATED ALWAYS.
+HINT:  Use OVERRIDING SYSTEM VALUE to override.
+ERROR:  cannot insert a non-DEFAULT value into column "id"
+DETAIL:  Column "id" is an identity column defined as GENERATED ALWAYS.
+HINT:  Use OVERRIDING SYSTEM VALUE to override.
+ERROR:  cannot insert a non-DEFAULT value into column "id"
+DETAIL:  Column "id" is an identity column defined as GENERATED ALWAYS.
+HINT:  Use OVERRIDING SYSTEM VALUE to override.
+ERROR:  cannot insert a non-DEFAULT value into column "id"
+DETAIL:  Column "id" is an identity column defined as GENERATED ALWAYS.
+HINT:  Use OVERRIDING SYSTEM VALUE to override.
+ERROR:  cannot insert a non-DEFAULT value into column "id"
+DETAIL:  Column "id" is an identity column defined as GENERATED ALWAYS.
+HINT:  Use OVERRIDING SYSTEM VALUE to override.
+ERROR:  cannot insert a non-DEFAULT value into column "id"
+DETAIL:  Column "id" is an identity column defined as GENERATED ALWAYS.
+HINT:  Use OVERRIDING SYSTEM VALUE to override.
+ERROR:  cannot insert a non-DEFAULT value into column "id"
+DETAIL:  Column "id" is an identity column defined as GENERATED ALWAYS.
+HINT:  Use OVERRIDING SYSTEM VALUE to override.
+ERROR:  cannot insert a non-DEFAULT value into column "id"
+DETAIL:  Column "id" is an identity column defined as GENERATED ALWAYS.
+HINT:  Use OVERRIDING SYSTEM VALUE to override.
+ERROR:  cannot insert a non-DEFAULT value into column "id"
+DETAIL:  Column "id" is an identity column defined as GENERATED ALWAYS.
+HINT:  Use OVERRIDING SYSTEM VALUE to override.
+ setval
+--------
+      1
+(1 row)
+
+ setval
+--------
+      5
+(1 row)
+
+ setval
+--------
+      3
+(1 row)
+
+ setval
+--------
+      2
+(1 row)
+
+ERROR:  setval: value 0 is out of bounds for sequence "shipping_companies_id_seq" (1..2147483647)
+ setval
+--------
+     34
+(1 row)
+
+ERROR:  setval: value 0 is out of bounds for sequence "orders_id_seq" (1..2147483647)
+ERROR:  setval: value 0 is out of bounds for sequence "order_items_id_seq" (1..2147483647)
+ERROR:  setval: value 0 is out of bounds for sequence "deliveries_id_seq" (1..2147483647)
+ERROR:  setval: value 0 is out of bounds for sequence "delivery_items_id_seq" (1..2147483647)
+ERROR:  setval: value 0 is out of bounds for sequence "containers_id_seq" (1..2147483647)
+ERROR:  setval: value 0 is out of bounds for sequence "container_documents_id_seq" (1..2147483647)
+ERROR:  setval: value 0 is out of bounds for sequence "payments_id_seq" (1..2147483647)
+ERROR:  setval: value 0 is out of bounds for sequence "shipping_payments_id_seq" (1..2147483647)
+ERROR:  setval: value 0 is out of bounds for sequence "cashbox_transactions_id_seq" (1..2147483647)
+ERROR:  setval: value 0 is out of bounds for sequence "user_categories_id_seq" (1..2147483647)
+root@TPL:~/Asset-Manager#
