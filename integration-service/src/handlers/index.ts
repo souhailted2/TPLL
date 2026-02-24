@@ -1,6 +1,7 @@
 import type { EventType } from "../schema.js";
 import { handlePartReceived } from "./part-received.js";
 import { handlePartUsed } from "./part-used.js";
+import { handleOrderCreated } from "./order-created.js";
 import { createEventLog } from "../storage.js";
 
 type HandlerFn = (eventId: number, payload: any) => Promise<void>;
@@ -8,6 +9,7 @@ type HandlerFn = (eventId: number, payload: any) => Promise<void>;
 const handlers: Record<string, HandlerFn> = {
   PART_RECEIVED: handlePartReceived,
   PART_USED: handlePartUsed,
+  ORDER_CREATED: handleOrderCreated,
 };
 
 export async function dispatchEvent(

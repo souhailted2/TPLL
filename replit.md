@@ -47,7 +47,9 @@ Preferred communication style: Simple, everyday language.
 - **Auth**: API key via `X-API-Key` header (env: `INTEGRATION_API_KEY`)
 - **Database Tables**: `integration_events`, `integration_event_logs` (same PostgreSQL, own tables)
 - **Key Rule**: Never directly modifies other systems' databases — all outbound actions via HTTP API calls (simulated via logs for now)
-- **Supported Events**: PART_RECEIVED, PART_USED, PURCHASE_CREATED, ORDER_CREATED, CONTAINER_ARRIVED
+- **Supported Events**: PART_RECEIVED, PART_USED, ORDER_CREATED (active handlers); PURCHASE_CREATED, CONTAINER_ARRIVED (logged, no handler yet)
+- **Connected to Main App**: Order creation in main app sends ORDER_CREATED events automatically via `server/integration-client.ts`
+- **Admin Monitor**: `/admin/integration` page shows events, stats, and service health
 - **Features**: Idempotency check, in-memory event queue with retry (max 3, exponential backoff), audit logging
 - **Endpoints**:
   - `POST /events` — receive events from external systems
@@ -79,7 +81,7 @@ Preferred communication style: Simple, everyday language.
 │   │   ├── storage.ts        # Event CRUD operations
 │   │   ├── middleware/       # API key auth, request logger
 │   │   ├── routes/           # Event endpoints
-│   │   ├── handlers/         # PART_RECEIVED, PART_USED handlers
+│   │   ├── handlers/         # PART_RECEIVED, PART_USED, ORDER_CREATED handlers
 │   │   └── queue/            # In-memory event queue with retry
 │   ├── package.json
 │   ├── tsconfig.json

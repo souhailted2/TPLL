@@ -22,6 +22,7 @@ import SalesOrders from "@/pages/sales/orders";
 import SalesOrderHistory from "@/pages/sales/history";
 import FactoryMap from "@/pages/factory/map";
 import FactoryLogs from "@/pages/factory/logs";
+import IntegrationMonitor from "@/pages/admin/integration-monitor";
 import { useEffect } from "react";
 
 function Router() {
@@ -67,6 +68,7 @@ function Router() {
           <Route path="/admin/products" component={AdminProducts} />
           <Route path="/admin/orders" component={AdminOrders} />
           <Route path="/admin/production" component={AdminProduction} />
+          <Route path="/admin/integration" component={IntegrationMonitor} />
         </>
       )}
 

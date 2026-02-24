@@ -12,6 +12,7 @@ import fs from "fs";
 
 import { createGzip } from "zlib";
 import archiver from "archiver";
+import { sendIntegrationEvent } from "./integration-client";
 
 export async function registerRoutes(
   httpServer: Server,
@@ -180,6 +181,15 @@ export async function registerRoutes(
       try {
         const userRole = await storage.getUserRole(userId);
         const salesPointName = userRole?.salesPointName || "نقطة بيع";
+
+        sendIntegrationEvent("ORDER_CREATED", "orders-system", {
+          orderId: order.id,
+          salesPointId: userId,
+          salesPointName,
+          itemCount: input.items.length,
+          items: input.items,
+          status: "submitted",
+        }, `order-created-${order.id}`).catch(() => {});
         const adminIds = await storage.getAdminUserIds();
         const receptionIds = await storage.getUserIdsByRole('reception');
         const notifyIds = Array.from(new Set([...adminIds, ...receptionIds]));
@@ -755,6 +765,46 @@ export async function registerRoutes(
     } catch (err) {
       console.error("Error saving push token:", err);
       res.status(500).json({ message: "Failed to save push token" });
+    }
+  });
+
+  const INTEGRATION_URL = process.env.INTEGRATION_SERVICE_URL || "http://localhost:3001";
+  const INT_API_KEY = process.env.INTEGRATION_API_KEY || "";
+
+  app.get("/api/integration/health", requireAdmin, async (_req, res) => {
+    try {
+      const r = await fetch(`${INTEGRATION_URL}/health`, { signal: AbortSignal.timeout(3000) });
+      const data = await r.json();
+      res.json(data);
+    } catch {
+      res.json({ status: "offline" });
+    }
+  });
+
+  app.get("/api/integration/events", requireAdmin, async (req, res) => {
+    try {
+      const qs = new URLSearchParams(req.query as Record<string, string>).toString();
+      const r = await fetch(`${INTEGRATION_URL}/events${qs ? `?${qs}` : ""}`, {
+        headers: { "X-API-Key": INT_API_KEY },
+        signal: AbortSignal.timeout(5000),
+      });
+      const data = await r.json();
+      res.json(data);
+    } catch {
+      res.status(502).json({ error: "Integration service unavailable" });
+    }
+  });
+
+  app.get("/api/integration/stats", requireAdmin, async (_req, res) => {
+    try {
+      const r = await fetch(`${INTEGRATION_URL}/stats`, {
+        headers: { "X-API-Key": INT_API_KEY },
+        signal: AbortSignal.timeout(5000),
+      });
+      const data = await r.json();
+      res.json(data);
+    } catch {
+      res.status(502).json({ error: "Integration service unavailable" });
     }
   });
 

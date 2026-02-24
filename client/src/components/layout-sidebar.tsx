@@ -12,7 +12,8 @@ import {
   BellRing,
   Truck,
   Factory,
-  FileText
+  FileText,
+  Network
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useState } from "react";
@@ -50,6 +51,7 @@ export function Sidebar({ role }: SidebarProps) {
     { href: "/admin/orders", label: "الطلبات", icon: ClipboardList },
     { href: "/admin/products", label: "المنتجات", icon: Package },
     { href: "/admin/production", label: "مراقبة الإنتاج", icon: Factory },
+    { href: "/admin/integration", label: "خدمة التكامل", icon: Network },
   ];
 
   const factoryMonitorLinks = [
