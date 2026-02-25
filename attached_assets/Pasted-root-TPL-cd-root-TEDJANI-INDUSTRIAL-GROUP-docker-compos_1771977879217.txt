@@ -1,0 +1,68 @@
+root@TPL:~# cd /root/TEDJANI-INDUSTRIAL-GROUP && docker compose up -d --build
+yaml: line 3: mapping values are not allowed in this context
+root@TPL:~/TEDJANI-INDUSTRIAL-GROUP# cd /root/TEDJANI-INDUSTRIAL-GROUP && git pull && docker compose up -d --build
+remote: Enumerating objects: 3, done.
+remote: Counting objects: 100% (3/3), done.
+remote: Compressing objects: 100% (3/3), done.
+remote: Total 3 (delta 0), reused 0 (delta 0), pack-reused 0 (from 0)
+Unpacking objects: 100% (3/3), 1.15 KiB | 591.00 KiB/s, done.
+From https://github.com/souhailted2/TEDJANI-INDUSTRIAL-GROUP
+   dca922d..d80eabd  main       -> origin/main
+Updating dca922d..d80eabd
+Fast-forward
+ docker-compose.yml | 67 ++++++++++++++++++++++++++++++++-----------------------------------
+ 1 file changed, 32 insertions(+), 35 deletions(-)
+[+] Building 1.1s (8/13)
+ => [internal] load local bake definitions                                                                         0.0s
+ => => reading from stdin 534B                                                                                     0.0s
+ => [internal] load build definition from Dockerfile                                                               0.0s
+ => => transferring dockerfile: 405B                                                                               0.0s
+ => [internal] load metadata for docker.io/library/node:20-alpine                                                  0.7s
+ => [internal] load .dockerignore                                                                                  0.0s
+ => => transferring context: 123B                                                                                  0.0s
+ => [internal] load build context                                                                                  0.1s
+ => => transferring context: 1.01MB                                                                                0.0s
+ => [builder 1/6] FROM docker.io/library/node:20-alpine@sha256:09e2b3d9726018aecf269bd35325f46bf75046a643a66d2836  0.0s
+ => => resolve docker.io/library/node:20-alpine@sha256:09e2b3d9726018aecf269bd35325f46bf75046a643a66d28360ec71132  0.0s
+ => CACHED [builder 2/6] WORKDIR /app                                                                              0.0s
+ => ERROR [builder 3/6] COPY package.json package-lock.json ./                                                     0.0s
+------
+ > [builder 3/6] COPY package.json package-lock.json ./:
+------
+[+] up 0/1
+ ⠙ Image tedjani-industrial-group-app Building                                                                      1.2s
+Dockerfile:5
+
+--------------------
+
+   3 |       WORKDIR /app
+
+   4 |
+
+   5 | >>>   COPY package.json package-lock.json ./
+
+   6 |       RUN npm ci
+
+   7 |
+
+--------------------
+
+Dockerfile:15
+
+--------------------
+
+  13 |       WORKDIR /app
+
+  14 |
+
+  15 | >>>   COPY package.json package-lock.json ./
+
+  16 |       RUN npm ci --omit=dev
+
+  17 |
+
+--------------------
+
+failed to solve: failed to compute cache key: failed to calculate checksum of ref urzztmewk8ncr32swm8h5jnq7::kw0it26yi2o7om56l4hq3ap1i: "/package-lock.json": not found
+
+root@TPL:~/TEDJANI-INDUSTRIAL-GROUP#
