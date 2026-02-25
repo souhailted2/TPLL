@@ -1,0 +1,115 @@
+root@TPL:~# cd /root/TEDJANI-INDUSTRIAL-GROUP && docker compose up -d --build
+yaml: line 3: mapping values are not allowed in this context
+root@TPL:~/TEDJANI-INDUSTRIAL-GROUP# cd /root/TEDJANI-INDUSTRIAL-GROUP && git pull && docker compose up -d --build
+remote: Enumerating objects: 3, done.
+remote: Counting objects: 100% (3/3), done.
+remote: Compressing objects: 100% (3/3), done.
+remote: Total 3 (delta 0), reused 0 (delta 0), pack-reused 0 (from 0)
+Unpacking objects: 100% (3/3), 1.15 KiB | 591.00 KiB/s, done.
+From https://github.com/souhailted2/TEDJANI-INDUSTRIAL-GROUP
+   dca922d..d80eabd  main       -> origin/main
+Updating dca922d..d80eabd
+Fast-forward
+ docker-compose.yml | 67 ++++++++++++++++++++++++++++++++-----------------------------------
+ 1 file changed, 32 insertions(+), 35 deletions(-)
+[+] Building 1.1s (8/13)
+ => [internal] load local bake definitions                                                                         0.0s
+ => => reading from stdin 534B                                                                                     0.0s
+ => [internal] load build definition from Dockerfile                                                               0.0s
+ => => transferring dockerfile: 405B                                                                               0.0s
+ => [internal] load metadata for docker.io/library/node:20-alpine                                                  0.7s
+ => [internal] load .dockerignore                                                                                  0.0s
+ => => transferring context: 123B                                                                                  0.0s
+ => [internal] load build context                                                                                  0.1s
+ => => transferring context: 1.01MB                                                                                0.0s
+ => [builder 1/6] FROM docker.io/library/node:20-alpine@sha256:09e2b3d9726018aecf269bd35325f46bf75046a643a66d2836  0.0s
+ => => resolve docker.io/library/node:20-alpine@sha256:09e2b3d9726018aecf269bd35325f46bf75046a643a66d28360ec71132  0.0s
+ => CACHED [builder 2/6] WORKDIR /app                                                                              0.0s
+ => ERROR [builder 3/6] COPY package.json package-lock.json ./                                                     0.0s
+------
+ > [builder 3/6] COPY package.json package-lock.json ./:
+------
+[+] up 0/1
+ ⠙ Image tedjani-industrial-group-app Building                                                                      1.2s
+Dockerfile:5
+
+--------------------
+
+   3 |       WORKDIR /app
+
+   4 |
+
+   5 | >>>   COPY package.json package-lock.json ./
+
+   6 |       RUN npm ci
+
+   7 |
+
+--------------------
+
+Dockerfile:15
+
+--------------------
+
+  13 |       WORKDIR /app
+
+  14 |
+
+  15 | >>>   COPY package.json package-lock.json ./
+
+  16 |       RUN npm ci --omit=dev
+
+  17 |
+
+--------------------
+
+failed to solve: failed to compute cache key: failed to calculate checksum of ref urzztmewk8ncr32swm8h5jnq7::kw0it26yi2o7om56l4hq3ap1i: "/package-lock.json": not found
+
+root@TPL:~/TEDJANI-INDUSTRIAL-GROUP# git pull && docker compose up -d --build
+remote: Enumerating objects: 4, done.
+remote: Counting objects: 100% (4/4), done.
+remote: Compressing objects: 100% (3/3), done.
+remote: Total 3 (delta 1), reused 0 (delta 0), pack-reused 0 (from 0)
+Unpacking objects: 100% (3/3), 70.92 KiB | 3.55 MiB/s, done.
+From https://github.com/souhailted2/TEDJANI-INDUSTRIAL-GROUP
+   d80eabd..406d75f  main       -> origin/main
+Updating d80eabd..406d75f
+Fast-forward
+ package-lock.json | 9453 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 9453 insertions(+)
+ create mode 100644 package-lock.json
+[+] Building 79.4s (15/15) FINISHED
+ => [internal] load local bake definitions                                                                         0.0s
+ => => reading from stdin 534B                                                                                     0.0s
+ => [internal] load build definition from Dockerfile                                                               0.0s
+ => => transferring dockerfile: 405B                                                                               0.0s
+ => [internal] load metadata for docker.io/library/node:20-alpine                                                  0.4s
+ => [internal] load .dockerignore                                                                                  0.0s
+ => => transferring context: 123B                                                                                  0.0s
+ => [builder 1/6] FROM docker.io/library/node:20-alpine@sha256:09e2b3d9726018aecf269bd35325f46bf75046a643a66d2836  0.1s
+ => => resolve docker.io/library/node:20-alpine@sha256:09e2b3d9726018aecf269bd35325f46bf75046a643a66d28360ec71132  0.1s
+ => [internal] load build context                                                                                  0.1s
+ => => transferring context: 336.94kB                                                                              0.0s
+ => CACHED [builder 2/6] WORKDIR /app                                                                              0.0s
+ => [builder 3/6] COPY package.json package-lock.json ./                                                           0.1s
+ => [builder 4/6] RUN npm ci                                                                                      25.2s
+ => [runner 4/5] RUN npm ci --omit=dev                                                                            21.6s
+ => [builder 5/6] COPY . .                                                                                         0.5s
+ => [builder 6/6] RUN npm run build                                                                               14.8s
+ => [runner 5/5] COPY --from=builder /app/dist ./dist                                                              0.7s
+ => exporting to image                                                                                            36.5s
+ => => exporting layers                                                                                           28.5s
+ => => exporting manifest sha256:5c14a6706974ea81823625581fbe48d52761bcbec618ed1225301c29726cb6d6                  0.0s
+ => => exporting config sha256:f0c5528df9d4ef54704e73c91d777f4727924fb6cf580a2d066df15ec2f3a40d                    0.0s
+ => => exporting attestation manifest sha256:8d0abc2910be1b577b2588ace1e0a24303ebafef3467b06ec9883d75256337b8      0.0s
+ => => exporting manifest list sha256:a7ba6846ad8822568c66475eaf0b0cd90178dc7365cf0017ff8340293c97a856             0.0s
+ => => naming to docker.io/library/tedjani-industrial-group-app:latest                                             0.0s
+ => => unpacking to docker.io/library/tedjani-industrial-group-app:latest                                          7.8s
+ => resolving provenance for metadata file                                                                         0.0s
+[+] up 5/5
+ ✔ Image tedjani-industrial-group-app         Built                                                                79.5s
+ ✔ Network tedjani-industrial-group_default   Created                                                              0.1s
+ ✔ Volume tedjani-industrial-group_tig_pgdata Created                                                              0.0s
+ ✔ Container tig-management-db                Healthy                                                              6.1s
+ ✔ Container tig-management-app               Created                                                              0.1s
+root@TPL:~/TEDJANI-INDUSTRIAL-GROUP#
