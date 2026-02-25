@@ -1,0 +1,125 @@
+root@TPL:~/TEDJANI-INDUSTRIAL-GROUP# cd /root/TEDJANI-INDUSTRIAL-GROUP && git pull && docker exec -i tig-management-db psql -U tig_user -d tig_management < script/complete_restore.sql && docker restart tig-management-app
+remote: Enumerating objects: 6, done.
+remote: Counting objects: 100% (6/6), done.
+remote: Compressing objects: 100% (4/4), done.
+remote: Total 4 (delta 1), reused 0 (delta 0), pack-reused 0 (from 0)
+Unpacking objects: 100% (4/4), 6.01 KiB | 1.00 MiB/s, done.
+From https://github.com/souhailted2/TEDJANI-INDUSTRIAL-GROUP
+   e8a2875..2fc552e  main       -> origin/main
+Updating e8a2875..2fc552e
+Fast-forward
+ script/complete_restore.sql | 390 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 390 insertions(+)
+ create mode 100644 script/complete_restore.sql
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+INSERT 0 4
+INSERT 0 2
+INSERT 0 5
+INSERT 0 1
+INSERT 0 1
+INSERT 0 63
+INSERT 0 37
+INSERT 0 63
+INSERT 0 18
+INSERT 0 37
+ERROR:  null value in column "name" of relation "containers" violates not-null constraint
+DETAIL:  Failing row contains (1, null, null, 1, null, null, arrived, 2026-02-14 23:25:52.212255, 1305, ,jgvjhg,nvh,, cma, 0, 0).
+ERROR:  insert or update on table "container_documents" violates foreign key constraint "container_documents_container_id_fkey"
+DETAIL:  Key (container_id)=(5) is not present in table "containers".
+INSERT 0 2
+INSERT 0 2
+INSERT 0 12
+INSERT 0 8
+ setval
+--------
+      5
+(1 row)
+
+ setval
+--------
+      9
+(1 row)
+
+ setval
+--------
+      8
+(1 row)
+
+ setval
+--------
+      3
+(1 row)
+
+ setval
+--------
+      1
+(1 row)
+
+ setval
+--------
+    145
+(1 row)
+
+ setval
+--------
+     37
+(1 row)
+
+ setval
+--------
+    119
+(1 row)
+
+ setval
+--------
+     18
+(1 row)
+
+ setval
+--------
+     82
+(1 row)
+
+ setval
+--------
+      1
+(1 row)
+
+ setval
+--------
+      1
+(1 row)
+
+ setval
+--------
+     15
+(1 row)
+
+ setval
+--------
+      4
+(1 row)
+
+ setval
+--------
+     23
+(1 row)
+
+ setval
+--------
+      9
+(1 row)
+
+tig-management-app
+root@TPL:~/TEDJANI-INDUSTRIAL-GROUP#
