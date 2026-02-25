@@ -1,0 +1,108 @@
+root@TPL:~/TEDJANI-INDUSTRIAL-GROUP# git pull
+remote: Enumerating objects: 6, done.
+remote: Counting objects: 100% (6/6), done.
+remote: Compressing objects: 100% (4/4), done.
+remote: Total 4 (delta 1), reused 0 (delta 0), pack-reused 0 (from 0)
+Unpacking objects: 100% (4/4), 1.47 KiB | 377.00 KiB/s, done.
+From https://github.com/souhailted2/TEDJANI-INDUSTRIAL-GROUP
+   406d75f..e8a2875  main       -> origin/main
+Updating 406d75f..e8a2875
+Fast-forward
+ script/init_schema.sql | 206 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 206 insertions(+)
+ create mode 100644 script/init_schema.sql
+root@TPL:~/TEDJANI-INDUSTRIAL-GROUP# docker exec -i tig-management-db psql -U tig_user -d tig_management < script/init_schema.sql
+DO
+DO
+DO
+DO
+DO
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE INDEX
+root@TPL:~/TEDJANI-INDUSTRIAL-GROUP# docker exec -i tig-management-db psql -U tig_user -d tig_management < backup_production.sql
+ERROR:  cannot insert a non-DEFAULT value into column "id"
+DETAIL:  Column "id" is an identity column defined as GENERATED ALWAYS.
+HINT:  Use OVERRIDING SYSTEM VALUE to override.
+ERROR:  cannot insert a non-DEFAULT value into column "id"
+DETAIL:  Column "id" is an identity column defined as GENERATED ALWAYS.
+HINT:  Use OVERRIDING SYSTEM VALUE to override.
+ERROR:  cannot insert a non-DEFAULT value into column "id"
+DETAIL:  Column "id" is an identity column defined as GENERATED ALWAYS.
+HINT:  Use OVERRIDING SYSTEM VALUE to override.
+ERROR:  cannot insert a non-DEFAULT value into column "id"
+DETAIL:  Column "id" is an identity column defined as GENERATED ALWAYS.
+HINT:  Use OVERRIDING SYSTEM VALUE to override.
+ERROR:  cannot insert a non-DEFAULT value into column "id"
+DETAIL:  Column "id" is an identity column defined as GENERATED ALWAYS.
+HINT:  Use OVERRIDING SYSTEM VALUE to override.
+ERROR:  cannot insert a non-DEFAULT value into column "id"
+DETAIL:  Column "id" is an identity column defined as GENERATED ALWAYS.
+HINT:  Use OVERRIDING SYSTEM VALUE to override.
+ERROR:  cannot insert a non-DEFAULT value into column "id"
+DETAIL:  Column "id" is an identity column defined as GENERATED ALWAYS.
+HINT:  Use OVERRIDING SYSTEM VALUE to override.
+ERROR:  cannot insert a non-DEFAULT value into column "id"
+DETAIL:  Column "id" is an identity column defined as GENERATED ALWAYS.
+HINT:  Use OVERRIDING SYSTEM VALUE to override.
+ERROR:  cannot insert a non-DEFAULT value into column "id"
+DETAIL:  Column "id" is an identity column defined as GENERATED ALWAYS.
+HINT:  Use OVERRIDING SYSTEM VALUE to override.
+ERROR:  column "price" of relation "delivery_items" does not exist
+LINE 1: ...ery_items (id, delivery_id, product_id, quantity, price, cur...
+                                                             ^
+ERROR:  column "invoice_number" of relation "containers" does not exist
+LINE 1: INSERT INTO containers (id, invoice_number, container_number...
+                                    ^
+ERROR:  cannot insert a non-DEFAULT value into column "id"
+DETAIL:  Column "id" is an identity column defined as GENERATED ALWAYS.
+HINT:  Use OVERRIDING SYSTEM VALUE to override.
+ERROR:  cannot insert a non-DEFAULT value into column "id"
+DETAIL:  Column "id" is an identity column defined as GENERATED ALWAYS.
+HINT:  Use OVERRIDING SYSTEM VALUE to override.
+ERROR:  cannot insert a non-DEFAULT value into column "id"
+DETAIL:  Column "id" is an identity column defined as GENERATED ALWAYS.
+HINT:  Use OVERRIDING SYSTEM VALUE to override.
+ERROR:  cannot insert a non-DEFAULT value into column "id"
+DETAIL:  Column "id" is an identity column defined as GENERATED ALWAYS.
+HINT:  Use OVERRIDING SYSTEM VALUE to override.
+ERROR:  cannot insert a non-DEFAULT value into column "id"
+DETAIL:  Column "id" is an identity column defined as GENERATED ALWAYS.
+HINT:  Use OVERRIDING SYSTEM VALUE to override.
+ERROR:  setval: value 0 is out of bounds for sequence "users_id_seq" (1..2147483647)
+ERROR:  setval: value 0 is out of bounds for sequence "categories_id_seq" (1..2147483647)
+ERROR:  setval: value 0 is out of bounds for sequence "suppliers_id_seq" (1..2147483647)
+ERROR:  setval: value 0 is out of bounds for sequence "warehouses_id_seq" (1..2147483647)
+ERROR:  setval: value 0 is out of bounds for sequence "shipping_companies_id_seq" (1..2147483647)
+ERROR:  setval: value 0 is out of bounds for sequence "products_id_seq" (1..2147483647)
+ERROR:  setval: value 0 is out of bounds for sequence "orders_id_seq" (1..2147483647)
+ERROR:  setval: value 0 is out of bounds for sequence "order_items_id_seq" (1..2147483647)
+ERROR:  setval: value 0 is out of bounds for sequence "deliveries_id_seq" (1..2147483647)
+ERROR:  setval: value 0 is out of bounds for sequence "delivery_items_id_seq" (1..2147483647)
+ERROR:  setval: value 0 is out of bounds for sequence "containers_id_seq" (1..2147483647)
+ERROR:  setval: value 0 is out of bounds for sequence "container_documents_id_seq" (1..2147483647)
+ERROR:  setval: value 0 is out of bounds for sequence "payments_id_seq" (1..2147483647)
+ERROR:  setval: value 0 is out of bounds for sequence "shipping_payments_id_seq" (1..2147483647)
+ERROR:  setval: value 0 is out of bounds for sequence "cashbox_transactions_id_seq" (1..2147483647)
+ERROR:  setval: value 0 is out of bounds for sequence "user_categories_id_seq" (1..2147483647)
+root@TPL:~/TEDJANI-INDUSTRIAL-GROUP# docker restart tig-management-app
+tig-management-app
+root@TPL:~/TEDJANI-INDUSTRIAL-GROUP#
