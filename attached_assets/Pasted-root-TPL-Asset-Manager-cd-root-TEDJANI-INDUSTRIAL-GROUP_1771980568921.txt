@@ -1,0 +1,44 @@
+root@TPL:~/Asset-Manager# cd /root/TEDJANI-INDUSTRIAL-GROUP && git pull && docker compose down && docker compose build --no-cache && docker compose up -d
+Already up to date.
+[+] down 3/3
+ ✔ Container tig-management-app             Removed                                                                10.3s
+ ✔ Container tig-management-db              Removed                                                                0.3s
+ ✔ Network tedjani-industrial-group_default Removed                                                                0.1s
+[+] Building 87.9s (18/18) FINISHED
+ => [internal] load local bake definitions                                                                         0.0s
+ => => reading from stdin 558B                                                                                     0.0s
+ => [internal] load build definition from Dockerfile                                                               0.0s
+ => => transferring dockerfile: 493B                                                                               0.0s
+ => [internal] load metadata for docker.io/library/node:20-alpine                                                  0.4s
+ => [internal] load .dockerignore                                                                                  0.0s
+ => => transferring context: 123B                                                                                  0.0s
+ => [builder 1/6] FROM docker.io/library/node:20-alpine@sha256:09e2b3d9726018aecf269bd35325f46bf75046a643a66d2836  0.0s
+ => => resolve docker.io/library/node:20-alpine@sha256:09e2b3d9726018aecf269bd35325f46bf75046a643a66d28360ec71132  0.0s
+ => [internal] load build context                                                                                  0.0s
+ => => transferring context: 6.93kB                                                                                0.0s
+ => CACHED [builder 2/6] WORKDIR /app                                                                              0.0s
+ => [builder 3/6] COPY package.json package-lock.json ./                                                           0.1s
+ => [builder 4/6] RUN npm ci                                                                                      17.4s
+ => [builder 5/6] COPY . .                                                                                         0.5s
+ => [builder 6/6] RUN npm run build                                                                               15.2s
+ => [runner 5/9] COPY --from=builder /app/dist ./dist                                                              0.1s
+ => [runner 6/9] COPY drizzle.config.ts ./                                                                         0.5s
+ => [runner 7/9] COPY shared/ ./shared/                                                                            0.0s
+ => [runner 8/9] COPY entrypoint.sh ./                                                                             0.0s
+ => [runner 9/9] RUN chmod +x entrypoint.sh                                                                        0.3s
+ => exporting to image                                                                                            51.3s
+ => => exporting layers                                                                                           40.7s
+ => => exporting manifest sha256:e7db4de7921447459a45c888ff8325e1524ae5d3e2f0fd8596fed1ffebeb7dbd                  0.0s
+ => => exporting config sha256:dff94d62165324cc3db882f8ce9e5ab31842eae6874b3ffb9a40594bdc826301                    0.0s
+ => => exporting attestation manifest sha256:ed6b460725e6d5a956c9a480b6bb7bbb9e30b0153d953b6e68a3943d56b178d0      0.0s
+ => => exporting manifest list sha256:0c6eef1a55dbdc0156371eb901ca72bc09d0c5b4f3ddda6d663f095ec8cd4e74             0.0s
+ => => naming to docker.io/library/tedjani-industrial-group-app:latest                                             0.0s
+ => => unpacking to docker.io/library/tedjani-industrial-group-app:latest                                         10.4s
+ => resolving provenance for metadata file                                                                         0.1s
+[+] build 1/1
+ ✔ Image tedjani-industrial-group-app Built                                                                        88.1s
+[+] up 3/3
+ ✔ Network tedjani-industrial-group_default Created                                                                 0.1s
+ ✔ Container tig-management-db              Healthy                                                                 6.6s
+ ✔ Container tig-management-app             Created                                                                 0.1s
+root@TPL:~/TEDJANI-INDUSTRIAL-GROUP#
