@@ -1,0 +1,254 @@
+root@TPL:~/TEDJANI-INDUSTRIAL-GROUP# docker restart tig-management-app
+tig-management-app
+root@TPL:~/TEDJANI-INDUSTRIAL-GROUP# docker exec -i tig-management-db psql -U tig_user -d tig_management -c "SELECT id, name, username, is_parent FROM companies;"
+                  id                  |         name          |  username  | is_parent
+--------------------------------------+-----------------------+------------+-----------
+ 4ec2d362-e358-4ae5-924c-d9c04c605774 | شركة النور للتجارة    | alnoor     | f
+ 4af9f370-a743-4ed1-8a80-335906149d64 | شركة الأمل للمقاولات  | alamal     | f
+ 29c32ba3-4988-46f1-bc49-4188f0ab8c52 | شركة الرياض للتقنية   | alriyadh   | f
+ c0567f28-be91-4ab6-938a-ee0813f5178f | شركة الخليج للاستثمار | alkhaleej  | f
+ 47e5e976-5573-45bb-9b0d-1c1c24ef784d | شركة جديدة            | newcompany | f
+ df5bee66-0e27-4bb6-93af-f4b107d4cd91 | الشركة الأم المركزية  | admin      | t
+(6 rows)
+
+root@TPL:~/TEDJANI-INDUSTRIAL-GROUP# cd /root/TEDJANI-INDUSTRIAL-GROUP && git pull && docker exec -i tig-management-db psql -U tig_user -d tig_management < script/full_restore.sql && docker restart tig-management-app
+remote: Enumerating objects: 7, done.
+remote: Counting objects: 100% (7/7), done.
+remote: Compressing objects: 100% (4/4), done.
+remote: Total 4 (delta 1), reused 0 (delta 0), pack-reused 0 (from 0)
+Unpacking objects: 100% (4/4), 9.23 KiB | 4.62 MiB/s, done.
+From https://github.com/souhailted2/TEDJANI-INDUSTRIAL-GROUP
+   5febd8f..51c5a33  main       -> origin/main
+Updating 5febd8f..51c5a33
+Fast-forward
+ script/full_restore.sql | 1793 +++++++++++++--------------------------------------------------------------------------
+ 1 file changed, 263 insertions(+), 1530 deletions(-)
+TRUNCATE TABLE
+TRUNCATE TABLE
+TRUNCATE TABLE
+TRUNCATE TABLE
+TRUNCATE TABLE
+TRUNCATE TABLE
+TRUNCATE TABLE
+TRUNCATE TABLE
+TRUNCATE TABLE
+TRUNCATE TABLE
+TRUNCATE TABLE
+TRUNCATE TABLE
+TRUNCATE TABLE
+TRUNCATE TABLE
+TRUNCATE TABLE
+TRUNCATE TABLE
+TRUNCATE TABLE
+TRUNCATE TABLE
+NOTICE:  truncate cascades to table "raw_material_purchases"
+TRUNCATE TABLE
+NOTICE:  truncate cascades to table "attendance_days"
+NOTICE:  truncate cascades to table "attendance_scans"
+NOTICE:  truncate cascades to table "machine_daily_entries"
+NOTICE:  truncate cascades to table "worker_transactions"
+NOTICE:  truncate cascades to table "worker_warnings"
+TRUNCATE TABLE
+NOTICE:  truncate cascades to table "machine_daily_entries"
+NOTICE:  truncate cascades to table "spare_parts_consumption"
+TRUNCATE TABLE
+NOTICE:  truncate cascades to table "spare_parts_consumption"
+NOTICE:  truncate cascades to table "spare_parts_purchases"
+TRUNCATE TABLE
+NOTICE:  truncate cascades to table "project_transactions"
+TRUNCATE TABLE
+NOTICE:  truncate cascades to table "truck_expenses"
+NOTICE:  truncate cascades to table "truck_trips"
+TRUNCATE TABLE
+NOTICE:  truncate cascades to table "debt_payments"
+TRUNCATE TABLE
+NOTICE:  truncate cascades to table "member_transfers"
+TRUNCATE TABLE
+TRUNCATE TABLE
+TRUNCATE TABLE
+TRUNCATE TABLE
+NOTICE:  truncate cascades to table "machines"
+NOTICE:  truncate cascades to table "raw_materials"
+NOTICE:  truncate cascades to table "workers"
+NOTICE:  truncate cascades to table "workshop_expenses"
+NOTICE:  truncate cascades to table "attendance_days"
+NOTICE:  truncate cascades to table "attendance_scans"
+NOTICE:  truncate cascades to table "machine_daily_entries"
+NOTICE:  truncate cascades to table "raw_material_purchases"
+NOTICE:  truncate cascades to table "spare_parts_consumption"
+NOTICE:  truncate cascades to table "worker_transactions"
+NOTICE:  truncate cascades to table "worker_warnings"
+TRUNCATE TABLE
+TRUNCATE TABLE
+NOTICE:  truncate cascades to table "workers"
+NOTICE:  truncate cascades to table "attendance_days"
+NOTICE:  truncate cascades to table "attendance_scans"
+NOTICE:  truncate cascades to table "machine_daily_entries"
+NOTICE:  truncate cascades to table "worker_transactions"
+NOTICE:  truncate cascades to table "worker_warnings"
+TRUNCATE TABLE
+NOTICE:  truncate cascades to table "attendance_days"
+NOTICE:  truncate cascades to table "workers"
+NOTICE:  truncate cascades to table "attendance_scans"
+NOTICE:  truncate cascades to table "machine_daily_entries"
+NOTICE:  truncate cascades to table "worker_transactions"
+NOTICE:  truncate cascades to table "worker_warnings"
+TRUNCATE TABLE
+TRUNCATE TABLE
+NOTICE:  truncate cascades to table "members"
+NOTICE:  truncate cascades to table "member_transfers"
+TRUNCATE TABLE
+TRUNCATE TABLE
+NOTICE:  truncate cascades to table "transfers"
+TRUNCATE TABLE
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+tig-management-app
+root@TPL:~/TEDJANI-INDUSTRIAL-GROUP#
