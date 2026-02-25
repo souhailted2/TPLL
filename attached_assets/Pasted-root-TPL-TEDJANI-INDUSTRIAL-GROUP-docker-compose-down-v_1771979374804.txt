@@ -1,0 +1,41 @@
+root@TPL:~/TEDJANI-INDUSTRIAL-GROUP# docker compose down -v && docker compose up -d --build
+[+] down 4/4
+ ✔ Container tig-management-app               Removed                                                               0.0s
+ ✔ Container tig-management-db                Removed                                                               0.3s
+ ✔ Volume tedjani-industrial-group_tig_pgdata Removed                                                               0.1s
+ ✔ Network tedjani-industrial-group_default   Removed                                                               0.1s
+[+] Building 1.0s (15/15) FINISHED
+ => [internal] load local bake definitions                                                                         0.0s
+ => => reading from stdin 534B                                                                                     0.0s
+ => [internal] load build definition from Dockerfile                                                               0.0s
+ => => transferring dockerfile: 405B                                                                               0.0s
+ => [internal] load metadata for docker.io/library/node:20-alpine                                                  0.4s
+ => [internal] load .dockerignore                                                                                  0.0s
+ => => transferring context: 123B                                                                                  0.0s
+ => [builder 1/6] FROM docker.io/library/node:20-alpine@sha256:09e2b3d9726018aecf269bd35325f46bf75046a643a66d2836  0.0s
+ => => resolve docker.io/library/node:20-alpine@sha256:09e2b3d9726018aecf269bd35325f46bf75046a643a66d28360ec71132  0.0s
+ => [internal] load build context                                                                                  0.0s
+ => => transferring context: 6.90kB                                                                                0.0s
+ => CACHED [builder 2/6] WORKDIR /app                                                                              0.0s
+ => CACHED [builder 3/6] COPY package.json package-lock.json ./                                                    0.0s
+ => CACHED [runner 4/5] RUN npm ci --omit=dev                                                                      0.0s
+ => CACHED [builder 4/6] RUN npm ci                                                                                0.0s
+ => CACHED [builder 5/6] COPY . .                                                                                  0.0s
+ => CACHED [builder 6/6] RUN npm run build                                                                         0.0s
+ => CACHED [runner 5/5] COPY --from=builder /app/dist ./dist                                                       0.0s
+ => exporting to image                                                                                             0.2s
+ => => exporting layers                                                                                            0.0s
+ => => exporting manifest sha256:5a8bd86388ebedeb99a44114d58119571cb8d50c3f014745c767519e4b28b9dc                  0.0s
+ => => exporting config sha256:47d282581d8c34effa31e54fd9faf8c43c0d6630fee3004a6d211ba225f2fa99                    0.0s
+ => => exporting attestation manifest sha256:bc64a962d82ed0e4bba1dcf511ace552f12f991366f44b6365c0e35469a4cf31      0.0s
+ => => exporting manifest list sha256:f679a79e3787c00aa3d83dcdb8861832a57924c12fc5eb8274a4c30ecd1f4cf5             0.0s
+ => => naming to docker.io/library/tedjani-industrial-group-app:latest                                             0.0s
+ => => unpacking to docker.io/library/tedjani-industrial-group-app:latest                                          0.0s
+ => resolving provenance for metadata file                                                                         0.0s
+[+] up 5/5
+ ✔ Image tedjani-industrial-group-app         Built                                                                 1.2s
+ ✔ Network tedjani-industrial-group_default   Created                                                               0.1s
+ ✔ Volume tedjani-industrial-group_tig_pgdata Created                                                               0.0s
+ ✔ Container tig-management-db                Healthy                                                               6.2s
+ ✔ Container tig-management-app               Created                                                               0.2s
+root@TPL:~/TEDJANI-INDUSTRIAL-GROUP#
