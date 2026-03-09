@@ -1,0 +1,171 @@
+root@TPL:~# docker exec tpl-factory-nginx-1 cat /etc/nginx/conf.d/subdomains.conf
+server {
+    listen 80;
+    server_name china.tplorders.com;
+    location / {
+        proxy_pass http://172.17.0.1:3001;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}
+
+server {
+    listen 443 ssl;
+    server_name china.tplorders.com;
+    ssl_certificate /etc/letsencrypt/live/tplorders.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/tplorders.com/privkey.pem;
+    location / {
+        proxy_pass http://172.17.0.1:3001;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}
+
+server {
+    listen 80;
+    server_name tpl.tplorders.com;
+    location / {
+        proxy_pass http://172.17.0.1:3002;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}
+
+server {
+    listen 443 ssl;
+    server_name tpl.tplorders.com;
+    ssl_certificate /etc/letsencrypt/live/tplorders.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/tplorders.com/privkey.pem;
+    location / {
+        proxy_pass http://172.17.0.1:3002;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}server {
+    listen 80;
+    server_name china.tplorders.com;
+    location / {
+        proxy_pass http://172.17.0.1:3001;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}
+
+server {
+    listen 443 ssl;
+    server_name china.tplorders.com;
+    ssl_certificate /etc/letsencrypt/live/tplorders.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/tplorders.com/privkey.pem;
+    location / {
+        proxy_pass http://172.17.0.1:3001;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}
+
+server {
+    listen 80;
+    server_name tpl.tplorders.com;
+    location / {
+        proxy_pass http://172.17.0.1:3002;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}
+
+server {
+    listen 443 ssl;
+    server_name tpl.tplorders.com;
+    ssl_certificate /etc/letsencrypt/live/tplorders.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/tplorders.com/privkey.pem;
+    location / {
+        proxy_pass http://172.17.0.1:3002;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}server {
+    listen 80;
+    server_name china.tplorders.com;
+    location / {
+        proxy_pass http://172.17.0.1:3001;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}
+
+server {
+    listen 443 ssl;
+    server_name china.tplorders.com;
+    ssl_certificate /etc/letsencrypt/live/tplorders.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/tplorders.com/privkey.pem;
+    location / {
+        proxy_pass http://172.17.0.1:3001;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}
+
+server {
+    listen 80;
+    server_name tpl.tplorders.com;
+    location / {
+        proxy_pass http://172.17.0.1:3002;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}
+
+server {
+    listen 443 ssl;
+    server_name tpl.tplorders.com;
+    ssl_certificate /etc/letsencrypt/live/tplorders.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/tplorders.com/privkey.pem;
+    location / {
+        proxy_pass http://172.17.0.1:3002;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}server {
+    listen 80;
+    server_name china.tplorders.com;
+    location / {
+        proxy_pass http://172.17.0.1:3001;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}
+
+server {
+    listen 443 ssl;
+    server_name china.tplorders.com;
+    ssl_certificate /etc/letsencrypt/live/tplorders.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/tplorders.com/privkey.pem;
+    location / {
+        proxy_pass http://172.17.0.1:3001;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}
+
+server {
+    listen 80;
+    server_name tpl.tplorders.com;
+    location / {
+        proxy_pass http://172.17.0.1:3002;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}
+
+server {
+    listen 443 ssl;
+    server_name tpl.tplorders.com;
+    ssl_certificate /etc/letsencrypt/live/tplorders.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/tplorders.com/privkey.pem;
+    location / {
+        proxy_pass http://172.17.0.1:3002;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}
+root@TPL:~#
