@@ -239,7 +239,7 @@ export default function ReceptionOrders() {
         return (
           <div className="pt-2 border-t border-slate-200 mt-2">
             <Button size="sm" disabled={isPending} className="w-full bg-green-600 hover:bg-green-700 text-white gap-1" onClick={() => handleOrderStatusChange(order.id, 'completed')} data-testid={`button-order-complete-${order.id}`}>
-              <CheckCircle className="h-3 w-3" /> إنجاز الطلب
+              <CheckCircle className="h-3 w-3" /> تم الإنجاز
             </Button>
           </div>
         );
