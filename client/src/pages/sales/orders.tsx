@@ -222,7 +222,7 @@ export default function SalesOrders() {
       received: 'تم الاستلام',
     };
     updateStatus.mutate(
-      { orderId, status: newStatus },
+      { id: orderId, status: newStatus },
       {
         onSuccess: () => {
           toast({ title: `تم تغيير حالة الطلب إلى: ${statusLabels[newStatus] || newStatus}` });
