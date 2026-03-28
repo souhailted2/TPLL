@@ -354,6 +354,37 @@ export async function registerRoutes(
     }
   });
 
+  // Direct order status correction (reception + admin — bypasses sequential transition rules)
+  app.patch("/api/orders/:id/status-correct", requireAuth, async (req: any, res) => {
+    try {
+      const { status } = req.body;
+      const orderId = Number(req.params.id);
+      const userId = req.userId;
+      const userRole = await storage.getUserRole(userId);
+      const role = userRole?.role;
+
+      if (!['admin', 'reception'].includes(role || '')) {
+        return res.status(403).json({ message: "ليس لديك صلاحية لتصحيح حالة الطلب" });
+      }
+
+      const validStatuses = ['submitted', 'accepted', 'rejected', 'in_progress', 'completed'];
+      if (!validStatuses.includes(status)) {
+        return res.status(400).json({ message: "حالة غير صالحة" });
+      }
+
+      const existingOrder = await storage.getOrder(orderId);
+      if (!existingOrder) return res.status(404).json({ message: "الطلب غير موجود" });
+
+      const order = await storage.updateOrderStatus(orderId, status, userId);
+      if (!order) return res.status(404).json({ message: "الطلب غير موجود" });
+
+      res.json(order);
+    } catch (err) {
+      console.error("Error correcting order status:", err);
+      res.status(500).json({ message: "فشل تصحيح حالة الطلب" });
+    }
+  });
+
   // Update item status (reception team - per item accept/reject/in_progress/completed)
   app.patch("/api/order-items/:id/status", requireFactory, async (req: any, res) => {
     try {

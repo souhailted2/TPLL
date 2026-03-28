@@ -1,10 +1,11 @@
 import { Sidebar } from "@/components/layout-sidebar";
-import { useOrders, useUpdateOrderStatus, useDismissOrderAlert } from "@/hooks/use-orders";
+import { useOrders, useUpdateOrderStatus, useDismissOrderAlert, useReceptionCorrectOrderStatus } from "@/hooks/use-orders";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Loader2, AlertTriangle, BellOff, PlayCircle, Package, Printer, Search, CheckCircle, XCircle } from "lucide-react";
+import { Loader2, AlertTriangle, BellOff, PlayCircle, Package, Printer, Search, CheckCircle, XCircle, Wrench } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { formatMaghrebDate } from "@/lib/queryClient";
 import { useState, useMemo } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -68,10 +69,12 @@ function countItemsByStatus(orders: any[], statusFilter: string): number {
 export default function ReceptionOrders() {
   const { data: orders, isLoading } = useOrders();
   const updateStatus = useUpdateOrderStatus();
+  const correctStatus = useReceptionCorrectOrderStatus();
   const dismissAlert = useDismissOrderAlert();
   const [activeFilter, setActiveFilter] = useState<string>('pending');
   const [printItem, setPrintItem] = useState<{ order: any; item: any } | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [correctingOrderId, setCorrectingOrderId] = useState<number | null>(null);
   const { toast } = useToast();
 
   const alertCount = useMemo(() => {
@@ -213,6 +216,28 @@ export default function ReceptionOrders() {
     );
   };
 
+  const handleCorrectOrderStatus = (orderId: number, newStatus: string) => {
+    const statusLabels: Record<string, string> = {
+      submitted: 'في الانتظار',
+      accepted: 'مقبول',
+      rejected: 'مرفوض',
+      in_progress: 'قيد الإنجاز',
+      completed: 'منجز',
+    };
+    correctStatus.mutate(
+      { id: orderId, status: newStatus },
+      {
+        onSuccess: () => {
+          setCorrectingOrderId(null);
+          toast({ title: `تم تصحيح حالة الطلب إلى: ${statusLabels[newStatus] || newStatus}` });
+        },
+        onError: (err: any) => {
+          toast({ title: 'خطأ', description: err.message || 'فشل تصحيح الحالة', variant: 'destructive' });
+        },
+      }
+    );
+  };
+
   const renderOrderStatusActions = (order: any) => {
     const isPending = updateStatus.isPending;
     switch (order.status) {
@@ -343,9 +368,57 @@ export default function ReceptionOrders() {
               {hasAlert && <AlertTriangle className="h-4 w-4 text-red-500" />}
               <span className="font-mono font-bold text-lg" data-testid={`text-order-id-${order.id}`}>#{order.id}</span>
             </div>
-            <Badge variant="secondary" className={getStatusColor(order.status)}>
-              {getStatusLabel(order.status)}
-            </Badge>
+            <div className="flex items-center gap-2">
+              {correctingOrderId === order.id ? (
+                <div className="flex items-center gap-1">
+                  <Select
+                    defaultValue={order.status}
+                    onValueChange={(val) => {
+                      if (val !== order.status) {
+                        handleCorrectOrderStatus(order.id, val);
+                      } else {
+                        setCorrectingOrderId(null);
+                      }
+                    }}
+                    disabled={correctStatus.isPending}
+                  >
+                    <SelectTrigger className="h-7 text-xs w-36" data-testid={`select-correct-status-${order.id}`}>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="submitted">في الانتظار</SelectItem>
+                      <SelectItem value="accepted">مقبول</SelectItem>
+                      <SelectItem value="rejected">مرفوض</SelectItem>
+                      <SelectItem value="in_progress">قيد الإنجاز</SelectItem>
+                      <SelectItem value="completed">منجز</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    size="sm" variant="ghost"
+                    className="h-7 px-2 text-slate-400 hover:text-slate-600"
+                    onClick={() => setCorrectingOrderId(null)}
+                    data-testid={`button-cancel-correct-${order.id}`}
+                  >
+                    ✕
+                  </Button>
+                </div>
+              ) : (
+                <>
+                  <Badge variant="secondary" className={getStatusColor(order.status)}>
+                    {getStatusLabel(order.status)}
+                  </Badge>
+                  <Button
+                    size="sm" variant="outline"
+                    className="h-6 px-2 text-[10px] border-amber-300 text-amber-700 hover:bg-amber-50 gap-1"
+                    onClick={() => setCorrectingOrderId(order.id)}
+                    data-testid={`button-correct-order-${order.id}`}
+                  >
+                    <Wrench className="h-3 w-3" />
+                    تصحيح
+                  </Button>
+                </>
+              )}
+            </div>
           </div>
 
           <div className="flex items-center justify-between gap-2 text-sm">
