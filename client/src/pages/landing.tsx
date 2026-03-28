@@ -15,7 +15,6 @@ const ACCOUNTS = [
   { id: "reception2", label: "العيد", role: "reception", group: "factory" },
   { id: "walid", label: "وليد (مراقب الإنتاج)", role: "factory_monitor", group: "factory" },
   { id: "shipping", label: "الشحن", role: "shipping", group: "factory" },
-  { id: "t2t", label: "طارق", role: "sales", group: "sales" },
   { id: "alger", label: "نقطة الجزائر", role: "sales", group: "sales" },
   { id: "eloued", label: "نقطة الوادي", role: "sales", group: "sales" },
   { id: "elma", label: "نقطة العلمة", role: "sales", group: "sales" },

@@ -2,7 +2,7 @@ import { Sidebar } from "@/components/layout-sidebar";
 import { useOrders, useUpdateOrderStatus, useUpdateItemStatus, useDismissOrderAlert } from "@/hooks/use-orders";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Loader2, Check, X as XIcon, AlertTriangle, BellOff, PlayCircle, CheckCircle2, Package, Printer, Search } from "lucide-react";
+import { Loader2, Check, X as XIcon, AlertTriangle, BellOff, PlayCircle, CheckCircle2, Package, Printer, Search, CheckCircle, XCircle, Truck, PackageOpen } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { formatMaghrebDate } from "@/lib/queryClient";
@@ -204,6 +204,79 @@ export default function ReceptionOrders() {
       toast({ title: "تم الإبطال", description: "تم إبطال الإنذار بنجاح" });
     } catch (err: any) {
       toast({ title: "خطأ", description: err.message, variant: "destructive" });
+    }
+  };
+
+  const handleOrderStatusChange = (orderId: number, newStatus: string) => {
+    const statusLabels: Record<string, string> = {
+      accepted: 'مقبول',
+      rejected: 'مرفوض',
+      in_progress: 'قيد الإنجاز',
+      completed: 'منجز',
+      shipped: 'تم الشحن',
+      received: 'تم الاستلام',
+    };
+    updateStatus.mutate(
+      { id: orderId, status: newStatus },
+      {
+        onSuccess: () => {
+          toast({ title: `تم تغيير حالة الطلب إلى: ${statusLabels[newStatus] || newStatus}` });
+        },
+        onError: (err: any) => {
+          toast({ title: 'خطأ', description: err.message || 'فشل تغيير الحالة', variant: 'destructive' });
+        },
+      }
+    );
+  };
+
+  const renderOrderStatusActions = (order: any) => {
+    if (updateStatus.isPending) return null;
+    switch (order.status) {
+      case 'submitted':
+        return (
+          <div className="flex gap-2 pt-2 border-t border-slate-200 mt-2">
+            <Button size="sm" className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white gap-1" onClick={() => handleOrderStatusChange(order.id, 'accepted')} data-testid={`button-order-accept-${order.id}`}>
+              <CheckCircle className="h-3 w-3" /> قبول الطلب
+            </Button>
+            <Button size="sm" variant="outline" className="flex-1 border-red-300 text-red-600 hover:bg-red-50 gap-1" onClick={() => handleOrderStatusChange(order.id, 'rejected')} data-testid={`button-order-reject-${order.id}`}>
+              <XCircle className="h-3 w-3" /> رفض الطلب
+            </Button>
+          </div>
+        );
+      case 'accepted':
+        return (
+          <div className="pt-2 border-t border-slate-200 mt-2">
+            <Button size="sm" className="w-full bg-blue-600 hover:bg-blue-700 text-white gap-1" onClick={() => handleOrderStatusChange(order.id, 'in_progress')} data-testid={`button-order-inprogress-${order.id}`}>
+              <PlayCircle className="h-3 w-3" /> بدء الإنجاز
+            </Button>
+          </div>
+        );
+      case 'in_progress':
+        return (
+          <div className="pt-2 border-t border-slate-200 mt-2">
+            <Button size="sm" className="w-full bg-green-600 hover:bg-green-700 text-white gap-1" onClick={() => handleOrderStatusChange(order.id, 'completed')} data-testid={`button-order-complete-${order.id}`}>
+              <CheckCircle className="h-3 w-3" /> إنجاز الطلب
+            </Button>
+          </div>
+        );
+      case 'completed':
+        return (
+          <div className="pt-2 border-t border-slate-200 mt-2">
+            <Button size="sm" className="w-full bg-purple-600 hover:bg-purple-700 text-white gap-1" onClick={() => handleOrderStatusChange(order.id, 'shipped')} data-testid={`button-order-ship-${order.id}`}>
+              <Truck className="h-3 w-3" /> تم الشحن
+            </Button>
+          </div>
+        );
+      case 'shipped':
+        return (
+          <div className="pt-2 border-t border-slate-200 mt-2">
+            <Button size="sm" className="w-full bg-teal-600 hover:bg-teal-700 text-white gap-1" onClick={() => handleOrderStatusChange(order.id, 'received')} data-testid={`button-order-receive-${order.id}`}>
+              <PackageOpen className="h-3 w-3" /> تم الاستلام
+            </Button>
+          </div>
+        );
+      default:
+        return null;
     }
   };
 
@@ -453,6 +526,7 @@ export default function ReceptionOrders() {
                   );
                 })}
               </div>
+              {renderOrderStatusActions(order)}
             </div>
           )}
         </CardContent>
