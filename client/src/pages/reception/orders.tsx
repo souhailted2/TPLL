@@ -388,7 +388,6 @@ export default function ReceptionOrders() {
                     <SelectContent>
                       <SelectItem value="submitted">في الانتظار</SelectItem>
                       <SelectItem value="accepted">مقبول</SelectItem>
-                      <SelectItem value="rejected">مرفوض</SelectItem>
                       <SelectItem value="in_progress">قيد الإنجاز</SelectItem>
                       <SelectItem value="completed">منجز</SelectItem>
                     </SelectContent>
