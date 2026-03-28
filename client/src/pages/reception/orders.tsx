@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Loader2, Check, X as XIcon, AlertTriangle, BellOff, PlayCircle, CheckCircle2, Package, Printer, Search, CheckCircle, XCircle, Truck, PackageOpen } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { formatMaghrebDate } from "@/lib/queryClient";
 import { useState, useMemo } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -191,6 +192,8 @@ export default function ReceptionOrders() {
         rejected: 'تم رفض الصنف',
         in_progress: 'الصنف قيد الإنجاز',
         completed: 'تم إنجاز الصنف',
+        pending: 'تم إعادة الصنف للانتظار',
+        received: 'تم تسجيل استلام الصنف',
       };
       toast({ title: statusLabels[newStatus] || "تم التحديث" });
     } catch (err: any) {
@@ -522,6 +525,26 @@ export default function ReceptionOrders() {
                         </div>
                       </div>
                       {renderItemActions(item, order)}
+                      <div className="flex items-center gap-2 mt-2 pt-2 border-t border-slate-100">
+                        <span className="text-[10px] text-slate-500 font-medium whitespace-nowrap shrink-0">تصحيح الحالة:</span>
+                        <Select
+                          value={itemSt}
+                          onValueChange={(v) => { if (v !== itemSt) handleItemStatusChange(item.id, v); }}
+                          disabled={updateItemStatus.isPending}
+                        >
+                          <SelectTrigger className="h-7 text-xs flex-1" data-testid={`select-item-status-${item.id}`}>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="pending">في الانتظار</SelectItem>
+                            <SelectItem value="accepted">مقبول</SelectItem>
+                            <SelectItem value="rejected">مرفوض</SelectItem>
+                            <SelectItem value="in_progress">قيد الإنجاز</SelectItem>
+                            <SelectItem value="completed">تم الإنجاز</SelectItem>
+                            <SelectItem value="received">تم الاستلام</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
                   );
                 })}

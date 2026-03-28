@@ -365,7 +365,7 @@ export async function registerRoutes(
       const userRole = await storage.getUserRole(userId);
       const role = userRole?.role;
       
-      if (!['pending', 'accepted', 'rejected', 'in_progress', 'completed'].includes(itemStatus)) {
+      if (!['pending', 'accepted', 'rejected', 'in_progress', 'completed', 'received'].includes(itemStatus)) {
         return res.status(400).json({ message: "حالة غير صالحة" });
       }
 
