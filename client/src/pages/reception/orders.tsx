@@ -230,15 +230,15 @@ export default function ReceptionOrders() {
   };
 
   const renderOrderStatusActions = (order: any) => {
-    if (updateStatus.isPending) return null;
+    const isPending = updateStatus.isPending;
     switch (order.status) {
       case 'submitted':
         return (
           <div className="flex gap-2 pt-2 border-t border-slate-200 mt-2">
-            <Button size="sm" className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white gap-1" onClick={() => handleOrderStatusChange(order.id, 'accepted')} data-testid={`button-order-accept-${order.id}`}>
+            <Button size="sm" disabled={isPending} className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white gap-1" onClick={() => handleOrderStatusChange(order.id, 'accepted')} data-testid={`button-order-accept-${order.id}`}>
               <CheckCircle className="h-3 w-3" /> قبول الطلب
             </Button>
-            <Button size="sm" variant="outline" className="flex-1 border-red-300 text-red-600 hover:bg-red-50 gap-1" onClick={() => handleOrderStatusChange(order.id, 'rejected')} data-testid={`button-order-reject-${order.id}`}>
+            <Button size="sm" disabled={isPending} variant="outline" className="flex-1 border-red-300 text-red-600 hover:bg-red-50 gap-1" onClick={() => handleOrderStatusChange(order.id, 'rejected')} data-testid={`button-order-reject-${order.id}`}>
               <XCircle className="h-3 w-3" /> رفض الطلب
             </Button>
           </div>
@@ -246,7 +246,7 @@ export default function ReceptionOrders() {
       case 'accepted':
         return (
           <div className="pt-2 border-t border-slate-200 mt-2">
-            <Button size="sm" className="w-full bg-blue-600 hover:bg-blue-700 text-white gap-1" onClick={() => handleOrderStatusChange(order.id, 'in_progress')} data-testid={`button-order-inprogress-${order.id}`}>
+            <Button size="sm" disabled={isPending} className="w-full bg-blue-600 hover:bg-blue-700 text-white gap-1" onClick={() => handleOrderStatusChange(order.id, 'in_progress')} data-testid={`button-order-inprogress-${order.id}`}>
               <PlayCircle className="h-3 w-3" /> بدء الإنجاز
             </Button>
           </div>
@@ -254,7 +254,7 @@ export default function ReceptionOrders() {
       case 'in_progress':
         return (
           <div className="pt-2 border-t border-slate-200 mt-2">
-            <Button size="sm" className="w-full bg-green-600 hover:bg-green-700 text-white gap-1" onClick={() => handleOrderStatusChange(order.id, 'completed')} data-testid={`button-order-complete-${order.id}`}>
+            <Button size="sm" disabled={isPending} className="w-full bg-green-600 hover:bg-green-700 text-white gap-1" onClick={() => handleOrderStatusChange(order.id, 'completed')} data-testid={`button-order-complete-${order.id}`}>
               <CheckCircle className="h-3 w-3" /> إنجاز الطلب
             </Button>
           </div>
@@ -262,7 +262,7 @@ export default function ReceptionOrders() {
       case 'completed':
         return (
           <div className="pt-2 border-t border-slate-200 mt-2">
-            <Button size="sm" className="w-full bg-purple-600 hover:bg-purple-700 text-white gap-1" onClick={() => handleOrderStatusChange(order.id, 'shipped')} data-testid={`button-order-ship-${order.id}`}>
+            <Button size="sm" disabled={isPending} className="w-full bg-purple-600 hover:bg-purple-700 text-white gap-1" onClick={() => handleOrderStatusChange(order.id, 'shipped')} data-testid={`button-order-ship-${order.id}`}>
               <Truck className="h-3 w-3" /> تم الشحن
             </Button>
           </div>
@@ -270,7 +270,7 @@ export default function ReceptionOrders() {
       case 'shipped':
         return (
           <div className="pt-2 border-t border-slate-200 mt-2">
-            <Button size="sm" className="w-full bg-teal-600 hover:bg-teal-700 text-white gap-1" onClick={() => handleOrderStatusChange(order.id, 'received')} data-testid={`button-order-receive-${order.id}`}>
+            <Button size="sm" disabled={isPending} className="w-full bg-teal-600 hover:bg-teal-700 text-white gap-1" onClick={() => handleOrderStatusChange(order.id, 'received')} data-testid={`button-order-receive-${order.id}`}>
               <PackageOpen className="h-3 w-3" /> تم الاستلام
             </Button>
           </div>
