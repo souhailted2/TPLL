@@ -1,11 +1,10 @@
 import { Sidebar } from "@/components/layout-sidebar";
-import { useOrders, useUpdateOrderStatus, useUpdateItemStatus, useDismissOrderAlert } from "@/hooks/use-orders";
+import { useOrders, useUpdateOrderStatus, useDismissOrderAlert } from "@/hooks/use-orders";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Loader2, Check, X as XIcon, AlertTriangle, BellOff, PlayCircle, CheckCircle2, Package, Printer, Search, CheckCircle, XCircle, Truck, PackageOpen } from "lucide-react";
+import { Loader2, AlertTriangle, BellOff, PlayCircle, Package, Printer, Search, CheckCircle, XCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { formatMaghrebDate } from "@/lib/queryClient";
 import { useState, useMemo } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -69,7 +68,6 @@ function countItemsByStatus(orders: any[], statusFilter: string): number {
 export default function ReceptionOrders() {
   const { data: orders, isLoading } = useOrders();
   const updateStatus = useUpdateOrderStatus();
-  const updateItemStatus = useUpdateItemStatus();
   const dismissAlert = useDismissOrderAlert();
   const [activeFilter, setActiveFilter] = useState<string>('pending');
   const [printItem, setPrintItem] = useState<{ order: any; item: any } | null>(null);
@@ -184,23 +182,6 @@ export default function ReceptionOrders() {
     });
   }, [filteredData, searchTerm]);
 
-  const handleItemStatusChange = async (itemId: number, newStatus: string) => {
-    try {
-      await updateItemStatus.mutateAsync({ itemId, itemStatus: newStatus });
-      const statusLabels: Record<string, string> = {
-        accepted: 'تم قبول الصنف',
-        rejected: 'تم رفض الصنف',
-        in_progress: 'الصنف قيد الإنجاز',
-        completed: 'تم إنجاز الصنف',
-        pending: 'تم إعادة الصنف للانتظار',
-        received: 'تم تسجيل استلام الصنف',
-      };
-      toast({ title: statusLabels[newStatus] || "تم التحديث" });
-    } catch (err: any) {
-      toast({ title: "خطأ", description: err.message, variant: "destructive" });
-    }
-  };
-
   const handleDismissAlert = async (orderId: number) => {
     try {
       await dismissAlert.mutateAsync(orderId);
@@ -262,22 +243,6 @@ export default function ReceptionOrders() {
             </Button>
           </div>
         );
-      case 'completed':
-        return (
-          <div className="pt-2 border-t border-slate-200 mt-2">
-            <Button size="sm" disabled={isPending} className="w-full bg-purple-600 hover:bg-purple-700 text-white gap-1" onClick={() => handleOrderStatusChange(order.id, 'shipped')} data-testid={`button-order-ship-${order.id}`}>
-              <Truck className="h-3 w-3" /> تم الشحن
-            </Button>
-          </div>
-        );
-      case 'shipped':
-        return (
-          <div className="pt-2 border-t border-slate-200 mt-2">
-            <Button size="sm" disabled={isPending} className="w-full bg-teal-600 hover:bg-teal-700 text-white gap-1" onClick={() => handleOrderStatusChange(order.id, 'received')} data-testid={`button-order-receive-${order.id}`}>
-              <PackageOpen className="h-3 w-3" /> تم الاستلام
-            </Button>
-          </div>
-        );
       default:
         return null;
     }
@@ -331,76 +296,6 @@ export default function ReceptionOrders() {
 
   const getUnitLabel = (unit: string) => {
     return unit === 'bag' ? 'شكارة 25 كغ' : 'قطعة';
-  };
-
-  const renderItemActions = (item: any, order: any) => {
-    const status = item.itemStatus || 'pending';
-    if (order.status === 'shipped' || order.status === 'received') return null;
-
-    return (
-      <div className="flex flex-wrap gap-1 mt-2">
-        {status === 'pending' && (
-          <>
-            <Button
-              size="sm" variant="default"
-              className="text-xs gap-1"
-              onClick={() => handleItemStatusChange(item.id, 'accepted')}
-              disabled={updateItemStatus.isPending}
-              data-testid={`button-accept-item-${item.id}`}
-            >
-              <Check className="h-3 w-3" />
-              قبول
-            </Button>
-            <Button
-              size="sm" variant="destructive"
-              className="text-xs gap-1"
-              onClick={() => handleItemStatusChange(item.id, 'rejected')}
-              disabled={updateItemStatus.isPending}
-              data-testid={`button-reject-item-${item.id}`}
-            >
-              <XIcon className="h-3 w-3" />
-              رفض
-            </Button>
-          </>
-        )}
-        {status === 'accepted' && (
-          <Button
-            size="sm" variant="outline"
-            className="text-xs gap-1"
-            onClick={() => handleItemStatusChange(item.id, 'in_progress')}
-            disabled={updateItemStatus.isPending}
-            data-testid={`button-start-item-${item.id}`}
-          >
-            <PlayCircle className="h-3 w-3" />
-            بدء الإنجاز
-          </Button>
-        )}
-        {status === 'in_progress' && (
-          <Button
-            size="sm" variant="default"
-            className="text-xs gap-1"
-            onClick={() => handleItemStatusChange(item.id, 'completed')}
-            disabled={updateItemStatus.isPending}
-            data-testid={`button-complete-item-${item.id}`}
-          >
-            <CheckCircle2 className="h-3 w-3" />
-            تم الإنجاز
-          </Button>
-        )}
-        {status === 'rejected' && (
-          <Button
-            size="sm" variant="outline"
-            className="text-xs gap-1"
-            onClick={() => handleItemStatusChange(item.id, 'accepted')}
-            disabled={updateItemStatus.isPending}
-            data-testid={`button-reaccept-item-${item.id}`}
-          >
-            <Check className="h-3 w-3" />
-            إعادة القبول
-          </Button>
-        )}
-      </div>
-    );
   };
 
   const renderAlertBanner = (alerts: any[]) => (
@@ -523,27 +418,6 @@ export default function ReceptionOrders() {
                             </Button>
                           )}
                         </div>
-                      </div>
-                      {renderItemActions(item, order)}
-                      <div className="flex items-center gap-2 mt-2 pt-2 border-t border-slate-100">
-                        <span className="text-[10px] text-slate-500 font-medium whitespace-nowrap shrink-0">تصحيح الحالة:</span>
-                        <Select
-                          value={itemSt}
-                          onValueChange={(v) => { if (v !== itemSt) handleItemStatusChange(item.id, v); }}
-                          disabled={updateItemStatus.isPending}
-                        >
-                          <SelectTrigger className="h-7 text-xs flex-1" data-testid={`select-item-status-${item.id}`}>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="pending">في الانتظار</SelectItem>
-                            <SelectItem value="accepted">مقبول</SelectItem>
-                            <SelectItem value="rejected">مرفوض</SelectItem>
-                            <SelectItem value="in_progress">قيد الإنجاز</SelectItem>
-                            <SelectItem value="completed">تم الإنجاز</SelectItem>
-                            <SelectItem value="received">تم الاستلام</SelectItem>
-                          </SelectContent>
-                        </Select>
                       </div>
                     </div>
                   );
