@@ -20,6 +20,7 @@ import { useState } from "react";
 import { Button } from "./ui/button";
 import { NotificationDropdown } from "./notification-dropdown";
 import { usePushNotifications } from "@/hooks/use-push-notifications";
+import { IosInstallBanner } from "./ios-install-banner";
 
 interface SidebarProps {
   role: 'admin' | 'reception' | 'shipping' | 'sales_point' | 'factory_monitor';
@@ -153,48 +154,51 @@ export function Sidebar({ role }: SidebarProps) {
             })}
           </nav>
 
-          <div className="p-4 border-t border-slate-700 bg-slate-900/50">
-            <div className="flex items-center gap-3 mb-4 px-2">
-              <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-xs font-bold">
-                {roleAbbreviations[role] || 'SP'}
+          <div className="border-t border-slate-700 bg-slate-900/50">
+            <IosInstallBanner />
+            <div className="p-4">
+              <div className="flex items-center gap-3 mb-4 px-2">
+                <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-xs font-bold">
+                  {roleAbbreviations[role] || 'SP'}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">{roleLabels[role] || 'نقطة بيع'}</p>
+                </div>
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">{roleLabels[role] || 'نقطة بيع'}</p>
-              </div>
+
+              {isSupported && !isEnabled && (
+                <button 
+                  onClick={() => enableNotifications()}
+                  disabled={isLoading}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-primary/20 text-primary hover:bg-primary/30 transition-colors border border-primary/30 mb-2"
+                  data-testid="button-enable-notifications"
+                >
+                  <Bell className="h-4 w-4" />
+                  <span>{isLoading ? 'جاري التفعيل...' : 'تفعيل الإشعارات'}</span>
+                </button>
+              )}
+
+              {isEnabled && (
+                <button 
+                  onClick={() => enableNotifications()}
+                  disabled={isLoading}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-green-500/20 text-green-400 hover:bg-green-500/30 transition-colors border border-green-500/30 mb-2"
+                  data-testid="button-refresh-push"
+                >
+                  <BellRing className="h-4 w-4" />
+                  <span>{isLoading ? 'جاري التحديث...' : 'الإشعارات مفعّلة ✓'}</span>
+                </button>
+              )}
+
+              <button 
+                onClick={() => logout()}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-slate-800 text-slate-300 hover:bg-red-500/10 hover:text-red-400 transition-colors border border-slate-700 hover:border-red-500/50"
+                data-testid="button-logout"
+              >
+                <LogOut className="h-4 w-4" />
+                <span>تسجيل الخروج</span>
+              </button>
             </div>
-            
-            {isSupported && !isEnabled && (
-              <button 
-                onClick={() => enableNotifications()}
-                disabled={isLoading}
-                className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-primary/20 text-primary hover:bg-primary/30 transition-colors border border-primary/30 mb-2"
-                data-testid="button-enable-notifications"
-              >
-                <Bell className="h-4 w-4" />
-                <span>{isLoading ? 'جاري التفعيل...' : 'تفعيل الإشعارات'}</span>
-              </button>
-            )}
-            
-            {isEnabled && (
-              <button 
-                onClick={() => enableNotifications()}
-                disabled={isLoading}
-                className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-green-500/20 text-green-400 hover:bg-green-500/30 transition-colors border border-green-500/30 mb-2"
-                data-testid="button-refresh-notifications"
-              >
-                <BellRing className="h-4 w-4" />
-                <span>{isLoading ? 'جاري التحديث...' : 'الإشعارات مفعّلة'}</span>
-              </button>
-            )}
-            
-            <button 
-              onClick={() => logout()}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-slate-800 text-slate-300 hover:bg-red-500/10 hover:text-red-400 transition-colors border border-slate-700 hover:border-red-500/50"
-              data-testid="button-logout"
-            >
-              <LogOut className="h-4 w-4" />
-              <span>تسجيل الخروج</span>
-            </button>
           </div>
         </div>
       </aside>
