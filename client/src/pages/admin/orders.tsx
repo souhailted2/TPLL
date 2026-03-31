@@ -2,10 +2,11 @@ import { Sidebar } from "@/components/layout-sidebar";
 import { useOrders, useUpdateOrderStatus, useDismissOrderAlert, useAdminCorrectItem } from "@/hooks/use-orders";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Loader2, Package, User, AlertTriangle, BellOff, Pencil, Save, X as XIcon, Search } from "lucide-react";
+import { Loader2, AlertTriangle, BellOff, Pencil, Save, X as XIcon, Search, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { formatMaghrebDate } from "@/lib/queryClient";
 import { useState, useMemo } from "react";
 import { useSearch, useLocation } from "wouter";
@@ -13,69 +14,36 @@ import { useToast } from "@/hooks/use-toast";
 
 const ALERT_DAYS = 15;
 
-function getOrderAlertInfo(order: any) {
-  if (!order.items || order.items.length === 0) return null;
-  if (order.alertDismissed) return null;
-  if (order.status === 'shipped' || order.status === 'received' || order.status === 'rejected' || order.status === 'submitted') return null;
-
-  const now = new Date();
-  const alerts: { type: 'incomplete' | 'exceeded'; itemName: string; completed: number; requested: number }[] = [];
-
-  for (const item of order.items) {
-    if (item.completedQuantity === item.quantity) continue;
-    const referenceDate = item.lastCompletedUpdate
-      ? new Date(item.lastCompletedUpdate)
-      : (order.createdAt ? new Date(order.createdAt) : null);
-    if (!referenceDate) continue;
-    const daysSince = (now.getTime() - referenceDate.getTime()) / (1000 * 60 * 60 * 24);
-    if (daysSince >= ALERT_DAYS) {
-      if (item.completedQuantity < item.quantity) {
-        alerts.push({ type: 'incomplete', itemName: item.product?.name || '', completed: item.completedQuantity, requested: item.quantity });
-      } else if (item.completedQuantity > item.quantity) {
-        alerts.push({ type: 'exceeded', itemName: item.product?.name || '', completed: item.completedQuantity, requested: item.quantity });
-      }
-    }
-  }
-  return alerts.length > 0 ? alerts : null;
+function isItemAlert(item: any, order: any): boolean {
+  if (order.alertDismissed) return false;
+  if (['shipped', 'received', 'rejected', 'submitted'].includes(order.status)) return false;
+  if (item.completedQuantity === item.quantity) return false;
+  const referenceDate = item.lastCompletedUpdate
+    ? new Date(item.lastCompletedUpdate)
+    : (order.createdAt ? new Date(order.createdAt) : null);
+  if (!referenceDate) return false;
+  const daysSince = (new Date().getTime() - referenceDate.getTime()) / (1000 * 60 * 60 * 24);
+  return daysSince >= ALERT_DAYS;
 }
 
-function getItemStatusFilter(itemStatus: string): string {
-  switch (itemStatus) {
-    case 'pending':
-    case 'accepted': return 'pending';
-    case 'in_progress': return 'in_progress';
-    case 'completed': return 'completed';
-    case 'rejected': return 'rejected';
-    default: return 'pending';
-  }
-}
-
-function filterItemsByStatus(items: any[], filter: string): any[] {
-  switch (filter) {
-    case 'pending':
-      return items.filter((i: any) => ['pending', 'accepted'].includes(i.itemStatus || 'pending'));
-    case 'in_progress':
-      return items.filter((i: any) => (i.itemStatus || 'pending') === 'in_progress');
-    case 'completed':
-      return items.filter((i: any) => (i.itemStatus || 'pending') === 'completed');
-    case 'rejected':
-      return items.filter((i: any) => (i.itemStatus || 'pending') === 'rejected');
-    case 'received':
-      return items.filter((i: any) => (i.itemStatus || 'pending') === 'received');
-    default:
-      return items;
-  }
-}
-
-function countItemsByStatus(orders: any[], statusFilter: string): number {
-  if (!orders) return 0;
-  let count = 0;
-  for (const order of orders) {
-    if (!order.items) continue;
-    count += filterItemsByStatus(order.items, statusFilter).length;
-  }
-  return count;
-}
+const adminOrderTransitions: Record<string, { label: string; target: string; color: string }[]> = {
+  submitted: [
+    { label: 'مقبول', target: 'accepted', color: 'text-emerald-700' },
+    { label: 'مرفوض', target: 'rejected', color: 'text-red-700' },
+  ],
+  accepted: [
+    { label: 'قيد الإنجاز', target: 'in_progress', color: 'text-blue-700' },
+  ],
+  in_progress: [
+    { label: 'منجز', target: 'completed', color: 'text-green-700' },
+  ],
+  completed: [
+    { label: 'تم الشحن', target: 'shipped', color: 'text-purple-700' },
+  ],
+  shipped: [
+    { label: 'تم الاستلام', target: 'received', color: 'text-teal-700' },
+  ],
+};
 
 export default function AdminOrders() {
   const { data: orders, isLoading } = useOrders();
@@ -85,7 +53,7 @@ export default function AdminOrders() {
   const searchString = useSearch();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  
+
   const searchParams = new URLSearchParams(searchString);
   const filterParam = searchParams.get('filter');
   const [activeFilter, setActiveFilter] = useState<string>(filterParam || 'all');
@@ -93,123 +61,17 @@ export default function AdminOrders() {
   const [editValues, setEditValues] = useState<{ completedQuantity: number; shippedQuantity: number; itemStatus: string }>({ completedQuantity: 0, shippedQuantity: 0, itemStatus: 'pending' });
   const [searchTerm, setSearchTerm] = useState("");
 
-  const alertCount = useMemo(() => {
-    if (!orders) return 0;
-    return orders.filter((o: any) => getOrderAlertInfo(o) !== null).length;
-  }, [orders]);
-
-  const isItemLevelFilter = ['in_progress', 'completed', 'rejected', 'received'].includes(activeFilter);
-
-  const filteredData = useMemo(() => {
-    if (!orders) return [];
-
-    switch (activeFilter) {
-      case 'pending': {
-        const result: any[] = [];
-        for (const order of orders) {
-          if (['shipped', 'received', 'rejected'].includes(order.status)) continue;
-          const filtered = filterItemsByStatus(order.items || [], 'pending');
-          if (filtered.length > 0) {
-            result.push({ ...order, _filteredItems: filtered });
-          }
-        }
-        return result;
-      }
-
-      case 'in_progress': {
-        const result: any[] = [];
-        for (const order of orders) {
-          if (['shipped', 'received', 'rejected', 'submitted'].includes(order.status)) continue;
-          const filtered = filterItemsByStatus(order.items || [], 'in_progress');
-          if (filtered.length > 0) {
-            result.push({ ...order, _filteredItems: filtered });
-          }
-        }
-        return result;
-      }
-
-      case 'completed': {
-        const result: any[] = [];
-        for (const order of orders) {
-          if (['shipped', 'received', 'rejected', 'submitted'].includes(order.status)) continue;
-          const filtered = filterItemsByStatus(order.items || [], 'completed');
-          if (filtered.length > 0) {
-            result.push({ ...order, _filteredItems: filtered });
-          }
-        }
-        return result;
-      }
-
-      case 'shipped': {
-        const result: any[] = [];
-        for (const order of orders) {
-          if (order.status === 'shipped') {
-            result.push({ ...order });
-            continue;
-          }
-          const shippedItems = (order.items || []).filter((i: any) => (i.shippedQuantity || 0) > 0);
-          if (shippedItems.length > 0) {
-            result.push({ ...order, _filteredItems: shippedItems });
-          }
-        }
-        return result;
-      }
-
-      case 'received': {
-        const result: any[] = [];
-        for (const order of orders) {
-          if (order.status === 'received') {
-            result.push({ ...order });
-            continue;
-          }
-          const receivedItems = filterItemsByStatus(order.items || [], 'received');
-          if (receivedItems.length > 0) {
-            result.push({ ...order, _filteredItems: receivedItems });
-          }
-        }
-        return result;
-      }
-
-      case 'rejected': {
-        const result: any[] = [];
-        for (const order of orders) {
-          const filtered = filterItemsByStatus(order.items || [], 'rejected');
-          if (filtered.length > 0) {
-            result.push({ ...order, _filteredItems: filtered });
-          }
-        }
-        const rejectedOrders = orders.filter((o: any) => o.status === 'rejected' && !result.find(r => r.id === o.id));
-        return [...result, ...rejectedOrders];
-      }
-
-      case 'alerts':
-        return orders.filter((o: any) => getOrderAlertInfo(o) !== null).map((o: any) => ({ ...o }));
-
-      default:
-        return orders.map((o: any) => ({ ...o }));
-    }
-  }, [orders, activeFilter]);
-
-  const searchFilteredData = useMemo(() => {
-    if (!searchTerm.trim()) return filteredData;
-    const term = searchTerm.trim().toLowerCase();
-    return filteredData.filter((order: any) => {
-      if (String(order.id).includes(term)) return true;
-      if ((order.salesPoint?.name || '').toLowerCase().includes(term)) return true;
-      const allItems = order.items || [];
-      return allItems.some((item: any) =>
-        (item.product?.name || '').toLowerCase().includes(term) ||
-        (item.product?.sku || '').toLowerCase().includes(term)
-      );
-    });
-  }, [filteredData, searchTerm]);
-  
-  const handleFilterChange = (filter: string) => {
-    setActiveFilter(filter);
-    if (filter === 'all') {
-      setLocation('/admin/orders');
-    } else {
-      setLocation(`/admin/orders?filter=${filter}`);
+  const handleOrderStatusChange = async (orderId: number, newStatus: string) => {
+    try {
+      await updateStatus.mutateAsync({ id: orderId, status: newStatus });
+      const labels: Record<string, string> = {
+        accepted: 'تم قبول الطلب', rejected: 'تم رفض الطلب',
+        in_progress: 'الطلب قيد الإنجاز', completed: 'تم إنجاز الطلب',
+        shipped: 'تم شحن الطلب', received: 'تم استلام الطلب',
+      };
+      toast({ title: labels[newStatus] || 'تم تحديث حالة الطلب' });
+    } catch (err: any) {
+      toast({ title: 'خطأ', description: err.message, variant: 'destructive' });
     }
   };
 
@@ -222,8 +84,14 @@ export default function AdminOrders() {
     }
   };
 
+  const handleFilterChange = (filter: string) => {
+    setActiveFilter(filter);
+    if (filter === 'all') setLocation('/admin/orders');
+    else setLocation(`/admin/orders?filter=${filter}`);
+  };
+
   const getStatusColor = (status: string) => {
-    switch(status) {
+    switch (status) {
       case 'accepted': return 'bg-emerald-100 text-emerald-800';
       case 'in_progress': return 'bg-blue-100 text-blue-800';
       case 'completed': return 'bg-green-100 text-green-800';
@@ -235,7 +103,7 @@ export default function AdminOrders() {
   };
 
   const getStatusLabel = (status: string) => {
-    switch(status) {
+    switch (status) {
       case 'accepted': return 'مقبول';
       case 'rejected': return 'مرفوض';
       case 'in_progress': return 'قيد الإنجاز';
@@ -246,12 +114,8 @@ export default function AdminOrders() {
     }
   };
 
-  const getUnitLabel = (unit: string) => {
-    return unit === 'bag' ? 'شكارة 25 كغ' : 'قطعة';
-  };
-
   const getItemStatusColor = (status: string) => {
-    switch(status) {
+    switch (status) {
       case 'accepted': return 'bg-emerald-100 text-emerald-800';
       case 'in_progress': return 'bg-blue-100 text-blue-800';
       case 'completed': return 'bg-green-100 text-green-800';
@@ -262,7 +126,7 @@ export default function AdminOrders() {
   };
 
   const getItemStatusLabel = (status: string) => {
-    switch(status) {
+    switch (status) {
       case 'accepted': return 'مقبول';
       case 'in_progress': return 'قيد الإنجاز';
       case 'completed': return 'تم الإنجاز';
@@ -272,222 +136,305 @@ export default function AdminOrders() {
     }
   };
 
-  const renderOrderCard = (order: any) => {
-    const alerts = getOrderAlertInfo(order);
-    const hasAlert = alerts !== null;
-    const displayItems = order._filteredItems || order.items || [];
+  const getUnitLabel = (unit: string) => unit === 'bag' ? 'شكارة 25 كغ' : 'قطعة';
+
+  const allFlatItems = useMemo(() => {
+    if (!orders) return [];
+    const flat: { item: any; order: any }[] = [];
+    for (const order of orders) {
+      for (const item of order.items || []) {
+        flat.push({ item, order });
+      }
+    }
+    return flat;
+  }, [orders]);
+
+  const filteredFlatItems = useMemo(() => {
+    if (!allFlatItems.length) return [];
+    switch (activeFilter) {
+      case 'pending':
+        return allFlatItems.filter(({ item, order }) =>
+          !['shipped', 'received', 'rejected'].includes(order.status) &&
+          ['pending', 'accepted'].includes(item.itemStatus || 'pending')
+        );
+      case 'in_progress':
+        return allFlatItems.filter(({ item, order }) =>
+          !['shipped', 'received', 'rejected', 'submitted'].includes(order.status) &&
+          (item.itemStatus || 'pending') === 'in_progress'
+        );
+      case 'completed':
+        return allFlatItems.filter(({ item, order }) =>
+          !['shipped', 'received', 'rejected', 'submitted'].includes(order.status) &&
+          (item.itemStatus || 'pending') === 'completed'
+        );
+      case 'shipped':
+        return allFlatItems.filter(({ item, order }) =>
+          order.status === 'shipped' || (item.shippedQuantity || 0) > 0
+        );
+      case 'received':
+        return allFlatItems.filter(({ item, order }) =>
+          order.status === 'received' || (item.itemStatus || 'pending') === 'received'
+        );
+      case 'rejected':
+        return allFlatItems.filter(({ item, order }) =>
+          (item.itemStatus || 'pending') === 'rejected' || order.status === 'rejected'
+        );
+      case 'alerts':
+        return allFlatItems.filter(({ item, order }) => isItemAlert(item, order));
+      default:
+        return allFlatItems;
+    }
+  }, [allFlatItems, activeFilter]);
+
+  const searchFilteredItems = useMemo(() => {
+    if (!searchTerm.trim()) return filteredFlatItems;
+    const term = searchTerm.trim().toLowerCase();
+    return filteredFlatItems.filter(({ item, order }) =>
+      String(order.id).includes(term) ||
+      (order.salesPoint?.salesPointName || order.salesPoint?.firstName || '').toLowerCase().includes(term) ||
+      (item.product?.name || '').toLowerCase().includes(term) ||
+      (item.product?.sku || '').toLowerCase().includes(term)
+    );
+  }, [filteredFlatItems, searchTerm]);
+
+  const countByFilter = (filter: string) => {
+    if (!allFlatItems.length) return 0;
+    switch (filter) {
+      case 'pending': return allFlatItems.filter(({ item, order }) =>
+        !['shipped', 'received', 'rejected'].includes(order.status) &&
+        ['pending', 'accepted'].includes(item.itemStatus || 'pending')
+      ).length;
+      case 'in_progress': return allFlatItems.filter(({ item, order }) =>
+        !['shipped', 'received', 'rejected', 'submitted'].includes(order.status) &&
+        (item.itemStatus || 'pending') === 'in_progress'
+      ).length;
+      case 'completed': return allFlatItems.filter(({ item, order }) =>
+        !['shipped', 'received', 'rejected', 'submitted'].includes(order.status) &&
+        (item.itemStatus || 'pending') === 'completed'
+      ).length;
+      case 'shipped': return allFlatItems.filter(({ item, order }) =>
+        order.status === 'shipped' || (item.shippedQuantity || 0) > 0
+      ).length;
+      case 'received': return allFlatItems.filter(({ item, order }) =>
+        order.status === 'received' || (item.itemStatus || 'pending') === 'received'
+      ).length;
+      case 'rejected': return allFlatItems.filter(({ item, order }) =>
+        (item.itemStatus || 'pending') === 'rejected' || order.status === 'rejected'
+      ).length;
+      case 'alerts': return allFlatItems.filter(({ item, order }) => isItemAlert(item, order)).length;
+      default: return allFlatItems.length;
+    }
+  };
+
+  const alertCount = useMemo(() => countByFilter('alerts'), [allFlatItems]);
+
+  const renderItemCard = ({ item, order }: { item: any; order: any }) => {
+    const itemSt = item.itemStatus || 'pending';
+    const hasAlert = isItemAlert(item, order);
+    const orderTransitions = adminOrderTransitions[order.status] || [];
+    const isEditing = editingItem === item.id;
 
     return (
-      <Card key={order.id} className={hasAlert ? 'border-red-200' : ''} data-testid={`card-order-${order.id}`}>
+      <Card
+        key={`${order.id}-${item.id}`}
+        className={hasAlert ? 'border-red-300' : ''}
+        data-testid={`card-item-${item.id}`}
+      >
         <CardContent className="p-4 space-y-3">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              {hasAlert && <AlertTriangle className="h-4 w-4 text-red-500" />}
-              <span className="font-mono font-bold text-lg" data-testid={`text-order-id-${order.id}`}>#{order.id}</span>
+          <div className="flex items-center justify-between gap-2 pb-2 border-b border-slate-100">
+            <div className="flex items-center gap-2 flex-wrap">
+              {hasAlert && <AlertTriangle className="h-3.5 w-3.5 text-red-500 shrink-0" />}
+              <span className="font-mono text-xs font-bold text-slate-500" data-testid={`text-order-ref-${item.id}`}>
+                طلب #{order.id}
+              </span>
+              <span className="text-xs text-slate-400">•</span>
+              <span className="text-xs font-medium text-slate-600" data-testid={`text-sales-point-${item.id}`}>
+                {order.salesPoint?.salesPointName || order.salesPoint?.firstName}
+              </span>
+              <span className="text-xs text-slate-400">•</span>
+              <span className="text-xs text-slate-400">{order.createdAt && formatMaghrebDate(order.createdAt)}</span>
             </div>
-            <Badge variant="secondary" className={getStatusColor(order.status)}>
-              {getStatusLabel(order.status)}
-            </Badge>
-          </div>
-
-          <div className="flex items-center justify-between gap-2 text-sm">
-            <span className="font-bold text-slate-700" data-testid={`text-sales-point-${order.id}`}>
-              {order.salesPoint?.salesPointName || order.salesPoint?.firstName}
-            </span>
-            <span className="text-xs text-slate-400">
-              {order.createdAt && formatMaghrebDate(order.createdAt)}
-            </span>
-          </div>
-
-          {order.statusChanger?.firstName && (
-            <div className="flex items-center gap-2 text-xs text-slate-500">
-              <User className="h-3 w-3" />
-              <span>تغيير: {order.statusChanger.firstName}</span>
-              {order.statusChangedAt && (
-                <span className="text-slate-400">({formatMaghrebDate(order.statusChangedAt)})</span>
+            <div className="flex items-center gap-1 shrink-0">
+              <Badge variant="secondary" className={`text-[10px] ${getStatusColor(order.status)}`}>
+                {getStatusLabel(order.status)}
+              </Badge>
+              {orderTransitions.length > 0 && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      size="sm" variant="ghost"
+                      className="h-6 w-6 p-0 text-slate-400 hover:text-slate-700"
+                      disabled={updateStatus.isPending}
+                      data-testid={`button-order-status-${order.id}`}
+                    >
+                      <ChevronDown className="h-3 w-3" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="min-w-[160px]">
+                    <DropdownMenuLabel className="text-[10px] text-slate-500">تغيير حالة الطلب</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    {orderTransitions.map((opt) => (
+                      <DropdownMenuItem
+                        key={opt.target}
+                        className={`text-xs gap-2 cursor-pointer font-medium ${opt.color}`}
+                        onClick={() => handleOrderStatusChange(order.id, opt.target)}
+                        data-testid={`menu-order-status-${order.id}-${opt.target}`}
+                      >
+                        {opt.label}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
               )}
             </div>
-          )}
+          </div>
 
-          {hasAlert && (
+          <div className="flex items-start justify-between gap-2">
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold text-sm break-words" data-testid={`text-item-name-${item.id}`}>
+                {item.product?.name}
+              </p>
+              <p className="text-[10px] text-slate-400">{item.product?.sku}</p>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <Badge variant={item.unit === 'bag' ? 'default' : 'outline'} className="text-[10px]">
+                {getUnitLabel(item.unit || 'piece')}
+              </Badge>
+              <span className="font-bold text-lg text-primary" data-testid={`text-item-qty-${item.id}`}>
+                {item.quantity}
+              </span>
+            </div>
+          </div>
+
+          {!isEditing && (
             <>
-              <div className="bg-red-50 border border-red-200 rounded-lg px-3 py-2">
-                <div className="flex items-start gap-2">
-                  <AlertTriangle className="h-4 w-4 text-red-600 mt-0.5 flex-shrink-0" />
-                  <div className="flex-1 space-y-1">
-                    <p className="font-bold text-red-800 text-xs">تنبيه: مشاكل في الإنجاز</p>
-                    {alerts.map((alert, idx) => (
-                      <div key={idx} className="flex flex-wrap items-center gap-1 text-xs">
-                        <Badge variant="secondary" className={`text-[10px] px-1.5 py-0 ${alert.type === 'incomplete' ? 'bg-orange-100 text-orange-800' : 'bg-red-100 text-red-800'}`}>
-                          {alert.type === 'incomplete' ? 'غير مكتمل' : 'تجاوز'}
-                        </Badge>
-                        <span className="text-red-700">
-                          <span className="font-medium">{alert.itemName}</span> — {alert.completed}/{alert.requested}
-                        </span>
-                      </div>
-                    ))}
-                    <p className="text-[10px] text-red-500">مر أكثر من {ALERT_DAYS} يوم منذ آخر تحديث</p>
-                  </div>
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <Badge variant="secondary" className={`text-[10px] ${getItemStatusColor(itemSt)}`}>
+                  {getItemStatusLabel(itemSt)}
+                </Badge>
+                <div className="flex items-center gap-3 text-xs">
+                  <span className="text-slate-500">المطلوب: <span className="font-bold">{item.quantity}</span></span>
+                  <span className="text-slate-500">المنجز: <span className={`font-bold ${hasAlert ? 'text-red-600' : 'text-green-700'}`}>{item.completedQuantity || 0}</span></span>
+                  {(item.shippedQuantity || 0) > 0 && (
+                    <span className="text-slate-500">المشحون: <span className="font-bold text-purple-700">{item.shippedQuantity}</span></span>
+                  )}
                 </div>
               </div>
-              <Button
-                size="sm" variant="outline"
-                className="border-red-300 text-red-600 gap-1 text-xs"
-                onClick={() => handleDismissAlert(order.id)}
-                disabled={dismissAlert.isPending}
-                data-testid={`button-dismiss-alert-${order.id}`}
-              >
-                <BellOff className="h-3 w-3" />
-                إبطال الإنذار
-              </Button>
+
+              {hasAlert && (
+                <div className="flex items-center justify-between bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                  <div className="flex items-center gap-2">
+                    <AlertTriangle className="h-3.5 w-3.5 text-red-600 shrink-0" />
+                    <p className="text-xs text-red-700">
+                      {item.completedQuantity < item.quantity ? 'إنجاز غير مكتمل' : 'تجاوز الكمية'} — منذ أكثر من {ALERT_DAYS} يوم
+                    </p>
+                  </div>
+                  <Button
+                    size="sm" variant="ghost"
+                    className="h-6 text-[10px] text-red-500 px-2"
+                    onClick={() => handleDismissAlert(order.id)}
+                    disabled={dismissAlert.isPending}
+                    data-testid={`button-dismiss-alert-${item.id}`}
+                  >
+                    <BellOff className="h-3 w-3 ml-1" />
+                    إبطال
+                  </Button>
+                </div>
+              )}
+
+              <div className="pt-1 border-t border-slate-100 flex justify-end">
+                <Button
+                  size="sm" variant="outline"
+                  className="gap-1 text-[10px] border-orange-300 text-orange-700"
+                  onClick={() => {
+                    setEditingItem(item.id);
+                    setEditValues({
+                      completedQuantity: item.completedQuantity || 0,
+                      shippedQuantity: item.shippedQuantity || 0,
+                      itemStatus: itemSt,
+                    });
+                  }}
+                  data-testid={`button-edit-item-${item.id}`}
+                >
+                  <Pencil className="h-3 w-3" />
+                  تصحيح
+                </Button>
+              </div>
             </>
           )}
 
-          {displayItems.length > 0 && (
-            <div className="space-y-2 pt-3 border-t border-slate-100">
-              <div className="flex items-center gap-2 mb-2">
-                <Package className="h-4 w-4 text-slate-500" />
-                <p className="font-bold text-sm">{displayItems.length} أصناف</p>
+          {isEditing && (
+            <div className="pt-2 border-t border-orange-200 bg-orange-50/50 rounded-lg p-3 space-y-3">
+              <p className="text-xs font-bold text-orange-800">تصحيح الصنف</p>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label className="text-[10px] text-slate-500 block mb-1">الحالة</label>
+                  <Select value={editValues.itemStatus} onValueChange={(v) => setEditValues(prev => ({ ...prev, itemStatus: v }))}>
+                    <SelectTrigger className="text-xs" data-testid={`select-status-${item.id}`}>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pending">في الانتظار</SelectItem>
+                      <SelectItem value="accepted">مقبول</SelectItem>
+                      <SelectItem value="in_progress">قيد الإنجاز</SelectItem>
+                      <SelectItem value="completed">منجز</SelectItem>
+                      <SelectItem value="rejected">مرفوض</SelectItem>
+                      <SelectItem value="received">تم الاستلام</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="text-[10px] text-slate-500 block mb-1">الكمية المستلمة من المصنع</label>
+                  <Input
+                    type="number" min={0}
+                    value={editValues.completedQuantity}
+                    onChange={(e) => setEditValues(prev => ({ ...prev, completedQuantity: Number(e.target.value) }))}
+                    className="text-xs"
+                    data-testid={`input-completed-${item.id}`}
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] text-slate-500 block mb-1">الكمية المشحونة</label>
+                  <Input
+                    type="number" min={0}
+                    value={editValues.shippedQuantity}
+                    onChange={(e) => setEditValues(prev => ({ ...prev, shippedQuantity: Number(e.target.value) }))}
+                    className="text-xs"
+                    data-testid={`input-shipped-${item.id}`}
+                  />
+                </div>
               </div>
-              <div className="grid gap-2">
-                {displayItems.map((item: any, idx: number) => {
-                  const itemSt = item.itemStatus || 'pending';
-                  const itemRefDate = item.lastCompletedUpdate ? new Date(item.lastCompletedUpdate) : (order.createdAt ? new Date(order.createdAt) : null);
-                  const itemHasIssue = itemRefDate && 
-                    ((new Date().getTime() - itemRefDate.getTime()) / (1000 * 60 * 60 * 24) >= ALERT_DAYS) &&
-                    item.completedQuantity !== item.quantity && !order.alertDismissed;
-                  const isEditing = editingItem === item.id;
-
-                  return (
-                    <div key={idx} className={`p-3 rounded-lg border ${itemHasIssue ? 'bg-red-50 border-red-200' : 'bg-white'}`} data-testid={`item-card-${item.id}`}>
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-sm break-words">{item.product?.name}</p>
-                          <p className="text-[10px] text-slate-400">{item.product?.sku}</p>
-                        </div>
-                        <div className="flex items-center gap-2 shrink-0">
-                          <Badge variant="secondary" className={`text-[10px] ${getItemStatusColor(itemSt)}`}>
-                            {getItemStatusLabel(itemSt)}
-                          </Badge>
-                          <Badge variant={item.unit === 'bag' ? 'default' : 'outline'} className="text-[10px]">
-                            {getUnitLabel(item.unit || 'piece')}
-                          </Badge>
-                        </div>
-                      </div>
-
-                      {isEditing ? (
-                        <div className="mt-2 pt-2 border-t border-orange-200 bg-white rounded-lg p-3 space-y-3">
-                          <p className="text-xs font-bold text-orange-800">تصحيح الصنف</p>
-                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                            <div>
-                              <label className="text-[10px] text-slate-500 block mb-1">الحالة</label>
-                              <Select value={editValues.itemStatus} onValueChange={(v) => setEditValues(prev => ({ ...prev, itemStatus: v }))}>
-                                <SelectTrigger className="text-xs" data-testid={`select-status-${item.id}`}>
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="pending">في الانتظار</SelectItem>
-                                  <SelectItem value="accepted">مقبول</SelectItem>
-                                  <SelectItem value="in_progress">قيد الإنجاز</SelectItem>
-                                  <SelectItem value="completed">منجز</SelectItem>
-                                  <SelectItem value="rejected">مرفوض</SelectItem>
-                                  <SelectItem value="received">تم الاستلام</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-                            <div>
-                              <label className="text-[10px] text-slate-500 block mb-1">الكمية المستلمة من المصنع</label>
-                              <Input
-                                type="number"
-                                min={0}
-                                value={editValues.completedQuantity}
-                                onChange={(e) => setEditValues(prev => ({ ...prev, completedQuantity: Number(e.target.value) }))}
-                                className="text-xs"
-                                data-testid={`input-completed-${item.id}`}
-                              />
-                            </div>
-                            <div>
-                              <label className="text-[10px] text-slate-500 block mb-1">الكمية المشحونة</label>
-                              <Input
-                                type="number"
-                                min={0}
-                                value={editValues.shippedQuantity}
-                                onChange={(e) => setEditValues(prev => ({ ...prev, shippedQuantity: Number(e.target.value) }))}
-                                className="text-xs"
-                                data-testid={`input-shipped-${item.id}`}
-                              />
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Button
-                              size="sm"
-                              className="gap-1 text-xs"
-                              onClick={async () => {
-                                try {
-                                  const corrections: any = {};
-                                  if (editValues.completedQuantity !== (item.completedQuantity || 0)) corrections.completedQuantity = editValues.completedQuantity;
-                                  if (editValues.shippedQuantity !== (item.shippedQuantity || 0)) corrections.shippedQuantity = editValues.shippedQuantity;
-                                  if (editValues.itemStatus !== itemSt) corrections.itemStatus = editValues.itemStatus;
-                                  if (Object.keys(corrections).length === 0) {
-                                    setEditingItem(null);
-                                    return;
-                                  }
-                                  await adminCorrect.mutateAsync({ itemId: item.id, corrections });
-                                  toast({ title: "تم التصحيح بنجاح" });
-                                  setEditingItem(null);
-                                } catch (err: any) {
-                                  toast({ title: "خطأ", description: err.message, variant: "destructive" });
-                                }
-                              }}
-                              disabled={adminCorrect.isPending}
-                              data-testid={`button-save-correct-${item.id}`}
-                            >
-                              <Save className="h-3 w-3" />
-                              حفظ التصحيح
-                            </Button>
-                            <Button
-                              size="sm" variant="outline"
-                              className="gap-1 text-xs"
-                              onClick={() => setEditingItem(null)}
-                              data-testid={`button-cancel-correct-${item.id}`}
-                            >
-                              <XIcon className="h-3 w-3" />
-                              إلغاء
-                            </Button>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="mt-2 pt-2 border-t border-slate-100">
-                          <div className="flex flex-wrap items-center justify-between gap-2">
-                            <div className="flex flex-wrap items-center gap-3 text-xs">
-                              <span className="text-slate-500">المطلوب: <span className="font-bold">{item.quantity}</span></span>
-                              <span className="text-slate-500">المنجز: <span className={`font-bold ${itemHasIssue ? 'text-red-600' : 'text-green-700'}`}>{item.completedQuantity || 0}</span></span>
-                              {(item.shippedQuantity || 0) > 0 && (
-                                <span className="text-slate-500">المشحون: <span className="font-bold text-purple-700">{item.shippedQuantity}</span></span>
-                              )}
-                            </div>
-                            <Button
-                              size="sm" variant="outline"
-                              className="gap-1 text-[10px] border-orange-300 text-orange-700"
-                              onClick={() => {
-                                setEditingItem(item.id);
-                                setEditValues({
-                                  completedQuantity: item.completedQuantity || 0,
-                                  shippedQuantity: item.shippedQuantity || 0,
-                                  itemStatus: itemSt,
-                                });
-                              }}
-                              data-testid={`button-edit-item-${item.id}`}
-                            >
-                              <Pencil className="h-3 w-3" />
-                              تصحيح
-                            </Button>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
+              <div className="flex items-center gap-2">
+                <Button
+                  size="sm" className="gap-1 text-xs"
+                  onClick={async () => {
+                    try {
+                      const corrections: any = {};
+                      if (editValues.completedQuantity !== (item.completedQuantity || 0)) corrections.completedQuantity = editValues.completedQuantity;
+                      if (editValues.shippedQuantity !== (item.shippedQuantity || 0)) corrections.shippedQuantity = editValues.shippedQuantity;
+                      if (editValues.itemStatus !== itemSt) corrections.itemStatus = editValues.itemStatus;
+                      if (Object.keys(corrections).length === 0) { setEditingItem(null); return; }
+                      await adminCorrect.mutateAsync({ itemId: item.id, corrections });
+                      toast({ title: "تم التصحيح بنجاح" });
+                      setEditingItem(null);
+                    } catch (err: any) {
+                      toast({ title: "خطأ", description: err.message, variant: "destructive" });
+                    }
+                  }}
+                  disabled={adminCorrect.isPending}
+                  data-testid={`button-save-correct-${item.id}`}
+                >
+                  <Save className="h-3 w-3" />
+                  حفظ التصحيح
+                </Button>
+                <Button
+                  size="sm" variant="outline" className="gap-1 text-xs"
+                  onClick={() => setEditingItem(null)}
+                  data-testid={`button-cancel-correct-${item.id}`}
+                >
+                  <XIcon className="h-3 w-3" />
+                  إلغاء
+                </Button>
               </div>
             </div>
           )}
@@ -495,20 +442,6 @@ export default function AdminOrders() {
       </Card>
     );
   };
-
-  const inProgressItemCount = useMemo(() => countItemsByStatus(orders || [], 'in_progress'), [orders]);
-  const completedItemCount = useMemo(() => countItemsByStatus(orders || [], 'completed'), [orders]);
-  const rejectedItemCount = useMemo(() => countItemsByStatus(orders || [], 'rejected'), [orders]);
-  const shippedItemCount = useMemo(() => {
-    if (!orders) return 0;
-    let count = 0;
-    for (const order of orders) {
-      if (order.status === 'shipped') { count++; continue; }
-      const shippedItems = (order.items || []).filter((i: any) => (i.shippedQuantity || 0) > 0);
-      if (shippedItems.length > 0) count += shippedItems.length;
-    }
-    return count;
-  }, [orders]);
 
   return (
     <div className="min-h-screen bg-background flex" dir="rtl">
@@ -530,18 +463,18 @@ export default function AdminOrders() {
               data-testid="input-search-orders"
             />
           </div>
-          
+
           <div className="flex flex-wrap gap-2">
             {[
-              { key: 'all', label: 'الكل', count: orders?.length || 0 },
-              { key: 'pending', label: 'في الانتظار', count: countItemsByStatus(orders || [], 'pending') },
-              { key: 'in_progress', label: 'قيد العمل', count: inProgressItemCount },
-              { key: 'completed', label: 'منجز', count: completedItemCount },
-              { key: 'shipped', label: 'تم الشحن', count: shippedItemCount },
-              { key: 'received', label: 'تم الاستلام', count: countItemsByStatus(orders || [], 'received') },
-              { key: 'rejected', label: 'مرفوض', count: rejectedItemCount },
+              { key: 'all', label: 'الكل', count: countByFilter('all') },
+              { key: 'pending', label: 'في الانتظار', count: countByFilter('pending') },
+              { key: 'in_progress', label: 'قيد العمل', count: countByFilter('in_progress') },
+              { key: 'completed', label: 'منجز', count: countByFilter('completed') },
+              { key: 'shipped', label: 'تم الشحن', count: countByFilter('shipped') },
+              { key: 'received', label: 'تم الاستلام', count: countByFilter('received') },
+              { key: 'rejected', label: 'مرفوض', count: countByFilter('rejected') },
             ].map(f => (
-              <Button 
+              <Button
                 key={f.key}
                 variant={activeFilter === f.key ? 'default' : 'outline'}
                 size="sm"
@@ -566,12 +499,11 @@ export default function AdminOrders() {
 
           {isLoading ? (
             <div className="p-12 flex justify-center"><Loader2 className="animate-spin text-primary" /></div>
+          ) : searchFilteredItems.length === 0 ? (
+            <div className="text-center py-12 text-slate-400">لا توجد طلبات بعد</div>
           ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {searchFilteredData?.map((order: any) => renderOrderCard(order))}
-              {searchFilteredData?.length === 0 && (
-                <div className="col-span-full text-center py-12 text-slate-400">لا توجد طلبات بعد</div>
-              )}
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+              {searchFilteredItems.map(renderItemCard)}
             </div>
           )}
         </div>

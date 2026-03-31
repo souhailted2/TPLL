@@ -2,7 +2,7 @@ import { Sidebar } from "@/components/layout-sidebar";
 import { useOrders, useUpdateCompletedQuantity, useShipItem } from "@/hooks/use-orders";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Loader2, Truck, Package, Send, ClipboardCheck, ArrowDownToLine, Search } from "lucide-react";
+import { Loader2, Truck, Send, ClipboardCheck, ArrowDownToLine, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { formatMaghrebDate } from "@/lib/queryClient";
@@ -18,63 +18,6 @@ export default function ShippingOrders() {
   const [shipQuantities, setShipQuantities] = useState<Record<number, number>>({});
   const [searchTerm, setSearchTerm] = useState("");
   const { toast } = useToast();
-
-  const activeOrders = useMemo(() => {
-    if (!orders) return [];
-    return orders.filter((o: any) =>
-      ['accepted', 'in_progress', 'completed'].includes(o.status)
-    );
-  }, [orders]);
-
-  const ordersWithShippableItems = useMemo(() => {
-    return activeOrders.filter((o: any) =>
-      o.items?.some((item: any) => {
-        const completed = item.completedQuantity || 0;
-        const shipped = item.shippedQuantity || 0;
-        return completed > shipped && ['accepted', 'in_progress', 'completed'].includes(item.itemStatus || 'pending');
-      })
-    );
-  }, [activeOrders]);
-
-  const ordersForReceiving = useMemo(() => {
-    return activeOrders.filter((o: any) =>
-      o.items?.some((item: any) =>
-        ['accepted', 'in_progress', 'completed'].includes(item.itemStatus || 'pending')
-      )
-    );
-  }, [activeOrders]);
-
-  const shippedOrders = useMemo(() => {
-    if (!orders) return [];
-    const result: any[] = [];
-    for (const order of orders) {
-      if (order.status === 'shipped') {
-        result.push({ ...order });
-        continue;
-      }
-      const shippedItems = (order.items || []).filter((i: any) => (i.shippedQuantity || 0) > 0);
-      if (shippedItems.length > 0) {
-        result.push({ ...order, _filteredItems: shippedItems });
-      }
-    }
-    return result;
-  }, [orders]);
-
-  const receivedOrders = useMemo(() => {
-    if (!orders) return [];
-    const result: any[] = [];
-    for (const order of orders) {
-      if (order.status === 'received') {
-        result.push({ ...order });
-        continue;
-      }
-      const receivedItems = (order.items || []).filter((i: any) => (i.itemStatus || 'pending') === 'received');
-      if (receivedItems.length > 0) {
-        result.push({ ...order, _filteredItems: receivedItems });
-      }
-    }
-    return result;
-  }, [orders]);
 
   const handleCompletedQuantity = async (itemId: number, quantity: number) => {
     try {
@@ -97,7 +40,7 @@ export default function ShippingOrders() {
   };
 
   const getStatusColor = (status: string) => {
-    switch(status) {
+    switch (status) {
       case 'in_progress':
       case 'accepted': return 'bg-orange-100 text-orange-800';
       case 'completed': return 'bg-green-100 text-green-800';
@@ -108,7 +51,7 @@ export default function ShippingOrders() {
   };
 
   const getStatusLabel = (status: string) => {
-    switch(status) {
+    switch (status) {
       case 'in_progress':
       case 'accepted': return 'قيد الإنجاز';
       case 'completed': return 'مكتمل';
@@ -119,7 +62,7 @@ export default function ShippingOrders() {
   };
 
   const getItemStatusLabel = (status: string) => {
-    switch(status) {
+    switch (status) {
       case 'accepted': return 'مقبول';
       case 'in_progress': return 'قيد الإنجاز';
       case 'completed': return 'تم الإنجاز';
@@ -130,7 +73,7 @@ export default function ShippingOrders() {
   };
 
   const getItemStatusColor = (status: string) => {
-    switch(status) {
+    switch (status) {
       case 'accepted': return 'bg-emerald-100 text-emerald-800';
       case 'in_progress': return 'bg-blue-100 text-blue-800';
       case 'completed': return 'bg-green-100 text-green-800';
@@ -140,228 +83,254 @@ export default function ShippingOrders() {
     }
   };
 
-  const getUnitLabel = (unit: string) => {
-    return unit === 'bag' ? 'شكارة 25 كغ' : 'قطعة';
-  };
+  const getUnitLabel = (unit: string) => unit === 'bag' ? 'شكارة 25 كغ' : 'قطعة';
 
-  const renderReceiveCard = (order: any) => {
-    const items = (order.items || []).filter((item: any) =>
+  const allFlatItems = useMemo(() => {
+    if (!orders) return [];
+    const flat: { item: any; order: any }[] = [];
+    for (const order of orders) {
+      for (const item of order.items || []) {
+        flat.push({ item, order });
+      }
+    }
+    return flat;
+  }, [orders]);
+
+  const receiveFlatItems = useMemo(() =>
+    allFlatItems.filter(({ item, order }) =>
+      ['accepted', 'in_progress', 'completed'].includes(order.status) &&
       ['accepted', 'in_progress', 'completed'].includes(item.itemStatus || 'pending')
-    );
+    ), [allFlatItems]
+  );
 
-    return (
-      <Card key={order.id} data-testid={`card-receive-${order.id}`}>
-        <CardContent className="p-4 space-y-3">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <ArrowDownToLine className="h-4 w-4 text-blue-600" />
-              <span className="font-mono font-bold text-lg" data-testid={`text-order-id-${order.id}`}>#{order.id}</span>
-            </div>
-            <Badge variant="secondary" className={getStatusColor(order.status)}>
-              {getStatusLabel(order.status)}
-            </Badge>
-          </div>
-
-          <div className="flex items-center justify-between gap-2 text-sm">
-            <span className="font-bold text-slate-700">{order.salesPoint?.salesPointName || order.salesPoint?.firstName}</span>
-            <span className="text-xs text-slate-400">{order.createdAt && formatMaghrebDate(order.createdAt)}</span>
-          </div>
-
-          <div className="space-y-2 pt-2 border-t border-slate-100">
-            {items.map((item: any, idx: number) => {
-              const maxAllowed = Math.ceil(item.quantity * 1.5);
-              const currentCompleted = item.completedQuantity || 0;
-
-              return (
-                <div key={idx} className="p-3 rounded-lg border bg-white" data-testid={`receive-item-${item.id}`}>
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm break-words">{item.product?.name}</p>
-                      <p className="text-[10px] text-slate-400">{item.product?.sku}</p>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <Badge variant="secondary" className={`text-[10px] ${getItemStatusColor(item.itemStatus)}`}>
-                        {getItemStatusLabel(item.itemStatus)}
-                      </Badge>
-                      <span className="font-bold text-primary">{item.quantity}</span>
-                      <span className="text-[10px] text-slate-400">{getUnitLabel(item.unit || 'piece')}</span>
-                    </div>
-                  </div>
-
-                  <div className="mt-2 pt-2 border-t border-slate-100">
-                    <div className="flex flex-wrap items-center gap-3 text-xs mb-2">
-                      <span className="text-slate-500">المطلوب: <span className="font-bold">{item.quantity}</span></span>
-                      <span className="text-slate-500">المستلم من المصنع: <span className="font-bold text-green-700">{currentCompleted}</span></span>
-                      <span className="text-slate-500">الحد الأقصى: <span className="font-bold text-orange-600">{maxAllowed}</span></span>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-blue-600 shrink-0 font-medium">إضافة كمية:</span>
-                      <Input
-                        type="number"
-                        min={0}
-                        max={maxAllowed - currentCompleted}
-                        value={completedQuantities[item.id] !== undefined ? (completedQuantities[item.id] === 0 ? '' : completedQuantities[item.id]) : ''}
-                        onChange={(e) => {
-                          const val = e.target.value === '' ? 0 : Number(e.target.value);
-                          const remaining = maxAllowed - currentCompleted;
-                          if (val >= 0 && val <= remaining) {
-                            setCompletedQuantities(prev => ({ ...prev, [item.id]: val }));
-                          }
-                        }}
-                        placeholder="0"
-                        className="w-20 text-center"
-                        data-testid={`input-completed-${item.id}`}
-                      />
-                      <Button
-                        size="sm" variant="outline"
-                        className="gap-1"
-                        onClick={() => {
-                          const newQty = completedQuantities[item.id] || 0;
-                          if (newQty > 0) {
-                            handleCompletedQuantity(item.id, currentCompleted + newQty);
-                          }
-                        }}
-                        disabled={updateCompleted.isPending || !(completedQuantities[item.id] > 0)}
-                        data-testid={`button-save-completed-${item.id}`}
-                      >
-                        <ClipboardCheck className="h-3 w-3" />
-                        تأكيد الاستلام
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </CardContent>
-      </Card>
-    );
-  };
-
-  const renderShipCard = (order: any) => {
-    const items = (order.items || []).filter((item: any) => {
+  const readyFlatItems = useMemo(() =>
+    allFlatItems.filter(({ item, order }) => {
       const completed = item.completedQuantity || 0;
       const shipped = item.shippedQuantity || 0;
-      return completed > shipped && ['accepted', 'in_progress', 'completed'].includes(item.itemStatus || 'pending');
-    });
+      return completed > shipped &&
+        ['accepted', 'in_progress', 'completed'].includes(order.status) &&
+        ['accepted', 'in_progress', 'completed'].includes(item.itemStatus || 'pending');
+    }), [allFlatItems]
+  );
 
-    if (items.length === 0) return null;
+  const shippedFlatItems = useMemo(() =>
+    allFlatItems.filter(({ item, order }) =>
+      order.status === 'shipped' || (item.shippedQuantity || 0) > 0
+    ), [allFlatItems]
+  );
+
+  const receivedFlatItems = useMemo(() =>
+    allFlatItems.filter(({ item, order }) =>
+      order.status === 'received' || (item.itemStatus || 'pending') === 'received'
+    ), [allFlatItems]
+  );
+
+  const filterBySearch = (list: { item: any; order: any }[]) => {
+    if (!searchTerm.trim()) return list;
+    const term = searchTerm.trim().toLowerCase();
+    return list.filter(({ item, order }) =>
+      String(order.id).includes(term) ||
+      (order.salesPoint?.salesPointName || order.salesPoint?.firstName || '').toLowerCase().includes(term) ||
+      (item.product?.name || '').toLowerCase().includes(term) ||
+      (item.product?.sku || '').toLowerCase().includes(term)
+    );
+  };
+
+  const renderReceiveCard = ({ item, order }: { item: any; order: any }) => {
+    const maxAllowed = Math.ceil(item.quantity * 1.5);
+    const currentCompleted = item.completedQuantity || 0;
 
     return (
-      <Card key={order.id} className="border-purple-200" data-testid={`card-ship-${order.id}`}>
+      <Card key={`${order.id}-${item.id}`} data-testid={`card-item-${item.id}`}>
         <CardContent className="p-4 space-y-3">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <Truck className="h-4 w-4 text-purple-600" />
-              <span className="font-mono font-bold text-lg">#{order.id}</span>
+          <div className="flex items-center justify-between gap-2 pb-2 border-b border-slate-100">
+            <div className="flex items-center gap-2 flex-wrap">
+              <ArrowDownToLine className="h-3.5 w-3.5 text-blue-600 shrink-0" />
+              <span className="font-mono text-xs font-bold text-slate-500" data-testid={`text-order-ref-${item.id}`}>
+                طلب #{order.id}
+              </span>
+              <span className="text-xs text-slate-400">•</span>
+              <span className="text-xs font-medium text-slate-600">
+                {order.salesPoint?.salesPointName || order.salesPoint?.firstName}
+              </span>
+              <span className="text-xs text-slate-400">•</span>
+              <span className="text-xs text-slate-400">{order.createdAt && formatMaghrebDate(order.createdAt)}</span>
             </div>
-            <Badge variant="secondary" className={getStatusColor(order.status)}>
+            <Badge variant="secondary" className={`text-[10px] ${getStatusColor(order.status)}`}>
               {getStatusLabel(order.status)}
             </Badge>
           </div>
 
-          <div className="flex items-center justify-between gap-2 text-sm">
-            <span className="font-bold text-slate-700">{order.salesPoint?.salesPointName || order.salesPoint?.firstName}</span>
-            <span className="text-xs text-slate-400">{order.createdAt && formatMaghrebDate(order.createdAt)}</span>
+          <div className="flex items-start justify-between gap-2">
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold text-sm break-words" data-testid={`text-item-name-${item.id}`}>
+                {item.product?.name}
+              </p>
+              <p className="text-[10px] text-slate-400">{item.product?.sku}</p>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <Badge variant="secondary" className={`text-[10px] ${getItemStatusColor(item.itemStatus)}`}>
+                {getItemStatusLabel(item.itemStatus)}
+              </Badge>
+              <span className="font-bold text-primary">{item.quantity}</span>
+              <span className="text-[10px] text-slate-400">{getUnitLabel(item.unit || 'piece')}</span>
+            </div>
           </div>
 
-          <div className="space-y-2 pt-2 border-t border-purple-100">
-            {items.map((item: any, idx: number) => {
-              const currentCompleted = item.completedQuantity || 0;
-              const currentShipped = item.shippedQuantity || 0;
-              const shippable = currentCompleted - currentShipped;
+          <div className="flex flex-wrap items-center gap-3 text-xs">
+            <span className="text-slate-500">المطلوب: <span className="font-bold">{item.quantity}</span></span>
+            <span className="text-slate-500">المستلم من المصنع: <span className="font-bold text-green-700">{currentCompleted}</span></span>
+            <span className="text-slate-500">الحد الأقصى: <span className="font-bold text-orange-600">{maxAllowed}</span></span>
+          </div>
 
-              return (
-                <div key={idx} className="p-3 rounded-lg border border-purple-200 bg-purple-50/50" data-testid={`ship-item-${item.id}`}>
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm break-words">{item.product?.name}</p>
-                      <p className="text-[10px] text-slate-400">{item.product?.sku}</p>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <span className="font-bold text-primary">{item.quantity}</span>
-                      <span className="text-[10px] text-slate-400">{getUnitLabel(item.unit || 'piece')}</span>
-                    </div>
-                  </div>
-
-                  <div className="mt-2 pt-2 border-t border-purple-100">
-                    <div className="flex flex-wrap items-center gap-3 text-xs mb-2">
-                      <span className="text-slate-500">المنجز: <span className="font-bold text-green-700">{currentCompleted}</span></span>
-                      <span className="text-slate-500">المشحون: <span className="font-bold text-purple-700">{currentShipped}</span></span>
-                      <span className="text-purple-700 font-bold">متاح للشحن: {shippable}</span>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <Send className="h-3 w-3 text-purple-600 shrink-0" />
-                      <span className="text-xs text-purple-700 shrink-0 font-medium">كمية الشحن:</span>
-                      <Input
-                        type="number"
-                        min={1}
-                        max={shippable}
-                        value={shipQuantities[item.id] !== undefined ? (shipQuantities[item.id] === 0 ? '' : shipQuantities[item.id]) : ''}
-                        onChange={(e) => {
-                          const val = e.target.value === '' ? 0 : Number(e.target.value);
-                          if (val >= 0 && val <= shippable) {
-                            setShipQuantities(prev => ({ ...prev, [item.id]: val }));
-                          }
-                        }}
-                        placeholder={`1 - ${shippable}`}
-                        className="w-24 text-center"
-                        data-testid={`input-ship-${item.id}`}
-                      />
-                      <Button
-                        size="sm"
-                        className="gap-1"
-                        onClick={() => {
-                          const qty = shipQuantities[item.id] || 0;
-                          if (qty > 0 && qty <= shippable) {
-                            handleShipItem(item.id, currentShipped + qty);
-                          }
-                        }}
-                        disabled={shipItem.isPending || !(shipQuantities[item.id] > 0)}
-                        data-testid={`button-ship-item-${item.id}`}
-                      >
-                        <Truck className="h-3 w-3" />
-                        شحن
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+          <div className="pt-1 border-t border-slate-100 flex items-center gap-2">
+            <span className="text-xs text-blue-600 shrink-0 font-medium">إضافة كمية:</span>
+            <Input
+              type="number" min={0}
+              max={maxAllowed - currentCompleted}
+              value={completedQuantities[item.id] !== undefined ? (completedQuantities[item.id] === 0 ? '' : completedQuantities[item.id]) : ''}
+              onChange={(e) => {
+                const val = e.target.value === '' ? 0 : Number(e.target.value);
+                const remaining = maxAllowed - currentCompleted;
+                if (val >= 0 && val <= remaining) {
+                  setCompletedQuantities(prev => ({ ...prev, [item.id]: val }));
+                }
+              }}
+              placeholder="0"
+              className="w-20 text-center"
+              data-testid={`input-completed-${item.id}`}
+            />
+            <Button
+              size="sm" variant="outline" className="gap-1"
+              onClick={() => {
+                const newQty = completedQuantities[item.id] || 0;
+                if (newQty > 0) handleCompletedQuantity(item.id, currentCompleted + newQty);
+              }}
+              disabled={updateCompleted.isPending || !(completedQuantities[item.id] > 0)}
+              data-testid={`button-save-completed-${item.id}`}
+            >
+              <ClipboardCheck className="h-3 w-3" />
+              تأكيد الاستلام
+            </Button>
           </div>
         </CardContent>
       </Card>
     );
   };
 
-  const renderHistoryCard = (order: any) => {
-    const items = order._filteredItems || order.items || [];
+  const renderShipCard = ({ item, order }: { item: any; order: any }) => {
+    const currentCompleted = item.completedQuantity || 0;
+    const currentShipped = item.shippedQuantity || 0;
+    const shippable = currentCompleted - currentShipped;
 
     return (
-      <Card key={order.id} data-testid={`card-history-${order.id}`}>
+      <Card key={`${order.id}-${item.id}`} className="border-purple-200" data-testid={`card-item-${item.id}`}>
         <CardContent className="p-4 space-y-3">
-          <div className="flex items-center justify-between gap-2">
-            <span className="font-mono font-bold text-lg">#{order.id}</span>
-            <Badge variant="secondary" className={getStatusColor(order.status)}>
+          <div className="flex items-center justify-between gap-2 pb-2 border-b border-purple-100">
+            <div className="flex items-center gap-2 flex-wrap">
+              <Truck className="h-3.5 w-3.5 text-purple-600 shrink-0" />
+              <span className="font-mono text-xs font-bold text-slate-500" data-testid={`text-order-ref-${item.id}`}>
+                طلب #{order.id}
+              </span>
+              <span className="text-xs text-slate-400">•</span>
+              <span className="text-xs font-medium text-slate-600">
+                {order.salesPoint?.salesPointName || order.salesPoint?.firstName}
+              </span>
+              <span className="text-xs text-slate-400">•</span>
+              <span className="text-xs text-slate-400">{order.createdAt && formatMaghrebDate(order.createdAt)}</span>
+            </div>
+            <Badge variant="secondary" className={`text-[10px] ${getStatusColor(order.status)}`}>
               {getStatusLabel(order.status)}
             </Badge>
           </div>
-          <div className="flex items-center justify-between gap-2 text-sm">
-            <span className="font-bold text-slate-700">{order.salesPoint?.salesPointName || order.salesPoint?.firstName}</span>
-            <span className="text-xs text-slate-400">{order.createdAt && formatMaghrebDate(order.createdAt)}</span>
+
+          <div className="flex items-start justify-between gap-2">
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold text-sm break-words" data-testid={`text-item-name-${item.id}`}>
+                {item.product?.name}
+              </p>
+              <p className="text-[10px] text-slate-400">{item.product?.sku}</p>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <span className="font-bold text-primary">{item.quantity}</span>
+              <span className="text-[10px] text-slate-400">{getUnitLabel(item.unit || 'piece')}</span>
+            </div>
           </div>
-          <div className="space-y-1 pt-2 border-t border-slate-100">
-            {items.filter((i: any) => i.itemStatus !== 'rejected').map((item: any, idx: number) => (
-              <div key={idx} className="flex items-center justify-between gap-2 text-xs p-2 rounded bg-slate-50">
-                <span className="font-medium">{item.product?.name}</span>
-                <div className="flex items-center gap-3">
-                  <span className="text-slate-500">منجز: <span className="font-bold text-green-700">{item.completedQuantity || 0}</span></span>
-                  <span className="text-purple-600">مشحون: <span className="font-bold">{item.shippedQuantity || 0}</span></span>
-                </div>
-              </div>
-            ))}
+
+          <div className="flex flex-wrap items-center gap-3 text-xs">
+            <span className="text-slate-500">المنجز: <span className="font-bold text-green-700">{currentCompleted}</span></span>
+            <span className="text-slate-500">المشحون: <span className="font-bold text-purple-700">{currentShipped}</span></span>
+            <span className="text-purple-700 font-bold">متاح للشحن: {shippable}</span>
+          </div>
+
+          <div className="pt-1 border-t border-purple-100 flex items-center gap-2">
+            <Send className="h-3 w-3 text-purple-600 shrink-0" />
+            <span className="text-xs text-purple-700 shrink-0 font-medium">كمية الشحن:</span>
+            <Input
+              type="number" min={1} max={shippable}
+              value={shipQuantities[item.id] !== undefined ? (shipQuantities[item.id] === 0 ? '' : shipQuantities[item.id]) : ''}
+              onChange={(e) => {
+                const val = e.target.value === '' ? 0 : Number(e.target.value);
+                if (val >= 0 && val <= shippable) {
+                  setShipQuantities(prev => ({ ...prev, [item.id]: val }));
+                }
+              }}
+              placeholder={`1 - ${shippable}`}
+              className="w-24 text-center"
+              data-testid={`input-ship-${item.id}`}
+            />
+            <Button
+              size="sm" className="gap-1"
+              onClick={() => {
+                const qty = shipQuantities[item.id] || 0;
+                if (qty > 0 && qty <= shippable) handleShipItem(item.id, currentShipped + qty);
+              }}
+              disabled={shipItem.isPending || !(shipQuantities[item.id] > 0)}
+              data-testid={`button-ship-item-${item.id}`}
+            >
+              <Truck className="h-3 w-3" />
+              شحن
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  };
+
+  const renderHistoryCard = ({ item, order }: { item: any; order: any }) => {
+    if ((item.itemStatus || 'pending') === 'rejected') return null;
+    return (
+      <Card key={`${order.id}-${item.id}`} data-testid={`card-item-${item.id}`}>
+        <CardContent className="p-4 space-y-3">
+          <div className="flex items-center justify-between gap-2 pb-2 border-b border-slate-100">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="font-mono text-xs font-bold text-slate-500">
+                طلب #{order.id}
+              </span>
+              <span className="text-xs text-slate-400">•</span>
+              <span className="text-xs font-medium text-slate-600">
+                {order.salesPoint?.salesPointName || order.salesPoint?.firstName}
+              </span>
+              <span className="text-xs text-slate-400">•</span>
+              <span className="text-xs text-slate-400">{order.createdAt && formatMaghrebDate(order.createdAt)}</span>
+            </div>
+            <Badge variant="secondary" className={`text-[10px] ${getStatusColor(order.status)}`}>
+              {getStatusLabel(order.status)}
+            </Badge>
+          </div>
+
+          <div className="flex items-start justify-between gap-2">
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold text-sm break-words">{item.product?.name}</p>
+              <p className="text-[10px] text-slate-400">{item.product?.sku}</p>
+            </div>
+            <span className="text-[10px] text-slate-400">{getUnitLabel(item.unit || 'piece')}</span>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3 text-xs border-t border-slate-100 pt-2">
+            <span className="text-slate-500">المطلوب: <span className="font-bold">{item.quantity}</span></span>
+            <span className="text-slate-500">منجز: <span className="font-bold text-green-700">{item.completedQuantity || 0}</span></span>
+            <span className="text-purple-600">مشحون: <span className="font-bold">{item.shippedQuantity || 0}</span></span>
           </div>
         </CardContent>
       </Card>
@@ -369,49 +338,35 @@ export default function ShippingOrders() {
   };
 
   const tabs = [
-    { key: 'receive', label: 'استلام من المصنع', icon: ArrowDownToLine, count: ordersForReceiving.length },
-    { key: 'ready', label: 'جاهز للشحن', icon: Truck, count: ordersWithShippableItems.length },
-    { key: 'shipped', label: 'تم الشحن', icon: Send, count: shippedOrders.length },
-    { key: 'received', label: 'تم الاستلام', icon: Package, count: receivedOrders.length },
+    { key: 'receive', label: 'استلام من المصنع', icon: ArrowDownToLine, count: receiveFlatItems.length },
+    { key: 'ready', label: 'جاهز للشحن', icon: Truck, count: readyFlatItems.length },
+    { key: 'shipped', label: 'تم الشحن', icon: Send, count: shippedFlatItems.length },
+    { key: 'received', label: 'تم الاستلام', icon: ArrowDownToLine, count: receivedFlatItems.length },
   ];
-
-  const filterBySearch = (list: any[]) => {
-    if (!searchTerm.trim()) return list;
-    const term = searchTerm.trim().toLowerCase();
-    return list.filter((order: any) => {
-      if (String(order.id).includes(term)) return true;
-      if ((order.salesPoint?.name || '').toLowerCase().includes(term)) return true;
-      const allItems = order.items || [];
-      return allItems.some((item: any) =>
-        (item.product?.name || '').toLowerCase().includes(term) ||
-        (item.product?.sku || '').toLowerCase().includes(term)
-      );
-    });
-  };
 
   const renderContent = () => {
     if (isLoading) {
       return <div className="p-12 flex justify-center"><Loader2 className="animate-spin text-primary" /></div>;
     }
 
-    let items: any[] = [];
-    let renderFn: (order: any) => any;
+    let items: { item: any; order: any }[];
+    let renderFn: (entry: { item: any; order: any }) => any;
 
     switch (activeTab) {
       case 'receive':
-        items = ordersForReceiving;
+        items = filterBySearch(receiveFlatItems);
         renderFn = renderReceiveCard;
         break;
       case 'ready':
-        items = ordersWithShippableItems;
+        items = filterBySearch(readyFlatItems);
         renderFn = renderShipCard;
         break;
       case 'shipped':
-        items = shippedOrders;
+        items = filterBySearch(shippedFlatItems);
         renderFn = renderHistoryCard;
         break;
       case 'received':
-        items = receivedOrders;
+        items = filterBySearch(receivedFlatItems);
         renderFn = renderHistoryCard;
         break;
       default:
@@ -419,15 +374,15 @@ export default function ShippingOrders() {
         renderFn = renderHistoryCard;
     }
 
-    const filtered = filterBySearch(items);
+    const rendered = items.map(renderFn).filter(Boolean);
 
-    if (filtered.length === 0) {
+    if (rendered.length === 0) {
       return <div className="col-span-full text-center py-12 text-slate-400">لا توجد طلبات</div>;
     }
 
     return (
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {filtered.map((order: any) => renderFn(order))}
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+        {rendered}
       </div>
     );
   };
