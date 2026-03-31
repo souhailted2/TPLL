@@ -2,9 +2,10 @@ import { Sidebar } from "@/components/layout-sidebar";
 import { useOrders, useUpdateOrderStatus, useUpdateItemStatus, useDismissOrderAlert } from "@/hooks/use-orders";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Loader2, Check, X as XIcon, AlertTriangle, BellOff, PlayCircle, CheckCircle2, Printer, Search, ChevronDown } from "lucide-react";
+import { Loader2, Check, X as XIcon, AlertTriangle, BellOff, PlayCircle, CheckCircle2, Printer, Search, ChevronDown, Pencil, Save } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { formatMaghrebDate } from "@/lib/queryClient";
 import { useState, useMemo } from "react";
@@ -41,6 +42,8 @@ export default function ReceptionOrders() {
   const [activeFilter, setActiveFilter] = useState<string>('pending');
   const [printItem, setPrintItem] = useState<{ order: any; item: any } | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [correctingItem, setCorrectingItem] = useState<number | null>(null);
+  const [correctStatus, setCorrectStatus] = useState<string>('pending');
   const { toast } = useToast();
 
   const handleItemStatusChange = async (itemId: number, newStatus: string) => {
@@ -482,6 +485,57 @@ export default function ReceptionOrders() {
                   طباعة أمر ورشة
                 </Button>
               )}
+              <Button
+                size="sm" variant="outline"
+                className="gap-1 text-[10px] border-orange-300 text-orange-700"
+                onClick={() => {
+                  setCorrectingItem(item.id);
+                  setCorrectStatus(itemSt === 'rejected' ? 'pending' : itemSt);
+                }}
+                data-testid={`button-correct-item-${item.id}`}
+              >
+                <Pencil className="h-3 w-3" />
+                تصحيح الحالة
+              </Button>
+            </div>
+          )}
+
+          {correctingItem === item.id && (
+            <div className="pt-2 border-t border-orange-200 bg-orange-50/50 rounded-lg p-3 space-y-3">
+              <p className="text-xs font-bold text-orange-800">تصحيح حالة الصنف</p>
+              <Select value={correctStatus} onValueChange={setCorrectStatus}>
+                <SelectTrigger className="text-xs" data-testid={`select-correct-status-${item.id}`}>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pending">في الانتظار</SelectItem>
+                  <SelectItem value="accepted">مقبول</SelectItem>
+                  <SelectItem value="in_progress">قيد الإنجاز</SelectItem>
+                  <SelectItem value="completed">منجز</SelectItem>
+                </SelectContent>
+              </Select>
+              <div className="flex items-center gap-2">
+                <Button
+                  size="sm" className="gap-1 text-xs"
+                  onClick={async () => {
+                    await handleItemStatusChange(item.id, correctStatus);
+                    setCorrectingItem(null);
+                  }}
+                  disabled={updateItemStatus.isPending}
+                  data-testid={`button-save-correct-${item.id}`}
+                >
+                  <Save className="h-3 w-3" />
+                  حفظ
+                </Button>
+                <Button
+                  size="sm" variant="outline" className="gap-1 text-xs"
+                  onClick={() => setCorrectingItem(null)}
+                  data-testid={`button-cancel-correct-${item.id}`}
+                >
+                  <XIcon className="h-3 w-3" />
+                  إلغاء
+                </Button>
+              </div>
             </div>
           )}
 
