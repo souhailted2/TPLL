@@ -1,12 +1,13 @@
 import { Sidebar } from "@/components/layout-sidebar";
-import { useOrders, useUpdateOrderStatus, useDismissOrderAlert, useAdminCorrectItem } from "@/hooks/use-orders";
+import { useOrders, useUpdateOrderStatus, useDismissOrderAlert, useAdminCorrectItem, useDeleteOrder } from "@/hooks/use-orders";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Loader2, AlertTriangle, BellOff, Pencil, Save, X as XIcon, Search, ChevronDown } from "lucide-react";
+import { Loader2, AlertTriangle, BellOff, Pencil, Save, X as XIcon, Search, ChevronDown, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { formatMaghrebDate } from "@/lib/queryClient";
 import { useState, useMemo } from "react";
 import { useSearch, useLocation } from "wouter";
@@ -50,6 +51,7 @@ export default function AdminOrders() {
   const updateStatus = useUpdateOrderStatus();
   const dismissAlert = useDismissOrderAlert();
   const adminCorrect = useAdminCorrectItem();
+  const deleteOrder = useDeleteOrder();
   const searchString = useSearch();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
@@ -60,6 +62,7 @@ export default function AdminOrders() {
   const [editingItem, setEditingItem] = useState<number | null>(null);
   const [editValues, setEditValues] = useState<{ completedQuantity: number; shippedQuantity: number; itemStatus: string }>({ completedQuantity: 0, shippedQuantity: 0, itemStatus: 'pending' });
   const [searchTerm, setSearchTerm] = useState("");
+  const [orderToDelete, setOrderToDelete] = useState<{ id: number } | null>(null);
 
   const handleOrderStatusChange = async (orderId: number, newStatus: string) => {
     try {
@@ -286,6 +289,14 @@ export default function AdminOrders() {
                   </DropdownMenuContent>
                 </DropdownMenu>
               )}
+              <Button
+                size="sm" variant="ghost"
+                className="h-6 w-6 p-0 text-slate-300 hover:text-red-600 hover:bg-red-50"
+                onClick={() => setOrderToDelete({ id: order.id })}
+                data-testid={`button-delete-order-${order.id}`}
+              >
+                <Trash2 className="h-3 w-3" />
+              </Button>
             </div>
           </div>
 
@@ -517,6 +528,40 @@ export default function AdminOrders() {
           )}
         </div>
       </main>
+
+      <AlertDialog open={!!orderToDelete} onOpenChange={(open) => !open && setOrderToDelete(null)}>
+        <AlertDialogContent dir="rtl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>تأكيد حذف الطلب</AlertDialogTitle>
+            <AlertDialogDescription>
+              هل أنت متأكد من حذف الطلب رقم <span className="font-bold text-slate-800">#{orderToDelete?.id}</span>؟
+              سيتم حذف جميع أصنافه بشكل نهائي ولا يمكن التراجع عن هذا الإجراء.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-row-reverse gap-2">
+            <AlertDialogCancel data-testid="button-cancel-delete">إلغاء</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-red-600 hover:bg-red-700 text-white"
+              data-testid="button-confirm-delete"
+              onClick={async () => {
+                if (!orderToDelete) return;
+                try {
+                  await deleteOrder.mutateAsync(orderToDelete.id);
+                  toast({ title: "تم الحذف", description: `تم حذف الطلب #${orderToDelete.id} بنجاح` });
+                  setOrderToDelete(null);
+                } catch (err: any) {
+                  toast({ title: "خطأ", description: err.message, variant: "destructive" });
+                  setOrderToDelete(null);
+                }
+              }}
+              disabled={deleteOrder.isPending}
+            >
+              {deleteOrder.isPending ? <Loader2 className="h-4 w-4 animate-spin ml-2" /> : null}
+              حذف الطلب
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

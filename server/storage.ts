@@ -35,6 +35,7 @@ export interface IStorage {
   adminCorrectItem(itemId: number, data: { completedQuantity?: number; shippedQuantity?: number; itemStatus?: string }): Promise<OrderItem | undefined>;
   syncOrderStatusFromItems(orderId: number): Promise<void>;
   dismissOrderAlert(orderId: number): Promise<Order | undefined>;
+  deleteOrder(orderId: number): Promise<void>;
 
   // User Roles
   getUserRole(userId: string): Promise<UserRole | undefined>;
@@ -469,6 +470,14 @@ export class DatabaseStorage implements IStorage {
       .where(eq(orders.id, orderId))
       .returning();
     return updated;
+  }
+
+  async deleteOrder(orderId: number): Promise<void> {
+    await db.transaction(async (tx) => {
+      await tx.delete(orderItems).where(eq(orderItems.orderId, orderId));
+      await tx.delete(notifications).where(eq(notifications.orderId, orderId));
+      await tx.delete(orders).where(eq(orders.id, orderId));
+    });
   }
 
   async getAdminUserIds(): Promise<string[]> {

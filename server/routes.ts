@@ -159,6 +159,23 @@ export async function registerRoutes(
     res.status(204).send();
   });
 
+  app.delete(api.orders.delete.path, requireAuth, async (req: any, res) => {
+    try {
+      const orderId = Number(req.params.id);
+      const userId = req.userId;
+      const userRole = await storage.getUserRole(userId);
+      if (userRole?.role !== 'admin') {
+        return res.status(403).json({ message: "فقط المدير يمكنه حذف الطلبات" });
+      }
+      const existing = await storage.getOrder(orderId);
+      if (!existing) return res.status(404).json({ message: "الطلب غير موجود" });
+      await storage.deleteOrder(orderId);
+      res.status(204).send();
+    } catch (err) {
+      res.status(500).json({ message: "فشل حذف الطلب" });
+    }
+  });
+
   // === Orders API ===
 
   app.get(api.orders.list.path, requireAuth, async (req: any, res) => {

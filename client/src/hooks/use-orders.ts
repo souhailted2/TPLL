@@ -2,6 +2,26 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, buildUrl } from "@shared/routes";
 import { authHeaders } from "@/hooks/use-auth";
 
+export function useDeleteOrder() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (orderId: number) => {
+      const url = buildUrl(api.orders.delete.path, { id: orderId });
+      const res = await fetch(url, {
+        method: 'DELETE',
+        headers: { ...authHeaders() },
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ message: "فشل حذف الطلب" }));
+        throw new Error(err.message);
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [api.orders.list.path] });
+    },
+  });
+}
+
 export function useOrders() {
   return useQuery({
     queryKey: [api.orders.list.path],
