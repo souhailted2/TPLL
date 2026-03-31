@@ -2,7 +2,7 @@ import { Sidebar } from "@/components/layout-sidebar";
 import { useOrders, useUpdateCompletedQuantity, useShipItem } from "@/hooks/use-orders";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Loader2, Truck, Send, ClipboardCheck, ArrowDownToLine, Search } from "lucide-react";
+import { Loader2, Truck, Send, ClipboardCheck, ArrowDownToLine, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { formatMaghrebDate } from "@/lib/queryClient";
@@ -18,6 +18,8 @@ export default function ShippingOrders() {
   const [shipQuantities, setShipQuantities] = useState<Record<number, number>>({});
   const [searchTerm, setSearchTerm] = useState("");
   const { toast } = useToast();
+
+  const searchActive = searchTerm.trim() !== "";
 
   const handleCompletedQuantity = async (itemId: number, quantity: number) => {
     try {
@@ -125,10 +127,10 @@ export default function ShippingOrders() {
     ), [allFlatItems]
   );
 
-  const filterBySearch = (list: { item: any; order: any }[]) => {
-    if (!searchTerm.trim()) return list;
+  const matchesSearch = ({ item, order }: { item: any; order: any }) => {
+    if (!searchActive) return true;
     const term = searchTerm.trim().toLowerCase();
-    return list.filter(({ item, order }) =>
+    return (
       String(order.id).includes(term) ||
       (order.salesPoint?.salesPointName || order.salesPoint?.firstName || '').toLowerCase().includes(term) ||
       (item.product?.name || '').toLowerCase().includes(term) ||
@@ -141,7 +143,7 @@ export default function ShippingOrders() {
     const currentCompleted = item.completedQuantity || 0;
 
     return (
-      <Card key={`${order.id}-${item.id}`} data-testid={`card-item-${item.id}`}>
+      <Card key={`receive-${order.id}-${item.id}`} data-testid={`card-item-${item.id}`}>
         <CardContent className="p-4 space-y-3">
           <div className="flex items-center justify-between gap-2 pb-2 border-b border-slate-100">
             <div className="flex items-center gap-2 flex-wrap">
@@ -224,7 +226,7 @@ export default function ShippingOrders() {
     const shippable = currentCompleted - currentShipped;
 
     return (
-      <Card key={`${order.id}-${item.id}`} className="border-purple-200" data-testid={`card-item-${item.id}`}>
+      <Card key={`ship-${order.id}-${item.id}`} className="border-purple-200" data-testid={`card-item-${item.id}`}>
         <CardContent className="p-4 space-y-3">
           <div className="flex items-center justify-between gap-2 pb-2 border-b border-purple-100">
             <div className="flex items-center gap-2 flex-wrap">
@@ -300,7 +302,7 @@ export default function ShippingOrders() {
   const renderHistoryCard = ({ item, order }: { item: any; order: any }) => {
     if ((item.itemStatus || 'pending') === 'rejected') return null;
     return (
-      <Card key={`${order.id}-${item.id}`} data-testid={`card-item-${item.id}`}>
+      <Card key={`hist-${order.id}-${item.id}`} data-testid={`card-item-${item.id}`}>
         <CardContent className="p-4 space-y-3">
           <div className="flex items-center justify-between gap-2 pb-2 border-b border-slate-100">
             <div className="flex items-center gap-2 flex-wrap">
@@ -338,10 +340,22 @@ export default function ShippingOrders() {
   };
 
   const tabs = [
-    { key: 'receive', label: 'استلام من المصنع', icon: ArrowDownToLine, count: receiveFlatItems.length },
-    { key: 'ready', label: 'جاهز للشحن', icon: Truck, count: readyFlatItems.length },
-    { key: 'shipped', label: 'تم الشحن', icon: Send, count: shippedFlatItems.length },
-    { key: 'received', label: 'تم الاستلام', icon: ArrowDownToLine, count: receivedFlatItems.length },
+    {
+      key: 'receive', label: 'استلام من المصنع', icon: ArrowDownToLine,
+      count: searchActive ? receiveFlatItems.filter(matchesSearch).length : receiveFlatItems.length,
+    },
+    {
+      key: 'ready', label: 'جاهز للشحن', icon: Truck,
+      count: searchActive ? readyFlatItems.filter(matchesSearch).length : readyFlatItems.length,
+    },
+    {
+      key: 'shipped', label: 'تم الشحن', icon: Send,
+      count: searchActive ? shippedFlatItems.filter(matchesSearch).length : shippedFlatItems.length,
+    },
+    {
+      key: 'received', label: 'تم الاستلام', icon: ArrowDownToLine,
+      count: searchActive ? receivedFlatItems.filter(matchesSearch).length : receivedFlatItems.length,
+    },
   ];
 
   const renderContent = () => {
@@ -349,32 +363,54 @@ export default function ShippingOrders() {
       return <div className="p-12 flex justify-center"><Loader2 className="animate-spin text-primary" /></div>;
     }
 
-    let items: { item: any; order: any }[];
-    let renderFn: (entry: { item: any; order: any }) => any;
+    if (searchActive) {
+      // Global search: collect matching items from all tabs, deduplicated by item.id
+      const seen = new Set<number>();
+      const results: JSX.Element[] = [];
 
-    switch (activeTab) {
-      case 'receive':
-        items = filterBySearch(receiveFlatItems);
-        renderFn = renderReceiveCard;
-        break;
-      case 'ready':
-        items = filterBySearch(readyFlatItems);
-        renderFn = renderShipCard;
-        break;
-      case 'shipped':
-        items = filterBySearch(shippedFlatItems);
-        renderFn = renderHistoryCard;
-        break;
-      case 'received':
-        items = filterBySearch(receivedFlatItems);
-        renderFn = renderHistoryCard;
-        break;
-      default:
-        items = [];
-        renderFn = renderHistoryCard;
+      const addItems = (
+        list: { item: any; order: any }[],
+        renderFn: (entry: { item: any; order: any }) => JSX.Element | null
+      ) => {
+        for (const entry of list) {
+          if (!seen.has(entry.item.id) && matchesSearch(entry)) {
+            seen.add(entry.item.id);
+            const card = renderFn(entry);
+            if (card) results.push(card);
+          }
+        }
+      };
+
+      // Priority: ready to ship first (most actionable), then receive, then history
+      addItems(readyFlatItems, renderShipCard);
+      addItems(receiveFlatItems, renderReceiveCard);
+      addItems(receivedFlatItems, renderHistoryCard);
+      addItems(shippedFlatItems, renderHistoryCard);
+
+      if (results.length === 0) {
+        return <div className="col-span-full text-center py-12 text-slate-400">لا توجد نتائج للبحث</div>;
+      }
+
+      return (
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+          {results}
+        </div>
+      );
     }
 
-    const rendered = items.map(renderFn).filter(Boolean);
+    // Normal tab view when not searching
+    let items: { item: any; order: any }[];
+    let renderFn: (entry: { item: any; order: any }) => JSX.Element | null;
+
+    switch (activeTab) {
+      case 'receive': items = receiveFlatItems; renderFn = renderReceiveCard; break;
+      case 'ready': items = readyFlatItems; renderFn = renderShipCard; break;
+      case 'shipped': items = shippedFlatItems; renderFn = renderHistoryCard; break;
+      case 'received': items = receivedFlatItems; renderFn = renderHistoryCard; break;
+      default: items = []; renderFn = renderHistoryCard;
+    }
+
+    const rendered = items.map(renderFn).filter(Boolean) as JSX.Element[];
 
     if (rendered.length === 0) {
       return <div className="col-span-full text-center py-12 text-slate-400">لا توجد طلبات</div>;
@@ -397,32 +433,58 @@ export default function ShippingOrders() {
             <p className="text-slate-500">استلام البضائع من المصنع وشحنها إلى نقاط البيع</p>
           </div>
 
-          <div className="relative">
-            <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <div className="relative max-w-md">
+            <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
             <Input
-              placeholder="بحث بالمنتج، الكود، أو الفرع..."
+              placeholder="بحث في جميع التبويبات: المنتج، الكود، الفرع..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pr-9 max-w-md"
+              className="pr-9 pl-9"
               data-testid="input-search-orders"
             />
+            {searchActive && (
+              <button
+                onClick={() => setSearchTerm("")}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                data-testid="button-clear-search"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
           </div>
 
-          <div className="flex flex-wrap gap-2">
-            {tabs.map(tab => (
-              <Button
-                key={tab.key}
-                variant={activeTab === tab.key ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setActiveTab(tab.key)}
-                data-testid={`filter-${tab.key}`}
-                className="gap-1"
-              >
-                <tab.icon className="h-3.5 w-3.5" />
-                {tab.label} ({tab.count})
-              </Button>
-            ))}
-          </div>
+          {!searchActive && (
+            <div className="flex flex-wrap gap-2">
+              {tabs.map(tab => (
+                <Button
+                  key={tab.key}
+                  variant={activeTab === tab.key ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setActiveTab(tab.key)}
+                  data-testid={`filter-${tab.key}`}
+                  className="gap-1"
+                >
+                  <tab.icon className="h-3.5 w-3.5" />
+                  {tab.label} ({tab.count})
+                </Button>
+              ))}
+            </div>
+          )}
+
+          {searchActive && (
+            <div className="flex flex-wrap gap-2">
+              {tabs.map(tab => (
+                <div
+                  key={tab.key}
+                  className="flex items-center gap-1 px-3 py-1.5 rounded-md bg-slate-100 text-slate-600 text-sm"
+                >
+                  <tab.icon className="h-3.5 w-3.5" />
+                  <span>{tab.label}</span>
+                  <span className="font-bold text-primary">({tab.count})</span>
+                </div>
+              ))}
+            </div>
+          )}
 
           {renderContent()}
         </div>
