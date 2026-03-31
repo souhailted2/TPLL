@@ -1,12 +1,11 @@
 import { Sidebar } from "@/components/layout-sidebar";
-import { useOrders, useUpdateOrderStatus, useUpdateItemStatus, useDismissOrderAlert } from "@/hooks/use-orders";
+import { useOrders, useUpdateItemStatus, useDismissOrderAlert } from "@/hooks/use-orders";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Loader2, Check, X as XIcon, AlertTriangle, BellOff, PlayCircle, CheckCircle2, Printer, Search, ChevronDown, Pencil, Save } from "lucide-react";
+import { Loader2, Check, X as XIcon, AlertTriangle, BellOff, PlayCircle, CheckCircle2, Printer, Search, Pencil, Save } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { formatMaghrebDate } from "@/lib/queryClient";
 import { useState, useMemo } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -36,7 +35,6 @@ const ITEM_STATUS_FILTERS: Record<string, (item: any) => boolean> = {
 
 export default function ReceptionOrders() {
   const { data: orders, isLoading } = useOrders();
-  const updateStatus = useUpdateOrderStatus();
   const updateItemStatus = useUpdateItemStatus();
   const dismissAlert = useDismissOrderAlert();
   const [activeFilter, setActiveFilter] = useState<string>('pending');
@@ -59,22 +57,6 @@ export default function ReceptionOrders() {
       toast({ title: labels[newStatus] || "تم التحديث" });
     } catch (err: any) {
       toast({ title: "خطأ", description: err.message, variant: "destructive" });
-    }
-  };
-
-  const handleOrderStatusChange = async (orderId: number, newStatus: string) => {
-    try {
-      await updateStatus.mutateAsync({ id: orderId, status: newStatus });
-      const labels: Record<string, string> = {
-        submitted: 'تم إعادة الطلب للانتظار',
-        accepted: 'تم قبول الطلب',
-        rejected: 'تم رفض الطلب',
-        in_progress: 'الطلب قيد الإنجاز',
-        completed: 'تم إنجاز الطلب',
-      };
-      toast({ title: labels[newStatus] || 'تم تحديث حالة الطلب' });
-    } catch (err: any) {
-      toast({ title: 'خطأ', description: err.message, variant: 'destructive' });
     }
   };
 
@@ -143,27 +125,6 @@ export default function ReceptionOrders() {
       case 'rejected': return 'border-red-200';
       default: return 'border-slate-200';
     }
-  };
-
-  const receptionOrderTransitions: Record<string, { label: string; target: string; color: string }[]> = {
-    submitted: [
-      { label: 'مقبول', target: 'accepted', color: 'text-emerald-700' },
-      { label: 'مرفوض', target: 'rejected', color: 'text-red-700' },
-    ],
-    accepted: [
-      { label: 'قيد الإنجاز', target: 'in_progress', color: 'text-blue-700' },
-      { label: 'في الانتظار', target: 'submitted', color: 'text-amber-700' },
-    ],
-    rejected: [
-      { label: 'في الانتظار', target: 'submitted', color: 'text-amber-700' },
-    ],
-    in_progress: [
-      { label: 'منجز', target: 'completed', color: 'text-green-700' },
-      { label: 'مقبول', target: 'accepted', color: 'text-emerald-700' },
-    ],
-    completed: [
-      { label: 'قيد الإنجاز', target: 'in_progress', color: 'text-blue-700' },
-    ],
   };
 
   // Flatten all items into individual entries with their parent order
@@ -263,9 +224,6 @@ export default function ReceptionOrders() {
   const renderItemCard = ({ item, order }: { item: any; order: any }) => {
     const itemSt = item.itemStatus || 'pending';
     const hasAlert = isItemAlert(item, order);
-    const orderTransitions = receptionOrderTransitions[order.status] || [];
-    const canChangeOrderStatus = !['shipped', 'received'].includes(order.status) && orderTransitions.length > 0;
-
     return (
       <Card
         key={`${order.id}-${item.id}`}
@@ -292,34 +250,6 @@ export default function ReceptionOrders() {
               <Badge variant="secondary" className={`text-[10px] ${getOrderStatusColor(order.status)}`}>
                 {getOrderStatusLabel(order.status)}
               </Badge>
-              {canChangeOrderStatus && (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      size="sm" variant="ghost"
-                      className="h-6 w-6 p-0 text-slate-400 hover:text-slate-700"
-                      disabled={updateStatus.isPending}
-                      data-testid={`button-order-status-${order.id}`}
-                    >
-                      <ChevronDown className="h-3 w-3" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="min-w-[160px]">
-                    <DropdownMenuLabel className="text-[10px] text-slate-500">تغيير حالة الطلب</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    {orderTransitions.map((opt) => (
-                      <DropdownMenuItem
-                        key={opt.target}
-                        className={`text-xs gap-2 cursor-pointer font-medium ${opt.color}`}
-                        onClick={() => handleOrderStatusChange(order.id, opt.target)}
-                        data-testid={`menu-order-status-${order.id}-${opt.target}`}
-                      >
-                        {opt.label}
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              )}
             </div>
           </div>
 
@@ -406,72 +336,27 @@ export default function ReceptionOrders() {
                 </>
               )}
               {itemSt === 'accepted' && (
-                <>
-                  <Button
-                    size="sm" variant="outline"
-                    className="text-xs gap-1"
-                    onClick={() => handleItemStatusChange(item.id, 'in_progress')}
-                    disabled={updateItemStatus.isPending}
-                    data-testid={`button-start-item-${item.id}`}
-                  >
-                    <PlayCircle className="h-3 w-3" />
-                    بدء الإنجاز
-                  </Button>
-                  <Button
-                    size="sm" variant="ghost"
-                    className="text-xs gap-1 text-slate-500"
-                    onClick={() => handleItemStatusChange(item.id, 'pending')}
-                    disabled={updateItemStatus.isPending}
-                    data-testid={`button-reset-item-${item.id}`}
-                  >
-                    إعادة للانتظار
-                  </Button>
-                </>
-              )}
-              {itemSt === 'in_progress' && (
-                <>
-                  <Button
-                    size="sm" variant="default"
-                    className="text-xs gap-1"
-                    onClick={() => handleItemStatusChange(item.id, 'completed')}
-                    disabled={updateItemStatus.isPending}
-                    data-testid={`button-complete-item-${item.id}`}
-                  >
-                    <CheckCircle2 className="h-3 w-3" />
-                    تم الإنجاز
-                  </Button>
-                  <Button
-                    size="sm" variant="ghost"
-                    className="text-xs gap-1 text-slate-500"
-                    onClick={() => handleItemStatusChange(item.id, 'accepted')}
-                    disabled={updateItemStatus.isPending}
-                    data-testid={`button-back-item-${item.id}`}
-                  >
-                    إعادة لمقبول
-                  </Button>
-                </>
-              )}
-              {itemSt === 'rejected' && (
                 <Button
                   size="sm" variant="outline"
                   className="text-xs gap-1"
-                  onClick={() => handleItemStatusChange(item.id, 'pending')}
-                  disabled={updateItemStatus.isPending}
-                  data-testid={`button-reaccept-item-${item.id}`}
-                >
-                  <Check className="h-3 w-3" />
-                  إعادة للانتظار
-                </Button>
-              )}
-              {itemSt === 'completed' && (
-                <Button
-                  size="sm" variant="ghost"
-                  className="text-xs gap-1 text-slate-500"
                   onClick={() => handleItemStatusChange(item.id, 'in_progress')}
                   disabled={updateItemStatus.isPending}
-                  data-testid={`button-back-completed-item-${item.id}`}
+                  data-testid={`button-start-item-${item.id}`}
                 >
-                  إعادة لقيد الإنجاز
+                  <PlayCircle className="h-3 w-3" />
+                  بدء الإنجاز
+                </Button>
+              )}
+              {itemSt === 'in_progress' && (
+                <Button
+                  size="sm" variant="default"
+                  className="text-xs gap-1"
+                  onClick={() => handleItemStatusChange(item.id, 'completed')}
+                  disabled={updateItemStatus.isPending}
+                  data-testid={`button-complete-item-${item.id}`}
+                >
+                  <CheckCircle2 className="h-3 w-3" />
+                  تم الإنجاز
                 </Button>
               )}
               {(itemSt === 'accepted' || itemSt === 'in_progress' || itemSt === 'completed') && (
