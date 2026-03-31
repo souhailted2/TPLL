@@ -2,7 +2,7 @@ import { Sidebar } from "@/components/layout-sidebar";
 import { useOrders, useUpdateOrderStatus, useUpdateItemStatus, useDismissOrderAlert } from "@/hooks/use-orders";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Loader2, Check, X as XIcon, AlertTriangle, BellOff, PlayCircle, CheckCircle2, Package, Printer, Search } from "lucide-react";
+import { Loader2, Check, X as XIcon, AlertTriangle, BellOff, PlayCircle, CheckCircle2, Package, Printer, Search, RotateCcw } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { formatMaghrebDate } from "@/lib/queryClient";
@@ -198,6 +198,20 @@ export default function ReceptionOrders() {
     }
   };
 
+  const handleOrderStatusChange = async (orderId: number, newStatus: string) => {
+    try {
+      await updateStatus.mutateAsync({ orderId, status: newStatus });
+      const statusLabels: Record<string, string> = {
+        submitted: 'تم إعادة الطلب للانتظار',
+        accepted: 'تم إعادة الطلب لمقبول',
+        in_progress: 'تم إعادة الطلب لقيد الإنجاز',
+      };
+      toast({ title: statusLabels[newStatus] || 'تم تحديث حالة الطلب' });
+    } catch (err: any) {
+      toast({ title: 'خطأ', description: err.message, variant: 'destructive' });
+    }
+  };
+
   const handleDismissAlert = async (orderId: number) => {
     try {
       await dismissAlert.mutateAsync(orderId);
@@ -385,6 +399,59 @@ export default function ReceptionOrders() {
               {order.createdAt && formatMaghrebDate(order.createdAt)}
             </span>
           </div>
+
+          {['accepted', 'rejected', 'in_progress', 'completed'].includes(order.status) && (
+            <div className="flex flex-wrap gap-1">
+              {order.status === 'accepted' && (
+                <Button
+                  size="sm" variant="outline"
+                  className="text-xs gap-1 border-slate-300 text-slate-600"
+                  onClick={() => handleOrderStatusChange(order.id, 'submitted')}
+                  disabled={updateStatus.isPending}
+                  data-testid={`button-correct-order-${order.id}-submitted`}
+                >
+                  <RotateCcw className="h-3 w-3" />
+                  إعادة للانتظار
+                </Button>
+              )}
+              {order.status === 'rejected' && (
+                <Button
+                  size="sm" variant="outline"
+                  className="text-xs gap-1 border-slate-300 text-slate-600"
+                  onClick={() => handleOrderStatusChange(order.id, 'submitted')}
+                  disabled={updateStatus.isPending}
+                  data-testid={`button-correct-order-${order.id}-submitted`}
+                >
+                  <RotateCcw className="h-3 w-3" />
+                  إعادة للانتظار
+                </Button>
+              )}
+              {order.status === 'in_progress' && (
+                <Button
+                  size="sm" variant="outline"
+                  className="text-xs gap-1 border-slate-300 text-slate-600"
+                  onClick={() => handleOrderStatusChange(order.id, 'accepted')}
+                  disabled={updateStatus.isPending}
+                  data-testid={`button-correct-order-${order.id}-accepted`}
+                >
+                  <RotateCcw className="h-3 w-3" />
+                  إعادة لمقبول
+                </Button>
+              )}
+              {order.status === 'completed' && (
+                <Button
+                  size="sm" variant="outline"
+                  className="text-xs gap-1 border-slate-300 text-slate-600"
+                  onClick={() => handleOrderStatusChange(order.id, 'in_progress')}
+                  disabled={updateStatus.isPending}
+                  data-testid={`button-correct-order-${order.id}-in_progress`}
+                >
+                  <RotateCcw className="h-3 w-3" />
+                  إعادة لقيد الإنجاز
+                </Button>
+              )}
+            </div>
+          )}
 
           {hasAlert && (
             <Button

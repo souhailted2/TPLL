@@ -250,8 +250,10 @@ export async function registerRoutes(
       const allowedTransitions: Record<string, Record<string, string[]>> = {
         reception: {
           submitted: ['accepted', 'rejected'],
-          accepted: ['in_progress'],
-          in_progress: ['completed'],
+          accepted: ['in_progress', 'submitted'],
+          rejected: ['submitted'],
+          in_progress: ['completed', 'accepted'],
+          completed: ['in_progress'],
         },
         shipping: {
           completed: ['shipped'],
