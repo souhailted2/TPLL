@@ -1,7 +1,7 @@
 import { Sidebar } from "@/components/layout-sidebar";
 import { useOrders, useUpdateOrderStatus, useConfirmItemReceived } from "@/hooks/use-orders";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Package, PackageCheck, Check, CheckCircle, XCircle, PlayCircle, Truck, PackageOpen } from "lucide-react";
+import { Loader2, Package, PackageCheck, Check } from "lucide-react";
 import { formatMaghrebDate } from "@/lib/queryClient";
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -212,74 +212,8 @@ export default function SalesOrders() {
     );
   };
 
-  const handleChangeStatus = (orderId: number, newStatus: string) => {
-    const statusLabels: Record<string, string> = {
-      accepted: 'مقبول',
-      rejected: 'مرفوض',
-      in_progress: 'قيد الإنجاز',
-      completed: 'منجز',
-      shipped: 'تم الشحن',
-      received: 'تم الاستلام',
-    };
-    updateStatus.mutate(
-      { id: orderId, status: newStatus },
-      {
-        onSuccess: () => {
-          toast({ title: `تم تغيير حالة الطلب إلى: ${statusLabels[newStatus] || newStatus}` });
-        },
-        onError: (err: any) => {
-          toast({ title: 'خطأ', description: err.message || 'فشل تغيير الحالة', variant: 'destructive' });
-        },
-      }
-    );
-  };
-
-  const renderStatusActions = (order: any) => {
-    if (updateStatus.isPending) return null;
-    switch (order.status) {
-      case 'submitted':
-        return (
-          <div className="flex gap-2 pt-1">
-            <Button size="sm" className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white gap-1" onClick={() => handleChangeStatus(order.id, 'accepted')} data-testid={`button-accept-order-${order.id}`}>
-              <CheckCircle className="h-3 w-3" /> قبول
-            </Button>
-            <Button size="sm" variant="outline" className="flex-1 border-red-300 text-red-600 hover:bg-red-50 gap-1" onClick={() => handleChangeStatus(order.id, 'rejected')} data-testid={`button-reject-order-${order.id}`}>
-              <XCircle className="h-3 w-3" /> رفض
-            </Button>
-          </div>
-        );
-      case 'accepted':
-        return (
-          <Button size="sm" className="w-full bg-blue-600 hover:bg-blue-700 text-white gap-1" onClick={() => handleChangeStatus(order.id, 'in_progress')} data-testid={`button-inprogress-order-${order.id}`}>
-            <PlayCircle className="h-3 w-3" /> بدء الإنجاز
-          </Button>
-        );
-      case 'in_progress':
-        return (
-          <Button size="sm" className="w-full bg-green-600 hover:bg-green-700 text-white gap-1" onClick={() => handleChangeStatus(order.id, 'completed')} data-testid={`button-complete-order-${order.id}`}>
-            <CheckCircle className="h-3 w-3" /> إنجاز الطلب
-          </Button>
-        );
-      case 'completed':
-        return (
-          <Button size="sm" className="w-full bg-purple-600 hover:bg-purple-700 text-white gap-1" onClick={() => handleChangeStatus(order.id, 'shipped')} data-testid={`button-ship-order-${order.id}`}>
-            <Truck className="h-3 w-3" /> تم الشحن
-          </Button>
-        );
-      case 'shipped':
-        return (
-          <Button size="sm" className="w-full bg-teal-600 hover:bg-teal-700 text-white gap-1" onClick={() => handleChangeStatus(order.id, 'received')} data-testid={`button-receive-order-${order.id}`}>
-            <PackageOpen className="h-3 w-3" /> تم الاستلام
-          </Button>
-        );
-      default:
-        return null;
-    }
-  };
-
   const renderOrderCard = (order: any) => {
     const displayItems = order._filteredItems || order.items || [];
-    const statusActions = renderStatusActions(order);
 
     return (
       <Card key={order.id} data-testid={`card-order-${order.id}`}>
@@ -298,12 +232,6 @@ export default function SalesOrders() {
               {order.createdAt && formatMaghrebDate(order.createdAt)}
             </span>
           </div>
-
-          {statusActions && (
-            <div className="border-t border-slate-100 pt-3">
-              {statusActions}
-            </div>
-          )}
 
           {displayItems.length > 0 && (
             <div className="border-t border-slate-100 pt-3 space-y-2">

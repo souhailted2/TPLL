@@ -137,16 +137,6 @@ export const isAuthenticated: RequestHandler = async (req: any, res, next) => {
 };
 
 export async function seedUsers() {
-  // Remove legacy test accounts that should no longer exist
-  const legacyUsernames = ['t2t'];
-  for (const username of legacyUsernames) {
-    const [legacy] = await db.select().from(users).where(eq(users.username, username));
-    if (legacy) {
-      await db.delete(userRoles).where(eq(userRoles.userId, legacy.id));
-      await db.delete(users).where(eq(users.id, legacy.id));
-    }
-  }
-
   const defaultUsers = [
     { username: "المدير العام", password: "5555", firstName: "المدير العام", role: "admin", salesPointName: null },
     { username: "reception1", password: "1111", firstName: "طارق", role: "reception", salesPointName: null },

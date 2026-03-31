@@ -154,27 +154,6 @@ export function useAdminCorrectItem() {
   });
 }
 
-export function useReceptionCorrectOrderStatus() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async ({ id, status }: { id: number; status: string }) => {
-      const res = await fetch(`/api/orders/${id}/status-correct`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', ...authHeaders() },
-        body: JSON.stringify({ status }),
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({ message: "فشل تصحيح حالة الطلب" }));
-        throw new Error(err.message);
-      }
-      return res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [api.orders.list.path] });
-    },
-  });
-}
-
 export function useUpdateItemStatus() {
   const queryClient = useQueryClient();
   return useMutation({
