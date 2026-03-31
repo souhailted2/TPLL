@@ -34,7 +34,7 @@ export default function SalesOrderHistory() {
   };
 
   const getUnitLabel = (unit: string) => {
-    return unit === 'bag' ? 'شكارة 25 كغ' : 'قطعة';
+    return unit === 'bag' ? 'شكارة 20 كغ' : 'قطعة';
   };
 
   return (

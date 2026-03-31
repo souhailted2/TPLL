@@ -339,7 +339,7 @@ export default function NewOrder() {
                         <p className="text-xs text-slate-400">{item.productSku}</p>
                       </div>
                       <Badge variant={item.unit === "bag" ? "default" : "outline"} className="text-xs">
-                        {item.unit === "bag" ? "شكارة 25 كغ" : "قطعة"}
+                        {item.unit === "bag" ? "شكارة 20 كغ" : "قطعة"}
                       </Badge>
                     </div>
                     <div className="flex items-center justify-between gap-2">
@@ -458,7 +458,7 @@ export default function NewOrder() {
                   <h3 className="font-bold text-lg text-slate-900">{quantityPrompt.productName}</h3>
                   <p className="text-xs text-slate-400">{quantityPrompt.productSku}</p>
                   <Badge variant={quantityPrompt.unit === "bag" ? "default" : "outline"} className="mt-2">
-                    {quantityPrompt.unit === "bag" ? "شكارة 25 كغ" : "قطعة"}
+                    {quantityPrompt.unit === "bag" ? "شكارة 20 كغ" : "قطعة"}
                   </Badge>
                 </div>
                 <div className="space-y-2">

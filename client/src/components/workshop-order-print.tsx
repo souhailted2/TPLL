@@ -14,7 +14,7 @@ export function WorkshopItemPrint({ order, item, onClose }: WorkshopItemPrintPro
   const printRef = useRef<HTMLDivElement>(null);
 
   const getUnitLabel = (unit: string) => {
-    return unit === 'bag' ? 'شكارة 25 كغ' : 'قطعة';
+    return unit === 'bag' ? 'شكارة 20 كغ' : 'قطعة';
   };
 
   const handlePrint = () => {

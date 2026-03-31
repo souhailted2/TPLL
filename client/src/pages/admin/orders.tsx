@@ -139,7 +139,7 @@ export default function AdminOrders() {
     }
   };
 
-  const getUnitLabel = (unit: string) => unit === 'bag' ? 'شكارة 25 كغ' : 'قطعة';
+  const getUnitLabel = (unit: string) => unit === 'bag' ? 'شكارة 20 كغ' : 'قطعة';
 
   const allFlatItems = useMemo(() => {
     if (!orders) return [];

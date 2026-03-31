@@ -115,7 +115,7 @@ export default function ReceptionOrders() {
     }
   };
 
-  const getUnitLabel = (unit: string) => unit === 'bag' ? 'شكارة 25 كغ' : 'قطعة';
+  const getUnitLabel = (unit: string) => unit === 'bag' ? 'شكارة 20 كغ' : 'قطعة';
 
   const getItemCardBorder = (status: string) => {
     switch (status) {
