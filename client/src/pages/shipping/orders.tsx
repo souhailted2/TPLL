@@ -364,7 +364,6 @@ export default function ShippingOrders() {
     }
 
     if (searchActive) {
-      // Global search: collect matching items from all tabs, deduplicated by item.id
       const seen = new Set<number>();
       const results: JSX.Element[] = [];
 
@@ -381,7 +380,6 @@ export default function ShippingOrders() {
         }
       };
 
-      // Priority: ready to ship first (most actionable), then receive, then history
       addItems(readyFlatItems, renderShipCard);
       addItems(receiveFlatItems, renderReceiveCard);
       addItems(receivedFlatItems, renderHistoryCard);
@@ -398,7 +396,6 @@ export default function ShippingOrders() {
       );
     }
 
-    // Normal tab view when not searching
     let items: { item: any; order: any }[];
     let renderFn: (entry: { item: any; order: any }) => JSX.Element | null;
 
