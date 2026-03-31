@@ -162,6 +162,9 @@ export async function registerRoutes(
   app.delete(api.orders.delete.path, requireAuth, async (req: any, res) => {
     try {
       const orderId = Number(req.params.id);
+      if (!Number.isInteger(orderId) || orderId <= 0) {
+        return res.status(400).json({ message: "معرف الطلب غير صالح" });
+      }
       const userId = req.userId;
       const userRole = await storage.getUserRole(userId);
       if (userRole?.role !== 'admin') {

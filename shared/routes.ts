@@ -112,6 +112,8 @@ export const api = {
       path: '/api/orders/:id',
       responses: {
         204: z.void(),
+        400: errorSchemas.validation,
+        403: z.object({ message: z.string() }),
         404: errorSchemas.notFound,
         401: errorSchemas.unauthorized,
       },
