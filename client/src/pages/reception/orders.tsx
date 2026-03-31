@@ -200,7 +200,7 @@ export default function ReceptionOrders() {
 
   const handleOrderStatusChange = async (orderId: number, newStatus: string) => {
     try {
-      await updateStatus.mutateAsync({ orderId, status: newStatus });
+      await updateStatus.mutateAsync({ id: orderId, status: newStatus });
       const statusLabels: Record<string, string> = {
         submitted: 'تم إعادة الطلب للانتظار',
         accepted: 'تم إعادة الطلب لمقبول',
