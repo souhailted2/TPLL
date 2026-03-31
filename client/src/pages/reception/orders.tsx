@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Loader2, Check, X as XIcon, AlertTriangle, BellOff, PlayCircle, CheckCircle2, Package, Printer, Search, RotateCcw } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { formatMaghrebDate } from "@/lib/queryClient";
 import { useState, useMemo } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -400,58 +401,48 @@ export default function ReceptionOrders() {
             </span>
           </div>
 
-          {['accepted', 'rejected', 'in_progress', 'completed'].includes(order.status) && (
-            <div className="flex flex-wrap gap-1">
-              {order.status === 'accepted' && (
-                <Button
-                  size="sm" variant="outline"
-                  className="text-xs gap-1 border-slate-300 text-slate-600"
-                  onClick={() => handleOrderStatusChange(order.id, 'submitted')}
-                  disabled={updateStatus.isPending}
-                  data-testid={`button-correct-order-${order.id}-submitted`}
-                >
-                  <RotateCcw className="h-3 w-3" />
-                  إعادة للانتظار
-                </Button>
-              )}
-              {order.status === 'rejected' && (
-                <Button
-                  size="sm" variant="outline"
-                  className="text-xs gap-1 border-slate-300 text-slate-600"
-                  onClick={() => handleOrderStatusChange(order.id, 'submitted')}
-                  disabled={updateStatus.isPending}
-                  data-testid={`button-correct-order-${order.id}-submitted`}
-                >
-                  <RotateCcw className="h-3 w-3" />
-                  إعادة للانتظار
-                </Button>
-              )}
-              {order.status === 'in_progress' && (
-                <Button
-                  size="sm" variant="outline"
-                  className="text-xs gap-1 border-slate-300 text-slate-600"
-                  onClick={() => handleOrderStatusChange(order.id, 'accepted')}
-                  disabled={updateStatus.isPending}
-                  data-testid={`button-correct-order-${order.id}-accepted`}
-                >
-                  <RotateCcw className="h-3 w-3" />
-                  إعادة لمقبول
-                </Button>
-              )}
-              {order.status === 'completed' && (
-                <Button
-                  size="sm" variant="outline"
-                  className="text-xs gap-1 border-slate-300 text-slate-600"
-                  onClick={() => handleOrderStatusChange(order.id, 'in_progress')}
-                  disabled={updateStatus.isPending}
-                  data-testid={`button-correct-order-${order.id}-in_progress`}
-                >
-                  <RotateCcw className="h-3 w-3" />
-                  إعادة لقيد الإنجاز
-                </Button>
-              )}
-            </div>
-          )}
+          {['accepted', 'rejected', 'in_progress', 'completed'].includes(order.status) && (() => {
+            const correctionOptions: { label: string; target: string }[] = [];
+            if (order.status === 'accepted' || order.status === 'rejected') {
+              correctionOptions.push({ label: 'إعادة للانتظار', target: 'submitted' });
+            }
+            if (order.status === 'in_progress') {
+              correctionOptions.push({ label: 'إعادة لمقبول', target: 'accepted' });
+            }
+            if (order.status === 'completed') {
+              correctionOptions.push({ label: 'إعادة لقيد الإنجاز', target: 'in_progress' });
+            }
+            return (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    size="sm" variant="outline"
+                    className="text-xs gap-1 border-slate-300 text-slate-600"
+                    disabled={updateStatus.isPending}
+                    data-testid={`button-correct-order-${order.id}`}
+                  >
+                    <RotateCcw className="h-3 w-3" />
+                    تصحيح
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="min-w-[160px]">
+                  <DropdownMenuLabel className="text-xs text-slate-500">إعادة الحالة إلى</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  {correctionOptions.map((opt) => (
+                    <DropdownMenuItem
+                      key={opt.target}
+                      className="text-xs gap-2 cursor-pointer"
+                      onClick={() => handleOrderStatusChange(order.id, opt.target)}
+                      data-testid={`menu-item-correct-${order.id}-${opt.target}`}
+                    >
+                      <RotateCcw className="h-3 w-3 text-slate-500" />
+                      {opt.label}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            );
+          })()}
 
           {hasAlert && (
             <Button
