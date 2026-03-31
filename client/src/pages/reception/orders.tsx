@@ -2,7 +2,7 @@ import { Sidebar } from "@/components/layout-sidebar";
 import { useOrders, useUpdateOrderStatus, useUpdateItemStatus, useDismissOrderAlert } from "@/hooks/use-orders";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Loader2, Check, X as XIcon, AlertTriangle, BellOff, PlayCircle, CheckCircle2, Package, Printer, Search, RotateCcw } from "lucide-react";
+import { Loader2, Check, X as XIcon, AlertTriangle, BellOff, PlayCircle, CheckCircle2, Package, Printer, Search, ChevronDown } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
@@ -401,17 +401,29 @@ export default function ReceptionOrders() {
             </span>
           </div>
 
-          {['accepted', 'rejected', 'in_progress', 'completed'].includes(order.status) && (() => {
-            const correctionOptions: { label: string; target: string }[] = [];
-            if (order.status === 'accepted' || order.status === 'rejected') {
-              correctionOptions.push({ label: 'إعادة للانتظار', target: 'submitted' });
-            }
-            if (order.status === 'in_progress') {
-              correctionOptions.push({ label: 'إعادة لمقبول', target: 'accepted' });
-            }
-            if (order.status === 'completed') {
-              correctionOptions.push({ label: 'إعادة لقيد الإنجاز', target: 'in_progress' });
-            }
+          {!['shipped', 'received'].includes(order.status) && (() => {
+            const receptionTransitions: Record<string, { label: string; target: string; color?: string }[]> = {
+              submitted: [
+                { label: 'مقبول', target: 'accepted', color: 'text-emerald-700' },
+                { label: 'مرفوض', target: 'rejected', color: 'text-red-700' },
+              ],
+              accepted: [
+                { label: 'قيد الإنجاز', target: 'in_progress', color: 'text-blue-700' },
+                { label: 'في الانتظار', target: 'submitted', color: 'text-amber-700' },
+              ],
+              rejected: [
+                { label: 'في الانتظار', target: 'submitted', color: 'text-amber-700' },
+              ],
+              in_progress: [
+                { label: 'منجز', target: 'completed', color: 'text-green-700' },
+                { label: 'مقبول', target: 'accepted', color: 'text-emerald-700' },
+              ],
+              completed: [
+                { label: 'قيد الإنجاز', target: 'in_progress', color: 'text-blue-700' },
+              ],
+            };
+            const options = receptionTransitions[order.status] || [];
+            if (options.length === 0) return null;
             return (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -419,23 +431,22 @@ export default function ReceptionOrders() {
                     size="sm" variant="outline"
                     className="text-xs gap-1 border-slate-300 text-slate-600"
                     disabled={updateStatus.isPending}
-                    data-testid={`button-correct-order-${order.id}`}
+                    data-testid={`button-change-status-${order.id}`}
                   >
-                    <RotateCcw className="h-3 w-3" />
-                    تصحيح
+                    تغيير الحالة
+                    <ChevronDown className="h-3 w-3" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="min-w-[160px]">
-                  <DropdownMenuLabel className="text-xs text-slate-500">إعادة الحالة إلى</DropdownMenuLabel>
+                  <DropdownMenuLabel className="text-xs text-slate-500">اختر الحالة الجديدة</DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  {correctionOptions.map((opt) => (
+                  {options.map((opt) => (
                     <DropdownMenuItem
                       key={opt.target}
-                      className="text-xs gap-2 cursor-pointer"
+                      className={`text-xs gap-2 cursor-pointer font-medium ${opt.color || ''}`}
                       onClick={() => handleOrderStatusChange(order.id, opt.target)}
-                      data-testid={`menu-item-correct-${order.id}-${opt.target}`}
+                      data-testid={`menu-item-status-${order.id}-${opt.target}`}
                     >
-                      <RotateCcw className="h-3 w-3 text-slate-500" />
                       {opt.label}
                     </DropdownMenuItem>
                   ))}
