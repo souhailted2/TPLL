@@ -189,13 +189,13 @@ export default function AdminOrders() {
   const searchFilteredItems = useMemo(() => {
     if (!searchTerm.trim()) return filteredFlatItems;
     const term = searchTerm.trim().toLowerCase();
-    return filteredFlatItems.filter(({ item, order }) =>
+    return allFlatItems.filter(({ item, order }) =>
       String(order.id).includes(term) ||
       (order.salesPoint?.salesPointName || order.salesPoint?.firstName || '').toLowerCase().includes(term) ||
       (item.product?.name || '').toLowerCase().includes(term) ||
       (item.product?.sku || '').toLowerCase().includes(term)
     );
-  }, [filteredFlatItems, searchTerm]);
+  }, [allFlatItems, filteredFlatItems, searchTerm]);
 
   const countByFilter = (filter: string) => {
     if (!allFlatItems.length) return 0;
@@ -453,15 +453,24 @@ export default function AdminOrders() {
             <p className="text-slate-500">متابعة وتحديث حالات طلبات الفروع</p>
           </div>
 
-          <div className="relative">
+          <div className="relative max-w-md">
             <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="بحث بالمنتج، الكود، أو الفرع..."
+              placeholder="بحث في كل الطلبات: منتج، كود، فرع، أو رقم طلب..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pr-9 max-w-md"
+              className="pr-9 pl-8"
               data-testid="input-search-orders"
             />
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm("")}
+                className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700"
+                data-testid="button-clear-search"
+              >
+                <XIcon className="h-4 w-4" />
+              </button>
+            )}
           </div>
 
           <div className="flex flex-wrap gap-2">
