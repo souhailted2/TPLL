@@ -489,8 +489,9 @@ export default function ReceptionOrders() {
                 size="sm" variant="outline"
                 className="gap-1 text-[10px] border-orange-300 text-orange-700"
                 onClick={() => {
+                  const allowed = ['pending', 'accepted', 'in_progress', 'completed'];
                   setCorrectingItem(item.id);
-                  setCorrectStatus(itemSt === 'rejected' ? 'pending' : itemSt);
+                  setCorrectStatus(allowed.includes(itemSt) ? itemSt : 'pending');
                 }}
                 data-testid={`button-correct-item-${item.id}`}
               >
@@ -518,8 +519,12 @@ export default function ReceptionOrders() {
                 <Button
                   size="sm" className="gap-1 text-xs"
                   onClick={async () => {
-                    await handleItemStatusChange(item.id, correctStatus);
-                    setCorrectingItem(null);
+                    try {
+                      await updateItemStatus.mutateAsync({ itemId: item.id, itemStatus: correctStatus });
+                      setCorrectingItem(null);
+                    } catch {
+                      toast({ title: 'خطأ في التصحيح', variant: 'destructive' });
+                    }
                   }}
                   disabled={updateItemStatus.isPending}
                   data-testid={`button-save-correct-${item.id}`}
