@@ -96,29 +96,6 @@ export default function SalesOrders() {
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'accepted':    return 'bg-emerald-100 text-emerald-800';
-      case 'in_progress': return 'bg-blue-100 text-blue-800';
-      case 'completed':   return 'bg-green-100 text-green-800';
-      case 'rejected':    return 'bg-red-100 text-red-800';
-      case 'shipped':     return 'bg-purple-100 text-purple-800';
-      case 'received':    return 'bg-teal-100 text-teal-800';
-      default:            return 'bg-orange-100 text-orange-800';
-    }
-  };
-
-  const getStatusLabel = (status: string) => {
-    switch (status) {
-      case 'accepted':    return 'مقبول';
-      case 'rejected':    return 'مرفوض';
-      case 'in_progress': return 'قيد الإنجاز';
-      case 'completed':   return 'منجز';
-      case 'shipped':     return 'تم الشحن';
-      case 'received':    return 'تم الاستلام';
-      default:            return 'في الانتظار';
-    }
-  };
 
   const getItemStatusStyle = (status: string): { badge: string; headerBg: string; border: string } => {
     switch (status) {
@@ -181,17 +158,14 @@ export default function SalesOrders() {
             <span className="font-bold text-sm text-slate-800" data-testid={`text-order-ref-${item.id}`}>
               طلب #{order.id}
             </span>
-            <Badge variant="secondary" className={`text-[10px] shrink-0 ${getStatusColor(order.status)}`} data-testid={`badge-order-status-${item.id}`}>
-              {getStatusLabel(order.status)}
+            <Badge variant="secondary" className={`text-[10px] ${style.badge}`}>
+              {getItemStatusLabel(isReceived ? 'received' : itemSt)}
             </Badge>
           </div>
           <div className="flex items-center justify-between gap-2">
             <span className="text-xs text-slate-400">
               {order.createdAt && formatMaghrebDate(order.createdAt)}
             </span>
-            <Badge variant="secondary" className={`text-[10px] ${style.badge}`}>
-              {getItemStatusLabel(isReceived ? 'received' : itemSt)}
-            </Badge>
           </div>
         </CardHeader>
 
