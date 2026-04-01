@@ -94,14 +94,14 @@ export default function ReceptionOrders() {
     }
   };
 
-  const getItemStatusStyle = (status: string): { badge: string; headerBg: string; accent: string } => {
+  const getItemStatusStyle = (status: string): { badge: string; headerBg: string; leftBorder: string } => {
     switch (status) {
-      case 'accepted':   return { badge: 'bg-emerald-100 text-emerald-800', headerBg: 'bg-emerald-50', accent: 'border-emerald-300' };
-      case 'in_progress': return { badge: 'bg-blue-100 text-blue-800',     headerBg: 'bg-blue-50',    accent: 'border-blue-300' };
-      case 'completed':  return { badge: 'bg-green-100 text-green-800',    headerBg: 'bg-green-50',   accent: 'border-green-300' };
-      case 'rejected':   return { badge: 'bg-red-100 text-red-800',        headerBg: 'bg-red-50',     accent: 'border-red-300' };
-      case 'received':   return { badge: 'bg-teal-100 text-teal-800',      headerBg: 'bg-teal-50',    accent: 'border-teal-300' };
-      default:           return { badge: 'bg-amber-100 text-amber-800',    headerBg: 'bg-slate-50',   accent: 'border-slate-200' };
+      case 'accepted':   return { badge: 'bg-emerald-100 text-emerald-800', headerBg: 'bg-emerald-50', leftBorder: 'border-l-emerald-500' };
+      case 'in_progress': return { badge: 'bg-blue-100 text-blue-800',     headerBg: 'bg-blue-50',    leftBorder: 'border-l-blue-500' };
+      case 'completed':  return { badge: 'bg-green-100 text-green-800',    headerBg: 'bg-green-50',   leftBorder: 'border-l-green-500' };
+      case 'rejected':   return { badge: 'bg-red-100 text-red-800',        headerBg: 'bg-red-50',     leftBorder: 'border-l-red-500' };
+      case 'received':   return { badge: 'bg-teal-100 text-teal-800',      headerBg: 'bg-teal-50',    leftBorder: 'border-l-teal-500' };
+      default:           return { badge: 'bg-amber-100 text-amber-800',    headerBg: 'bg-amber-50',   leftBorder: 'border-l-amber-400' };
     }
   };
 
@@ -223,7 +223,7 @@ export default function ReceptionOrders() {
     return (
       <Card
         key={`${order.id}-${item.id}`}
-        className={`overflow-hidden border ${hasAlert ? 'border-red-400' : style.accent} shadow-md`}
+        className={`overflow-hidden bg-white border border-slate-200 border-l-4 ${hasAlert ? 'border-l-red-500' : style.leftBorder} shadow-md`}
         data-testid={`card-item-${item.id}`}
       >
         {/* ── Card Header ── */}
