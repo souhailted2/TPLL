@@ -95,14 +95,14 @@ export default function ReceptionOrders() {
     }
   };
 
-  const getItemStatusStyle = (status: string): { badge: string; headerBg: string; leftBorder: string } => {
+  const getItemStatusStyle = (status: string): { badge: string; headerBg: string; border: string } => {
     switch (status) {
-      case 'accepted':   return { badge: 'bg-emerald-100 text-emerald-800', headerBg: 'bg-emerald-50', leftBorder: 'border-l-emerald-500' };
-      case 'in_progress': return { badge: 'bg-blue-100 text-blue-800',     headerBg: 'bg-blue-50',    leftBorder: 'border-l-blue-500' };
-      case 'completed':  return { badge: 'bg-green-100 text-green-800',    headerBg: 'bg-green-50',   leftBorder: 'border-l-green-500' };
-      case 'rejected':   return { badge: 'bg-red-100 text-red-800',        headerBg: 'bg-red-50',     leftBorder: 'border-l-red-500' };
-      case 'received':   return { badge: 'bg-teal-100 text-teal-800',      headerBg: 'bg-teal-50',    leftBorder: 'border-l-teal-500' };
-      default:           return { badge: 'bg-amber-100 text-amber-800',    headerBg: 'bg-amber-50',   leftBorder: 'border-l-amber-400' };
+      case 'accepted':   return { badge: 'bg-emerald-100 text-emerald-800', headerBg: 'bg-emerald-50', border: 'border-2 border-emerald-300' };
+      case 'in_progress': return { badge: 'bg-blue-100 text-blue-800',     headerBg: 'bg-blue-50',    border: 'border-2 border-blue-300' };
+      case 'completed':  return { badge: 'bg-green-100 text-green-800',    headerBg: 'bg-green-50',   border: 'border-2 border-green-300' };
+      case 'rejected':   return { badge: 'bg-red-100 text-red-800',        headerBg: 'bg-red-50',     border: 'border-2 border-red-300' };
+      case 'received':   return { badge: 'bg-teal-100 text-teal-800',      headerBg: 'bg-teal-50',    border: 'border-2 border-teal-300' };
+      default:           return { badge: 'bg-amber-100 text-amber-800',    headerBg: 'bg-amber-50',   border: 'border-2 border-amber-300' };
     }
   };
 
@@ -224,7 +224,7 @@ export default function ReceptionOrders() {
     return (
       <AnimatedCard key={`${order.id}-${item.id}`} index={cardIndex} data-testid={`card-item-${item.id}`}>
       <Card
-        className={`overflow-hidden bg-white border border-slate-200 border-l-4 ${hasAlert ? 'border-l-red-500' : style.leftBorder} shadow-md`}
+        className={`overflow-hidden bg-white ${hasAlert ? 'border-2 border-red-400' : style.border}`}
       >
         {/* ── Card Header ── */}
         <CardHeader className={`${hasAlert ? 'bg-red-50' : style.headerBg} px-4 py-3 space-y-1 border-b ${hasAlert ? 'border-red-200' : 'border-slate-200'}`}>

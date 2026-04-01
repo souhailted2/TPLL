@@ -146,7 +146,7 @@ export default function ShippingOrders() {
     const completedPct = Math.min(Math.round((currentCompleted / (item.quantity || 1)) * 100), 100);
 
     return (
-      <Card key={`receive-${order.id}-${item.id}`} className="overflow-hidden bg-white border border-slate-200 border-l-4 border-l-blue-500 shadow-md" data-testid={`card-item-${item.id}`}>
+      <Card key={`receive-${order.id}-${item.id}`} className="overflow-hidden bg-white border-2 border-blue-300" data-testid={`card-item-${item.id}`}>
         <CardHeader className="bg-blue-50 px-4 py-3 space-y-1 border-b border-blue-200">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 min-w-0">
@@ -242,7 +242,7 @@ export default function ShippingOrders() {
     const shippedPct = Math.min(Math.round((currentShipped / totalQty) * 100), 100);
 
     return (
-      <Card key={`ship-${order.id}-${item.id}`} className="overflow-hidden bg-white border border-slate-200 border-l-4 border-l-purple-500 shadow-md" data-testid={`card-item-${item.id}`}>
+      <Card key={`ship-${order.id}-${item.id}`} className="overflow-hidden bg-white border-2 border-purple-300" data-testid={`card-item-${item.id}`}>
         <CardHeader className="bg-purple-50 px-4 py-3 space-y-1 border-b border-purple-200">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 min-w-0">
@@ -344,7 +344,7 @@ export default function ShippingOrders() {
     return (
       <Card
         key={`hist-${order.id}-${item.id}`}
-        className={`overflow-hidden bg-white border border-slate-200 border-l-4 ${isReceived ? 'border-l-teal-500' : 'border-l-purple-400'} shadow-md`}
+        className={`overflow-hidden bg-white ${isReceived ? 'border-2 border-teal-300' : 'border-2 border-purple-300'}`}
         data-testid={`card-item-${item.id}`}
       >
         <CardHeader className={`${isReceived ? 'bg-teal-50' : 'bg-slate-50'} px-4 py-3 space-y-1 border-b border-slate-200`}>
