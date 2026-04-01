@@ -1,7 +1,8 @@
 import { Sidebar } from "@/components/layout-sidebar";
 import { useOrders, useUpdateItemStatus, useDismissOrderAlert } from "@/hooks/use-orders";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 import { Loader2, Check, X as XIcon, AlertTriangle, BellOff, PlayCircle, CheckCircle2, Printer, Search, Pencil, Save } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -93,41 +94,30 @@ export default function ReceptionOrders() {
     }
   };
 
-  const getItemStatusColor = (status: string) => {
+  const getItemStatusStyle = (status: string): { badge: string; headerBg: string; accent: string } => {
     switch (status) {
-      case 'accepted': return 'bg-emerald-100 text-emerald-800';
-      case 'in_progress': return 'bg-blue-100 text-blue-800';
-      case 'completed': return 'bg-green-100 text-green-800';
-      case 'rejected': return 'bg-red-100 text-red-800';
-      case 'received': return 'bg-teal-100 text-teal-800';
-      default: return 'bg-amber-100 text-orange-800';
+      case 'accepted':   return { badge: 'bg-emerald-100 text-emerald-800', headerBg: 'bg-emerald-50', accent: 'border-emerald-300' };
+      case 'in_progress': return { badge: 'bg-blue-100 text-blue-800',     headerBg: 'bg-blue-50',    accent: 'border-blue-300' };
+      case 'completed':  return { badge: 'bg-green-100 text-green-800',    headerBg: 'bg-green-50',   accent: 'border-green-300' };
+      case 'rejected':   return { badge: 'bg-red-100 text-red-800',        headerBg: 'bg-red-50',     accent: 'border-red-300' };
+      case 'received':   return { badge: 'bg-teal-100 text-teal-800',      headerBg: 'bg-teal-50',    accent: 'border-teal-300' };
+      default:           return { badge: 'bg-amber-100 text-amber-800',    headerBg: 'bg-slate-50',   accent: 'border-slate-200' };
     }
   };
 
   const getItemStatusLabel = (status: string) => {
     switch (status) {
-      case 'accepted': return 'مقبول';
-      case 'rejected': return 'مرفوض';
+      case 'accepted':   return 'مقبول';
+      case 'rejected':   return 'مرفوض';
       case 'in_progress': return 'قيد الإنجاز';
-      case 'completed': return 'تم الإنجاز';
-      case 'received': return 'تم الاستلام';
-      default: return 'في الانتظار';
+      case 'completed':  return 'تم الإنجاز';
+      case 'received':   return 'تم الاستلام';
+      default:           return 'في الانتظار';
     }
   };
 
   const getUnitLabel = (unit: string) => unit === 'bag' ? 'شكارة 20 كغ' : 'قطعة';
 
-  const getItemCardBorder = (status: string) => {
-    switch (status) {
-      case 'accepted': return 'border-emerald-200';
-      case 'in_progress': return 'border-blue-200';
-      case 'completed': return 'border-green-200';
-      case 'rejected': return 'border-red-200';
-      default: return 'border-slate-200';
-    }
-  };
-
-  // Flatten all items into individual entries with their parent order
   const allFlatItems = useMemo(() => {
     if (!orders) return [];
     const flat: { item: any; order: any }[] = [];
@@ -141,9 +131,7 @@ export default function ReceptionOrders() {
 
   const filteredFlatItems = useMemo(() => {
     if (!allFlatItems.length) return [];
-
     let result = allFlatItems;
-
     switch (activeFilter) {
       case 'pending':
         result = result.filter(({ item, order }) =>
@@ -175,7 +163,6 @@ export default function ReceptionOrders() {
       default:
         break;
     }
-
     return result;
   }, [allFlatItems, activeFilter]);
 
@@ -224,67 +211,94 @@ export default function ReceptionOrders() {
   const renderItemCard = ({ item, order }: { item: any; order: any }) => {
     const itemSt = item.itemStatus || 'pending';
     const hasAlert = isItemAlert(item, order);
+    const style = getItemStatusStyle(itemSt);
+    const completedQty = item.completedQuantity || 0;
+    const shippedQty = item.shippedQuantity || 0;
+    const totalQty = item.quantity || 1;
+    const completedPct = Math.min(Math.round((completedQty / totalQty) * 100), 100);
+    const shippedPct = Math.min(Math.round((shippedQty / totalQty) * 100), 100);
+    const showProgress = completedQty > 0 || shippedQty > 0;
+    const canAct = order.status !== 'shipped' && order.status !== 'received';
+
     return (
       <Card
         key={`${order.id}-${item.id}`}
-        className={`${getItemCardBorder(itemSt)} ${hasAlert ? 'border-red-300' : ''}`}
+        className={`overflow-hidden border ${hasAlert ? 'border-red-400' : style.accent} shadow-sm`}
         data-testid={`card-item-${item.id}`}
       >
-        <CardContent className="p-4 space-y-3">
-
-          {/* Order header */}
-          <div className="flex items-center justify-between gap-2 pb-2 border-b border-slate-100">
-            <div className="flex items-center gap-2 flex-wrap">
-              {hasAlert && <AlertTriangle className="h-3.5 w-3.5 text-red-500 shrink-0" />}
-              <span className="font-mono text-xs font-bold text-slate-500" data-testid={`text-order-ref-${item.id}`}>
+        {/* ── Card Header ── */}
+        <CardHeader className={`${hasAlert ? 'bg-red-50' : style.headerBg} px-4 py-3 space-y-1 border-b ${hasAlert ? 'border-red-200' : 'border-slate-200'}`}>
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 min-w-0">
+              {hasAlert && <AlertTriangle className="h-4 w-4 text-red-500 shrink-0" />}
+              <span className="font-bold text-sm text-slate-800" data-testid={`text-order-ref-${item.id}`}>
                 طلب #{order.id}
               </span>
-              <span className="text-xs text-slate-400">•</span>
-              <span className="text-xs font-medium text-slate-600" data-testid={`text-sales-point-${item.id}`}>
+              <span className="text-slate-300">•</span>
+              <span className="font-semibold text-sm text-slate-700 truncate" data-testid={`text-sales-point-${item.id}`}>
                 {order.salesPoint?.salesPointName || order.salesPoint?.firstName}
               </span>
-              <span className="text-xs text-slate-400">•</span>
-              <span className="text-xs text-slate-400">{order.createdAt && formatMaghrebDate(order.createdAt)}</span>
             </div>
-            <div className="flex items-center gap-1 shrink-0">
-              <Badge variant="secondary" className={`text-[10px] ${getOrderStatusColor(order.status)}`}>
-                {getOrderStatusLabel(order.status)}
-              </Badge>
-            </div>
+            <Badge variant="secondary" className={`text-[10px] shrink-0 ${getOrderStatusColor(order.status)}`}>
+              {getOrderStatusLabel(order.status)}
+            </Badge>
           </div>
-
-          {/* Item main info */}
-          <div className="flex items-start justify-between gap-2">
-            <div className="flex-1 min-w-0">
-              <p className="font-semibold text-sm break-words" data-testid={`text-item-name-${item.id}`}>
-                {item.product?.name}
-              </p>
-              <p className="text-[10px] text-slate-400">{item.product?.sku}</p>
-            </div>
-            <div className="flex items-center gap-2 shrink-0">
-              <Badge variant={item.unit === 'bag' ? 'default' : 'outline'} className="text-[10px]">
-                {getUnitLabel(item.unit || 'piece')}
-              </Badge>
-              <span className="font-bold text-lg text-primary" data-testid={`text-item-qty-${item.id}`}>
-                {item.quantity}
-              </span>
-            </div>
-          </div>
-
-          {/* Item status & quantities */}
-          <div className="flex items-center justify-between gap-2 flex-wrap">
-            <Badge variant="secondary" className={`text-[10px] ${getItemStatusColor(itemSt)}`}>
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-xs text-slate-400">
+              {order.createdAt && formatMaghrebDate(order.createdAt)}
+            </span>
+            <Badge variant="secondary" className={`text-[10px] ${style.badge}`}>
               {getItemStatusLabel(itemSt)}
             </Badge>
-            <div className="flex items-center gap-3 text-xs">
-              {item.completedQuantity > 0 && (
-                <span className="text-slate-500">منجز: <span className="font-bold">{item.completedQuantity}</span></span>
+          </div>
+        </CardHeader>
+
+        {/* ── Card Body ── */}
+        <CardContent className="px-4 py-3 space-y-3">
+          {/* Product name + quantity */}
+          <div className="space-y-1">
+            <p className="font-bold text-base text-slate-900 leading-tight" data-testid={`text-item-name-${item.id}`}>
+              {item.product?.name}
+            </p>
+            <p className="text-xs text-slate-400 font-mono">{item.product?.sku}</p>
+          </div>
+
+          <div className="flex items-center justify-between bg-slate-50 rounded-lg px-3 py-2">
+            <span className="text-xs text-slate-500">الكمية المطلوبة</span>
+            <span className="font-bold text-slate-800 text-sm" data-testid={`text-item-qty-${item.id}`}>
+              {item.quantity} {getUnitLabel(item.unit || 'piece')}
+            </span>
+          </div>
+
+          {/* Progress bar */}
+          {showProgress && (
+            <div className="space-y-1.5">
+              {completedQty > 0 && (
+                <div className="space-y-1">
+                  <div className="flex justify-between text-xs text-slate-500">
+                    <span>الإنجاز</span>
+                    <span className="font-medium text-slate-700">{completedQty} / {totalQty}</span>
+                  </div>
+                  <Progress
+                    value={completedPct}
+                    className="h-2 bg-slate-200 [&>div]:bg-emerald-500"
+                  />
+                </div>
               )}
-              {(item.shippedQuantity || 0) > 0 && (
-                <span className="text-purple-600">مشحون: <span className="font-bold">{item.shippedQuantity}</span></span>
+              {shippedQty > 0 && (
+                <div className="space-y-1">
+                  <div className="flex justify-between text-xs text-slate-500">
+                    <span>الشحن</span>
+                    <span className="font-medium text-purple-700">{shippedQty} / {totalQty}</span>
+                  </div>
+                  <Progress
+                    value={shippedPct}
+                    className="h-2 bg-slate-200 [&>div]:bg-purple-500"
+                  />
+                </div>
               )}
             </div>
-          </div>
+          )}
 
           {/* Alert */}
           {hasAlert && (
@@ -292,7 +306,7 @@ export default function ReceptionOrders() {
               <div className="flex items-center gap-2">
                 <AlertTriangle className="h-3.5 w-3.5 text-red-600 shrink-0" />
                 <p className="text-xs text-red-700">
-                  {item.completedQuantity < item.quantity ? 'إنجاز غير مكتمل' : 'تجاوز الكمية'} — منذ أكثر من {ALERT_DAYS} يوم
+                  {completedQty < totalQty ? 'إنجاز غير مكتمل' : 'تجاوز الكمية'} — منذ أكثر من {ALERT_DAYS} يوم
                 </p>
               </div>
               <Button
@@ -308,89 +322,12 @@ export default function ReceptionOrders() {
             </div>
           )}
 
-          {/* Action buttons */}
-          {order.status !== 'shipped' && order.status !== 'received' && (
-            <div className="flex flex-wrap items-center gap-1 pt-1 border-t border-slate-100">
-              {itemSt === 'pending' && (
-                <>
-                  <Button
-                    size="sm" variant="default"
-                    className="text-xs gap-1"
-                    onClick={() => handleItemStatusChange(item.id, 'accepted')}
-                    disabled={updateItemStatus.isPending}
-                    data-testid={`button-accept-item-${item.id}`}
-                  >
-                    <Check className="h-3 w-3" />
-                    قبول
-                  </Button>
-                  <Button
-                    size="sm" variant="destructive"
-                    className="text-xs gap-1"
-                    onClick={() => handleItemStatusChange(item.id, 'rejected')}
-                    disabled={updateItemStatus.isPending}
-                    data-testid={`button-reject-item-${item.id}`}
-                  >
-                    <XIcon className="h-3 w-3" />
-                    رفض
-                  </Button>
-                </>
-              )}
-              {itemSt === 'accepted' && (
-                <Button
-                  size="sm" variant="outline"
-                  className="text-xs gap-1"
-                  onClick={() => handleItemStatusChange(item.id, 'in_progress')}
-                  disabled={updateItemStatus.isPending}
-                  data-testid={`button-start-item-${item.id}`}
-                >
-                  <PlayCircle className="h-3 w-3" />
-                  بدء الإنجاز
-                </Button>
-              )}
-              {itemSt === 'in_progress' && (
-                <Button
-                  size="sm" variant="default"
-                  className="text-xs gap-1"
-                  onClick={() => handleItemStatusChange(item.id, 'completed')}
-                  disabled={updateItemStatus.isPending}
-                  data-testid={`button-complete-item-${item.id}`}
-                >
-                  <CheckCircle2 className="h-3 w-3" />
-                  تم الإنجاز
-                </Button>
-              )}
-              {(itemSt === 'accepted' || itemSt === 'in_progress' || itemSt === 'completed') && (
-                <Button
-                  size="sm" variant="outline"
-                  className="gap-1 text-[10px] border-blue-300 text-blue-700 mr-auto"
-                  onClick={() => setPrintItem({ order, item })}
-                  data-testid={`button-print-item-${item.id}`}
-                >
-                  <Printer className="h-3 w-3" />
-                  طباعة أمر ورشة
-                </Button>
-              )}
-              <Button
-                size="sm" variant="outline"
-                className="gap-1 text-[10px] border-orange-300 text-orange-700"
-                onClick={() => {
-                  const allowed = ['pending', 'accepted', 'in_progress', 'completed'];
-                  setCorrectingItem(item.id);
-                  setCorrectStatus(allowed.includes(itemSt) ? itemSt : 'pending');
-                }}
-                data-testid={`button-correct-item-${item.id}`}
-              >
-                <Pencil className="h-3 w-3" />
-                تصحيح الحالة
-              </Button>
-            </div>
-          )}
-
+          {/* Correction form */}
           {correctingItem === item.id && (
-            <div className="pt-2 border-t border-orange-200 bg-orange-50/50 rounded-lg p-3 space-y-3">
+            <div className="border border-orange-200 bg-orange-50 rounded-lg p-3 space-y-2">
               <p className="text-xs font-bold text-orange-800">تصحيح حالة الصنف</p>
               <Select value={correctStatus} onValueChange={setCorrectStatus}>
-                <SelectTrigger className="text-xs" data-testid={`select-correct-status-${item.id}`}>
+                <SelectTrigger className="text-xs bg-white" data-testid={`select-correct-status-${item.id}`}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -400,9 +337,9 @@ export default function ReceptionOrders() {
                   <SelectItem value="completed">منجز</SelectItem>
                 </SelectContent>
               </Select>
-              <div className="flex items-center gap-2">
+              <div className="flex gap-2">
                 <Button
-                  size="sm" className="gap-1 text-xs"
+                  size="sm" className="flex-1 gap-1 text-xs"
                   onClick={async () => {
                     try {
                       await updateItemStatus.mutateAsync({ itemId: item.id, itemStatus: correctStatus });
@@ -428,8 +365,94 @@ export default function ReceptionOrders() {
               </div>
             </div>
           )}
-
         </CardContent>
+
+        {/* ── Card Footer — Action buttons ── */}
+        {canAct && (
+          <CardFooter className="px-4 py-3 border-t border-slate-100 flex flex-col gap-2">
+            {/* Main action buttons */}
+            {(itemSt === 'pending' || itemSt === 'accepted' || itemSt === 'in_progress') && (
+              <div className="flex gap-2 w-full">
+                {itemSt === 'pending' && (
+                  <>
+                    <Button
+                      size="sm" variant="default"
+                      className="flex-1 gap-1 text-sm"
+                      onClick={() => handleItemStatusChange(item.id, 'accepted')}
+                      disabled={updateItemStatus.isPending}
+                      data-testid={`button-accept-item-${item.id}`}
+                    >
+                      <Check className="h-4 w-4" />
+                      قبول
+                    </Button>
+                    <Button
+                      size="sm" variant="destructive"
+                      className="flex-1 gap-1 text-sm"
+                      onClick={() => handleItemStatusChange(item.id, 'rejected')}
+                      disabled={updateItemStatus.isPending}
+                      data-testid={`button-reject-item-${item.id}`}
+                    >
+                      <XIcon className="h-4 w-4" />
+                      رفض
+                    </Button>
+                  </>
+                )}
+                {itemSt === 'accepted' && (
+                  <Button
+                    size="sm" variant="outline"
+                    className="flex-1 gap-1 text-sm border-blue-300 text-blue-700 hover:bg-blue-50"
+                    onClick={() => handleItemStatusChange(item.id, 'in_progress')}
+                    disabled={updateItemStatus.isPending}
+                    data-testid={`button-start-item-${item.id}`}
+                  >
+                    <PlayCircle className="h-4 w-4" />
+                    بدء الإنجاز
+                  </Button>
+                )}
+                {itemSt === 'in_progress' && (
+                  <Button
+                    size="sm" variant="default"
+                    className="flex-1 gap-1 text-sm bg-emerald-600 hover:bg-emerald-700"
+                    onClick={() => handleItemStatusChange(item.id, 'completed')}
+                    disabled={updateItemStatus.isPending}
+                    data-testid={`button-complete-item-${item.id}`}
+                  >
+                    <CheckCircle2 className="h-4 w-4" />
+                    تم الإنجاز
+                  </Button>
+                )}
+              </div>
+            )}
+
+            {/* Secondary actions */}
+            <div className="flex gap-2 w-full">
+              {(itemSt === 'accepted' || itemSt === 'in_progress' || itemSt === 'completed') && (
+                <Button
+                  size="sm" variant="outline"
+                  className="flex-1 gap-1 text-xs border-blue-200 text-blue-700 hover:bg-blue-50"
+                  onClick={() => setPrintItem({ order, item })}
+                  data-testid={`button-print-item-${item.id}`}
+                >
+                  <Printer className="h-3.5 w-3.5" />
+                  طباعة أمر ورشة
+                </Button>
+              )}
+              <Button
+                size="sm" variant="outline"
+                className="flex-1 gap-1 text-xs border-orange-200 text-orange-700 hover:bg-orange-50"
+                onClick={() => {
+                  const allowed = ['pending', 'accepted', 'in_progress', 'completed'];
+                  setCorrectingItem(correctingItem === item.id ? null : item.id);
+                  setCorrectStatus(allowed.includes(itemSt) ? itemSt : 'pending');
+                }}
+                data-testid={`button-correct-item-${item.id}`}
+              >
+                <Pencil className="h-3.5 w-3.5" />
+                تصحيح الحالة
+              </Button>
+            </div>
+          </CardFooter>
+        )}
       </Card>
     );
   };
@@ -449,15 +472,15 @@ export default function ReceptionOrders() {
       <Sidebar role="reception" />
       <main className="flex-1 md:mr-64 p-4 md:p-8 pt-24 md:pt-8 overflow-x-hidden">
         <div className="max-w-7xl mx-auto space-y-6">
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-1">
             <h1 className="text-3xl font-bold text-slate-900" data-testid="text-page-title">إدارة الطلبات</h1>
-            <p className="text-slate-500">قبول ورفض الأصناف وإدارة حالة الإنتاج</p>
+            <p className="text-slate-500 text-sm">قبول ورفض الأصناف وإدارة حالة الإنتاج</p>
           </div>
 
           <div className="relative max-w-md">
             <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="بحث في كل الطلبات: منتج، كود، فرع، أو رقم طلب..."
+              placeholder="بحث: منتج، كود، فرع، أو رقم طلب..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pr-9 pl-8"
