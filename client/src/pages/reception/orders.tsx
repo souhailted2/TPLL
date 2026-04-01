@@ -11,6 +11,7 @@ import { formatMaghrebDate } from "@/lib/queryClient";
 import { useState, useMemo } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { WorkshopItemPrint } from "@/components/workshop-order-print";
+import { AnimatedCard } from "@/components/animated-card";
 
 const ALERT_DAYS = 15;
 
@@ -208,7 +209,7 @@ export default function ReceptionOrders() {
 
   const alertCount = useMemo(() => countByFilter('alerts'), [allFlatItems]);
 
-  const renderItemCard = ({ item, order }: { item: any; order: any }) => {
+  const renderItemCard = ({ item, order }: { item: any; order: any }, cardIndex: number = 0) => {
     const itemSt = item.itemStatus || 'pending';
     const hasAlert = isItemAlert(item, order);
     const style = getItemStatusStyle(itemSt);
@@ -221,10 +222,9 @@ export default function ReceptionOrders() {
     const canAct = order.status !== 'shipped' && order.status !== 'received';
 
     return (
+      <AnimatedCard key={`${order.id}-${item.id}`} index={cardIndex} data-testid={`card-item-${item.id}`}>
       <Card
-        key={`${order.id}-${item.id}`}
         className={`overflow-hidden bg-white border border-slate-200 border-l-4 ${hasAlert ? 'border-l-red-500' : style.leftBorder} shadow-md`}
-        data-testid={`card-item-${item.id}`}
       >
         {/* ── Card Header ── */}
         <CardHeader className={`${hasAlert ? 'bg-red-50' : style.headerBg} px-4 py-3 space-y-1 border-b ${hasAlert ? 'border-red-200' : 'border-slate-200'}`}>
@@ -454,6 +454,7 @@ export default function ReceptionOrders() {
           </CardFooter>
         )}
       </Card>
+    </AnimatedCard>
     );
   };
 
@@ -523,7 +524,7 @@ export default function ReceptionOrders() {
             </div>
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-              {searchFilteredItems.map(renderItemCard)}
+              {searchFilteredItems.map((entry, i) => renderItemCard(entry, i))}
             </div>
           )}
         </div>

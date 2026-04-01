@@ -8,6 +8,7 @@ import { formatMaghrebDate } from "@/lib/queryClient";
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { AnimatedCard } from "@/components/animated-card";
 
 const ITEM_STATUS_FILTERS: Record<string, (item: any) => boolean> = {
   pending: (i) => ['pending', 'accepted'].includes(i.itemStatus || 'pending'),
@@ -298,7 +299,11 @@ export default function SalesOrders() {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-              {filteredFlatItems.map(renderItemCard)}
+              {filteredFlatItems.map((entry, i) => (
+                <AnimatedCard key={`${entry.order.id}-${entry.item.id}`} index={i}>
+                  {renderItemCard(entry)}
+                </AnimatedCard>
+              ))}
             </div>
           )}
         </div>

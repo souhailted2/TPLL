@@ -13,6 +13,7 @@ import { formatMaghrebDate } from "@/lib/queryClient";
 import { useState, useMemo } from "react";
 import { useSearch, useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
+import { AnimatedCard } from "@/components/animated-card";
 
 const ALERT_DAYS = 15;
 
@@ -535,7 +536,11 @@ export default function AdminOrders() {
             </div>
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-              {searchFilteredItems.map(renderItemCard)}
+              {searchFilteredItems.map((entry, i) => (
+                <AnimatedCard key={`${entry.order.id}-${entry.item.id}`} index={i}>
+                  {renderItemCard(entry)}
+                </AnimatedCard>
+              ))}
             </div>
           )}
         </div>

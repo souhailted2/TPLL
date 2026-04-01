@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { formatMaghrebDate } from "@/lib/queryClient";
 import { useState, useMemo } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { AnimatedCard } from "@/components/animated-card";
 
 export default function ShippingOrders() {
   const { data: orders, isLoading } = useOrders();
@@ -419,12 +420,15 @@ export default function ShippingOrders() {
     if (searchActive) {
       const seen = new Set<number>();
       const results: JSX.Element[] = [];
+      let idx = 0;
       const addItems = (list: { item: any; order: any }[], renderFn: (e: { item: any; order: any }) => JSX.Element | null) => {
         for (const entry of list) {
           if (!seen.has(entry.item.id) && matchesSearch(entry)) {
             seen.add(entry.item.id);
             const card = renderFn(entry);
-            if (card) results.push(card);
+            if (card) results.push(
+              <AnimatedCard key={entry.item.id} index={idx++}>{card}</AnimatedCard>
+            );
           }
         }
       };
@@ -447,7 +451,11 @@ export default function ShippingOrders() {
       case 'received': items = receivedFlatItems; renderFn = renderHistoryCard; break;
       default: items = []; renderFn = renderHistoryCard;
     }
-    const rendered = items.map(renderFn).filter(Boolean) as JSX.Element[];
+    const rendered = items.map((entry, i) => {
+      const card = renderFn(entry);
+      if (!card) return null;
+      return <AnimatedCard key={`${entry.order.id}-${entry.item.id}`} index={i}>{card}</AnimatedCard>;
+    }).filter(Boolean) as JSX.Element[];
     if (rendered.length === 0) {
       return <div className="col-span-full text-center py-12 text-slate-400">لا توجد طلبات</div>;
     }
