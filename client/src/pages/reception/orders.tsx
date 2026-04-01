@@ -275,9 +275,9 @@ export default function ReceptionOrders() {
             <div className="space-y-1.5">
               {completedQty > 0 && (
                 <div className="space-y-1">
-                  <div className="flex justify-between text-xs text-slate-500">
-                    <span>الإنجاز</span>
-                    <span className="font-medium text-slate-700">{completedQty} / {totalQty}</span>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-slate-500">الإنجاز</span>
+                    <span className="font-semibold text-emerald-700">{completedQty} / {totalQty} <span className="text-slate-400">({completedPct}%)</span></span>
                   </div>
                   <Progress
                     value={completedPct}
@@ -287,9 +287,9 @@ export default function ReceptionOrders() {
               )}
               {shippedQty > 0 && (
                 <div className="space-y-1">
-                  <div className="flex justify-between text-xs text-slate-500">
-                    <span>الشحن</span>
-                    <span className="font-medium text-purple-700">{shippedQty} / {totalQty}</span>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-slate-500">الشحن</span>
+                    <span className="font-semibold text-purple-700">{shippedQty} / {totalQty} <span className="text-slate-400">({shippedPct}%)</span></span>
                   </div>
                   <Progress
                     value={shippedPct}
