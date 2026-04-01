@@ -1,7 +1,8 @@
 import { Sidebar } from "@/components/layout-sidebar";
 import { useOrders, useUpdateOrderStatus, useDismissOrderAlert, useAdminCorrectItem, useDeleteOrder } from "@/hooks/use-orders";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 import { Loader2, AlertTriangle, BellOff, Pencil, Save, X as XIcon, Search, ChevronDown, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,18 +33,10 @@ const adminOrderTransitions: Record<string, { label: string; target: string; col
     { label: 'مقبول', target: 'accepted', color: 'text-emerald-700' },
     { label: 'مرفوض', target: 'rejected', color: 'text-red-700' },
   ],
-  accepted: [
-    { label: 'قيد الإنجاز', target: 'in_progress', color: 'text-blue-700' },
-  ],
-  in_progress: [
-    { label: 'منجز', target: 'completed', color: 'text-green-700' },
-  ],
-  completed: [
-    { label: 'تم الشحن', target: 'shipped', color: 'text-purple-700' },
-  ],
-  shipped: [
-    { label: 'تم الاستلام', target: 'received', color: 'text-teal-700' },
-  ],
+  accepted: [{ label: 'قيد الإنجاز', target: 'in_progress', color: 'text-blue-700' }],
+  in_progress: [{ label: 'منجز', target: 'completed', color: 'text-green-700' }],
+  completed: [{ label: 'تم الشحن', target: 'shipped', color: 'text-purple-700' }],
+  shipped: [{ label: 'تم الاستلام', target: 'received', color: 'text-teal-700' }],
 };
 
 export default function AdminOrders() {
@@ -117,25 +110,25 @@ export default function AdminOrders() {
     }
   };
 
-  const getItemStatusColor = (status: string) => {
+  const getItemStatusStyle = (status: string): { badge: string; headerBg: string; accent: string } => {
     switch (status) {
-      case 'accepted': return 'bg-emerald-100 text-emerald-800';
-      case 'in_progress': return 'bg-blue-100 text-blue-800';
-      case 'completed': return 'bg-green-100 text-green-800';
-      case 'rejected': return 'bg-red-100 text-red-800';
-      case 'received': return 'bg-teal-100 text-teal-800';
-      default: return 'bg-amber-100 text-orange-800';
+      case 'accepted':    return { badge: 'bg-emerald-100 text-emerald-800', headerBg: 'bg-emerald-50', accent: 'border-emerald-300' };
+      case 'in_progress': return { badge: 'bg-blue-100 text-blue-800',      headerBg: 'bg-blue-50',    accent: 'border-blue-300' };
+      case 'completed':   return { badge: 'bg-green-100 text-green-800',    headerBg: 'bg-green-50',   accent: 'border-green-300' };
+      case 'rejected':    return { badge: 'bg-red-100 text-red-800',        headerBg: 'bg-red-50',     accent: 'border-red-300' };
+      case 'received':    return { badge: 'bg-teal-100 text-teal-800',      headerBg: 'bg-teal-50',    accent: 'border-teal-300' };
+      default:            return { badge: 'bg-amber-100 text-amber-800',    headerBg: 'bg-slate-50',   accent: 'border-slate-200' };
     }
   };
 
   const getItemStatusLabel = (status: string) => {
     switch (status) {
-      case 'accepted': return 'مقبول';
+      case 'accepted':    return 'مقبول';
       case 'in_progress': return 'قيد الإنجاز';
-      case 'completed': return 'تم الإنجاز';
-      case 'rejected': return 'مرفوض';
-      case 'received': return 'تم الاستلام';
-      default: return 'في الانتظار';
+      case 'completed':   return 'تم الإنجاز';
+      case 'rejected':    return 'مرفوض';
+      case 'received':    return 'تم الاستلام';
+      default:            return 'في الانتظار';
     }
   };
 
@@ -234,28 +227,34 @@ export default function AdminOrders() {
   const renderItemCard = ({ item, order }: { item: any; order: any }) => {
     const itemSt = item.itemStatus || 'pending';
     const hasAlert = isItemAlert(item, order);
+    const style = getItemStatusStyle(itemSt);
     const orderTransitions = adminOrderTransitions[order.status] || [];
     const isEditing = editingItem === item.id;
+    const completedQty = item.completedQuantity || 0;
+    const shippedQty = item.shippedQuantity || 0;
+    const totalQty = item.quantity || 1;
+    const completedPct = Math.min(Math.round((completedQty / totalQty) * 100), 100);
+    const shippedPct = Math.min(Math.round((shippedQty / totalQty) * 100), 100);
+    const showProgress = completedQty > 0 || shippedQty > 0;
 
     return (
       <Card
         key={`${order.id}-${item.id}`}
-        className={hasAlert ? 'border-red-300' : ''}
+        className={`overflow-hidden border ${hasAlert ? 'border-red-400' : style.accent} shadow-sm`}
         data-testid={`card-item-${item.id}`}
       >
-        <CardContent className="p-4 space-y-3">
-          <div className="flex items-center justify-between gap-2 pb-2 border-b border-slate-100">
-            <div className="flex items-center gap-2 flex-wrap">
-              {hasAlert && <AlertTriangle className="h-3.5 w-3.5 text-red-500 shrink-0" />}
-              <span className="font-mono text-xs font-bold text-slate-500" data-testid={`text-order-ref-${item.id}`}>
+        {/* Header */}
+        <CardHeader className={`${hasAlert ? 'bg-red-50' : style.headerBg} px-4 py-3 space-y-1 border-b ${hasAlert ? 'border-red-200' : 'border-slate-200'}`}>
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 min-w-0">
+              {hasAlert && <AlertTriangle className="h-4 w-4 text-red-500 shrink-0" />}
+              <span className="font-bold text-sm text-slate-800" data-testid={`text-order-ref-${item.id}`}>
                 طلب #{order.id}
               </span>
-              <span className="text-xs text-slate-400">•</span>
-              <span className="text-xs font-medium text-slate-600" data-testid={`text-sales-point-${item.id}`}>
+              <span className="text-slate-300">•</span>
+              <span className="font-semibold text-sm text-slate-700 truncate" data-testid={`text-sales-point-${item.id}`}>
                 {order.salesPoint?.salesPointName || order.salesPoint?.firstName}
               </span>
-              <span className="text-xs text-slate-400">•</span>
-              <span className="text-xs text-slate-400">{order.createdAt && formatMaghrebDate(order.createdAt)}</span>
             </div>
             <div className="flex items-center gap-1 shrink-0">
               <Badge variant="secondary" className={`text-[10px] ${getStatusColor(order.status)}`}>
@@ -299,89 +298,84 @@ export default function AdminOrders() {
               </Button>
             </div>
           </div>
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-xs text-slate-400">
+              {order.createdAt && formatMaghrebDate(order.createdAt)}
+            </span>
+            <Badge variant="secondary" className={`text-[10px] ${style.badge}`}>
+              {getItemStatusLabel(itemSt)}
+            </Badge>
+          </div>
+        </CardHeader>
 
-          <div className="flex items-start justify-between gap-2">
-            <div className="flex-1 min-w-0">
-              <p className="font-semibold text-sm break-words" data-testid={`text-item-name-${item.id}`}>
-                {item.product?.name}
-              </p>
-              <p className="text-[10px] text-slate-400">{item.product?.sku}</p>
-            </div>
-            <div className="flex items-center gap-2 shrink-0">
-              <Badge variant={item.unit === 'bag' ? 'default' : 'outline'} className="text-[10px]">
-                {getUnitLabel(item.unit || 'piece')}
-              </Badge>
-              <span className="font-bold text-lg text-primary" data-testid={`text-item-qty-${item.id}`}>
-                {item.quantity}
-              </span>
-            </div>
+        {/* Body */}
+        <CardContent className="px-4 py-3 space-y-3">
+          <div className="space-y-1">
+            <p className="font-bold text-base text-slate-900 leading-tight" data-testid={`text-item-name-${item.id}`}>
+              {item.product?.name}
+            </p>
+            <p className="text-xs text-slate-400 font-mono">{item.product?.sku}</p>
           </div>
 
-          {!isEditing && (
-            <>
-              <div className="flex items-center justify-between gap-2 flex-wrap">
-                <Badge variant="secondary" className={`text-[10px] ${getItemStatusColor(itemSt)}`}>
-                  {getItemStatusLabel(itemSt)}
-                </Badge>
-                <div className="flex items-center gap-3 text-xs">
-                  <span className="text-slate-500">المطلوب: <span className="font-bold">{item.quantity}</span></span>
-                  <span className="text-slate-500">المنجز: <span className={`font-bold ${hasAlert ? 'text-red-600' : 'text-green-700'}`}>{item.completedQuantity || 0}</span></span>
-                  {(item.shippedQuantity || 0) > 0 && (
-                    <span className="text-slate-500">المشحون: <span className="font-bold text-purple-700">{item.shippedQuantity}</span></span>
-                  )}
-                </div>
-              </div>
+          <div className="flex items-center justify-between bg-slate-50 rounded-lg px-3 py-2">
+            <span className="text-xs text-slate-500">الكمية المطلوبة</span>
+            <span className="font-bold text-slate-800 text-sm" data-testid={`text-item-qty-${item.id}`}>
+              {item.quantity} {getUnitLabel(item.unit || 'piece')}
+            </span>
+          </div>
 
-              {hasAlert && (
-                <div className="flex items-center justify-between bg-red-50 border border-red-200 rounded-lg px-3 py-2">
-                  <div className="flex items-center gap-2">
-                    <AlertTriangle className="h-3.5 w-3.5 text-red-600 shrink-0" />
-                    <p className="text-xs text-red-700">
-                      {item.completedQuantity < item.quantity ? 'إنجاز غير مكتمل' : 'تجاوز الكمية'} — منذ أكثر من {ALERT_DAYS} يوم
-                    </p>
+          {showProgress && !isEditing && (
+            <div className="space-y-1.5">
+              {completedQty > 0 && (
+                <div className="space-y-1">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-slate-500">الإنجاز</span>
+                    <span className="font-semibold text-emerald-700">{completedQty} / {totalQty} <span className="text-slate-400">({completedPct}%)</span></span>
                   </div>
-                  <Button
-                    size="sm" variant="ghost"
-                    className="h-6 text-[10px] text-red-500 px-2"
-                    onClick={() => handleDismissAlert(order.id)}
-                    disabled={dismissAlert.isPending}
-                    data-testid={`button-dismiss-alert-${item.id}`}
-                  >
-                    <BellOff className="h-3 w-3 ml-1" />
-                    إبطال
-                  </Button>
+                  <Progress value={completedPct} className="h-2 bg-slate-200 [&>div]:bg-emerald-500" />
                 </div>
               )}
+              {shippedQty > 0 && (
+                <div className="space-y-1">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-slate-500">الشحن</span>
+                    <span className="font-semibold text-purple-700">{shippedQty} / {totalQty} <span className="text-slate-400">({shippedPct}%)</span></span>
+                  </div>
+                  <Progress value={shippedPct} className="h-2 bg-slate-200 [&>div]:bg-purple-500" />
+                </div>
+              )}
+            </div>
+          )}
 
-              <div className="pt-1 border-t border-slate-100 flex justify-end">
-                <Button
-                  size="sm" variant="outline"
-                  className="gap-1 text-[10px] border-orange-300 text-orange-700"
-                  onClick={() => {
-                    setEditingItem(item.id);
-                    setEditValues({
-                      completedQuantity: item.completedQuantity || 0,
-                      shippedQuantity: item.shippedQuantity || 0,
-                      itemStatus: itemSt,
-                    });
-                  }}
-                  data-testid={`button-edit-item-${item.id}`}
-                >
-                  <Pencil className="h-3 w-3" />
-                  تصحيح
-                </Button>
+          {hasAlert && !isEditing && (
+            <div className="flex items-center justify-between bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="h-3.5 w-3.5 text-red-600 shrink-0" />
+                <p className="text-xs text-red-700">
+                  {completedQty < totalQty ? 'إنجاز غير مكتمل' : 'تجاوز الكمية'} — منذ أكثر من {ALERT_DAYS} يوم
+                </p>
               </div>
-            </>
+              <Button
+                size="sm" variant="ghost"
+                className="h-6 text-[10px] text-red-500 px-2"
+                onClick={() => handleDismissAlert(order.id)}
+                disabled={dismissAlert.isPending}
+                data-testid={`button-dismiss-alert-${item.id}`}
+              >
+                <BellOff className="h-3 w-3 ml-1" />
+                إبطال
+              </Button>
+            </div>
           )}
 
           {isEditing && (
-            <div className="pt-2 border-t border-orange-200 bg-orange-50/50 rounded-lg p-3 space-y-3">
+            <div className="border border-orange-200 bg-orange-50 rounded-lg p-3 space-y-3">
               <p className="text-xs font-bold text-orange-800">تصحيح الصنف</p>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
                   <label className="text-[10px] text-slate-500 block mb-1">الحالة</label>
                   <Select value={editValues.itemStatus} onValueChange={(v) => setEditValues(prev => ({ ...prev, itemStatus: v }))}>
-                    <SelectTrigger className="text-xs" data-testid={`select-status-${item.id}`}>
+                    <SelectTrigger className="text-xs bg-white" data-testid={`select-status-${item.id}`}>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -400,7 +394,7 @@ export default function AdminOrders() {
                     type="number" min={0}
                     value={editValues.completedQuantity}
                     onChange={(e) => setEditValues(prev => ({ ...prev, completedQuantity: Number(e.target.value) }))}
-                    className="text-xs"
+                    className="text-xs bg-white"
                     data-testid={`input-completed-${item.id}`}
                   />
                 </div>
@@ -410,14 +404,14 @@ export default function AdminOrders() {
                     type="number" min={0}
                     value={editValues.shippedQuantity}
                     onChange={(e) => setEditValues(prev => ({ ...prev, shippedQuantity: Number(e.target.value) }))}
-                    className="text-xs"
+                    className="text-xs bg-white"
                     data-testid={`input-shipped-${item.id}`}
                   />
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex gap-2">
                 <Button
-                  size="sm" className="gap-1 text-xs"
+                  size="sm" className="flex-1 gap-1 text-xs"
                   onClick={async () => {
                     try {
                       const corrections: any = {};
@@ -450,6 +444,28 @@ export default function AdminOrders() {
             </div>
           )}
         </CardContent>
+
+        {/* Footer */}
+        {!isEditing && (
+          <CardFooter className="px-4 py-3 border-t border-slate-100">
+            <Button
+              size="sm" variant="outline"
+              className="w-full gap-1 text-xs border-orange-200 text-orange-700 hover:bg-orange-50"
+              onClick={() => {
+                setEditingItem(item.id);
+                setEditValues({
+                  completedQuantity: item.completedQuantity || 0,
+                  shippedQuantity: item.shippedQuantity || 0,
+                  itemStatus: itemSt,
+                });
+              }}
+              data-testid={`button-edit-item-${item.id}`}
+            >
+              <Pencil className="h-3.5 w-3.5" />
+              تصحيح بيانات الصنف
+            </Button>
+          </CardFooter>
+        )}
       </Card>
     );
   };
@@ -459,9 +475,9 @@ export default function AdminOrders() {
       <Sidebar role="admin" />
       <main className="flex-1 md:mr-64 p-4 md:p-8 pt-24 md:pt-8 overflow-x-hidden">
         <div className="max-w-7xl mx-auto space-y-6">
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-1">
             <h1 className="text-3xl font-bold" data-testid="text-page-title">سجل الطلبات</h1>
-            <p className="text-slate-500">متابعة وتحديث حالات طلبات الفروع</p>
+            <p className="text-slate-500 text-sm">متابعة وتحديث حالات طلبات الفروع</p>
           </div>
 
           <div className="relative max-w-md">
@@ -493,6 +509,7 @@ export default function AdminOrders() {
               { key: 'shipped', label: 'تم الشحن', count: countByFilter('shipped') },
               { key: 'received', label: 'تم الاستلام', count: countByFilter('received') },
               { key: 'rejected', label: 'مرفوض', count: countByFilter('rejected') },
+              ...(alertCount > 0 ? [{ key: 'alerts', label: 'تنبيهات', count: alertCount }] : []),
             ].map(f => (
               <Button
                 key={f.key}
@@ -500,64 +517,56 @@ export default function AdminOrders() {
                 size="sm"
                 onClick={() => handleFilterChange(f.key)}
                 data-testid={`filter-${f.key}`}
+                className={f.key === 'alerts' ? 'border-red-300 text-red-600' : ''}
               >
                 {f.label} ({f.count})
               </Button>
             ))}
-            {alertCount > 0 && (
-              <Button
-                variant={activeFilter === 'alerts' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => handleFilterChange('alerts')}
-                className={activeFilter !== 'alerts' ? 'border-red-300 text-red-600' : 'bg-red-600'}
-                data-testid="filter-alerts"
-              >
-                تنبيهات ({alertCount})
-              </Button>
-            )}
           </div>
 
           {isLoading ? (
-            <div className="p-12 flex justify-center"><Loader2 className="animate-spin text-primary" /></div>
+            <div className="flex items-center justify-center py-20">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
           ) : searchFilteredItems.length === 0 ? (
-            <div className="text-center py-12 text-slate-400">لا توجد طلبات بعد</div>
+            <div className="text-center py-16 text-slate-400">
+              <p className="text-lg font-medium">لا توجد أصناف</p>
+              <p className="text-sm mt-1">جرب تغيير الفلتر أو البحث</p>
+            </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
               {searchFilteredItems.map(renderItemCard)}
             </div>
           )}
         </div>
       </main>
 
-      <AlertDialog open={!!orderToDelete} onOpenChange={(open) => !open && setOrderToDelete(null)}>
+      <AlertDialog open={!!orderToDelete} onOpenChange={() => setOrderToDelete(null)}>
         <AlertDialogContent dir="rtl">
           <AlertDialogHeader>
-            <AlertDialogTitle>تأكيد حذف الطلب</AlertDialogTitle>
+            <AlertDialogTitle>حذف الطلب #{orderToDelete?.id}</AlertDialogTitle>
             <AlertDialogDescription>
-              هل أنت متأكد من حذف الطلب رقم <span className="font-bold text-slate-800">#{orderToDelete?.id}</span>؟
-              سيتم حذف جميع أصنافه بشكل نهائي ولا يمكن التراجع عن هذا الإجراء.
+              هذا الإجراء لا يمكن التراجع عنه. سيتم حذف الطلب وجميع أصنافه نهائياً.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter className="flex-row-reverse gap-2">
-            <AlertDialogCancel data-testid="button-cancel-delete">إلغاء</AlertDialogCancel>
+          <AlertDialogFooter>
+            <AlertDialogCancel>إلغاء</AlertDialogCancel>
             <AlertDialogAction
-              className="bg-red-600 hover:bg-red-700 text-white"
-              data-testid="button-confirm-delete"
+              className="bg-red-600 hover:bg-red-700"
               onClick={async () => {
                 if (!orderToDelete) return;
                 try {
                   await deleteOrder.mutateAsync(orderToDelete.id);
-                  toast({ title: "تم الحذف", description: `تم حذف الطلب #${orderToDelete.id} بنجاح` });
-                  setOrderToDelete(null);
+                  toast({ title: 'تم حذف الطلب بنجاح' });
                 } catch (err: any) {
-                  toast({ title: "خطأ", description: err.message, variant: "destructive" });
+                  toast({ title: 'خطأ', description: err.message, variant: 'destructive' });
+                } finally {
                   setOrderToDelete(null);
                 }
               }}
-              disabled={deleteOrder.isPending}
+              data-testid="button-confirm-delete"
             >
-              {deleteOrder.isPending ? <Loader2 className="h-4 w-4 animate-spin ml-2" /> : null}
-              حذف الطلب
+              حذف
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
