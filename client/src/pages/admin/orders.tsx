@@ -240,7 +240,7 @@ export default function AdminOrders() {
     return (
       <Card
         key={`${order.id}-${item.id}`}
-        className={`overflow-hidden border ${hasAlert ? 'border-red-400' : style.accent} shadow-sm`}
+        className={`overflow-hidden border ${hasAlert ? 'border-red-400' : style.accent} shadow-md`}
         data-testid={`card-item-${item.id}`}
       >
         {/* Header */}
@@ -471,7 +471,7 @@ export default function AdminOrders() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex" dir="rtl">
+    <div className="min-h-screen bg-slate-50 flex" dir="rtl">
       <Sidebar role="admin" />
       <main className="flex-1 md:mr-64 p-4 md:p-8 pt-24 md:pt-8 overflow-x-hidden">
         <div className="max-w-7xl mx-auto space-y-6">

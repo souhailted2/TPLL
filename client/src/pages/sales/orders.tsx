@@ -171,7 +171,7 @@ export default function SalesOrders() {
     return (
       <Card
         key={`${order.id}-${item.id}`}
-        className={`overflow-hidden border ${style.accent} shadow-sm`}
+        className={`overflow-hidden border ${style.accent} shadow-md`}
         data-testid={`card-item-${item.id}`}
       >
         {/* Header */}

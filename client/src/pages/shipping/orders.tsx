@@ -145,7 +145,7 @@ export default function ShippingOrders() {
     const completedPct = Math.min(Math.round((currentCompleted / (item.quantity || 1)) * 100), 100);
 
     return (
-      <Card key={`receive-${order.id}-${item.id}`} className="overflow-hidden border border-blue-200 shadow-sm" data-testid={`card-item-${item.id}`}>
+      <Card key={`receive-${order.id}-${item.id}`} className="overflow-hidden border border-blue-200 shadow-md" data-testid={`card-item-${item.id}`}>
         <CardHeader className="bg-blue-50 px-4 py-3 space-y-1 border-b border-blue-200">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 min-w-0">
@@ -241,7 +241,7 @@ export default function ShippingOrders() {
     const shippedPct = Math.min(Math.round((currentShipped / totalQty) * 100), 100);
 
     return (
-      <Card key={`ship-${order.id}-${item.id}`} className="overflow-hidden border border-purple-300 shadow-sm" data-testid={`card-item-${item.id}`}>
+      <Card key={`ship-${order.id}-${item.id}`} className="overflow-hidden border border-purple-300 shadow-md" data-testid={`card-item-${item.id}`}>
         <CardHeader className="bg-purple-50 px-4 py-3 space-y-1 border-b border-purple-200">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 min-w-0">
@@ -343,7 +343,7 @@ export default function ShippingOrders() {
     return (
       <Card
         key={`hist-${order.id}-${item.id}`}
-        className={`overflow-hidden border ${isReceived ? 'border-teal-200' : 'border-slate-200'} shadow-sm`}
+        className={`overflow-hidden border ${isReceived ? 'border-teal-200' : 'border-slate-200'} shadow-md`}
         data-testid={`card-item-${item.id}`}
       >
         <CardHeader className={`${isReceived ? 'bg-teal-50' : 'bg-slate-50'} px-4 py-3 space-y-1 border-b border-slate-200`}>

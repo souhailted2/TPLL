@@ -223,7 +223,7 @@ export default function ReceptionOrders() {
     return (
       <Card
         key={`${order.id}-${item.id}`}
-        className={`overflow-hidden border ${hasAlert ? 'border-red-400' : style.accent} shadow-sm`}
+        className={`overflow-hidden border ${hasAlert ? 'border-red-400' : style.accent} shadow-md`}
         data-testid={`card-item-${item.id}`}
       >
         {/* ── Card Header ── */}
