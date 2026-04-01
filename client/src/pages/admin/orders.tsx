@@ -87,29 +87,6 @@ export default function AdminOrders() {
     else setLocation(`/admin/orders?filter=${filter}`);
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'accepted': return 'bg-emerald-100 text-emerald-800';
-      case 'in_progress': return 'bg-blue-100 text-blue-800';
-      case 'completed': return 'bg-green-100 text-green-800';
-      case 'rejected': return 'bg-red-100 text-red-800';
-      case 'shipped': return 'bg-purple-100 text-purple-800';
-      case 'received': return 'bg-teal-100 text-teal-800';
-      default: return 'bg-amber-100 text-orange-800';
-    }
-  };
-
-  const getStatusLabel = (status: string) => {
-    switch (status) {
-      case 'accepted': return 'مقبول';
-      case 'rejected': return 'مرفوض';
-      case 'in_progress': return 'قيد الإنجاز';
-      case 'completed': return 'منجز';
-      case 'shipped': return 'تم الشحن';
-      case 'received': return 'تم الاستلام';
-      default: return 'في الانتظار';
-    }
-  };
 
   const getItemStatusStyle = (status: string): { badge: string; headerBg: string; border: string } => {
     switch (status) {
@@ -258,9 +235,6 @@ export default function AdminOrders() {
               </span>
             </div>
             <div className="flex items-center gap-1 shrink-0">
-              <Badge variant="secondary" className={`text-[10px] ${getStatusColor(order.status)}`}>
-                {getStatusLabel(order.status)}
-              </Badge>
               {orderTransitions.length > 0 && (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
