@@ -141,7 +141,6 @@ export default function ShippingOrders() {
   };
 
   const renderReceiveCard = ({ item, order }: { item: any; order: any }) => {
-    const maxAllowed = Math.ceil(item.quantity * 1.5);
     const currentCompleted = item.completedQuantity || 0;
     const completedPct = Math.min(Math.round((currentCompleted / (item.quantity || 1)) * 100), 100);
 
@@ -194,21 +193,16 @@ export default function ShippingOrders() {
             </div>
           )}
 
-          <div className="text-xs text-slate-500 bg-orange-50 rounded px-2 py-1">
-            الحد الأقصى للاستلام: <span className="font-bold text-orange-600">{maxAllowed}</span>
-          </div>
         </CardContent>
 
         <CardFooter className="px-4 py-3 border-t border-blue-100 flex items-center gap-2">
           <span className="text-xs text-blue-600 shrink-0 font-medium">إضافة كمية:</span>
           <Input
             type="number" min={0}
-            max={maxAllowed - currentCompleted}
             value={completedQuantities[item.id] !== undefined ? (completedQuantities[item.id] === 0 ? '' : completedQuantities[item.id]) : ''}
             onChange={(e) => {
               const val = e.target.value === '' ? 0 : Number(e.target.value);
-              const remaining = maxAllowed - currentCompleted;
-              if (val >= 0 && val <= remaining) {
+              if (val >= 0) {
                 setCompletedQuantities(prev => ({ ...prev, [item.id]: val }));
               }
             }}
