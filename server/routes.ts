@@ -428,11 +428,6 @@ export async function registerRoutes(
       const existingItem = await storage.getOrderItem(itemId);
       if (!existingItem) return res.status(404).json({ message: "Item not found" });
       
-      // Allow up to 150% of requested quantity
-      const maxAllowed = Math.ceil(existingItem.quantity * 1.5);
-      if (completedQuantity > maxAllowed) {
-        return res.status(400).json({ message: `الكمية المستلمة لا يمكن أن تتجاوز ${maxAllowed} (150% من الكمية المطلوبة)` });
-      }
       
       const updated = await storage.updateOrderItemCompletedQuantity(itemId, completedQuantity);
       if (!updated) return res.status(404).json({ message: "Item not found" });
@@ -462,10 +457,6 @@ export async function registerRoutes(
 
       const existingItem = await storage.getOrderItem(itemId);
       if (!existingItem) return res.status(404).json({ message: "الصنف غير موجود" });
-
-      if (shippedQuantity > existingItem.completedQuantity) {
-        return res.status(400).json({ message: `كمية الشحن لا يمكن أن تتجاوز الكمية المنجزة (${existingItem.completedQuantity})` });
-      }
 
       const updated = await storage.updateOrderItemShippedQuantity(itemId, shippedQuantity);
       if (!updated) return res.status(404).json({ message: "الصنف غير موجود" });
