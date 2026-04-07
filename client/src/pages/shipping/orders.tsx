@@ -3,7 +3,7 @@ import { useOrders, useUpdateCompletedQuantity, useShipItem } from "@/hooks/use-
 import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Loader2, Truck, Send, ClipboardCheck, ArrowDownToLine, Search, X } from "lucide-react";
+import { Loader2, Truck, Send, ClipboardCheck, ArrowDownToLine, Search, X, Pencil, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { formatMaghrebDate } from "@/lib/queryClient";
@@ -19,6 +19,10 @@ export default function ShippingOrders() {
   const [completedQuantities, setCompletedQuantities] = useState<Record<number, number>>({});
   const [shipQuantities, setShipQuantities] = useState<Record<number, number>>({});
   const [searchTerm, setSearchTerm] = useState("");
+  const [editingReceive, setEditingReceive] = useState<Record<number, boolean>>({});
+  const [editReceiveValues, setEditReceiveValues] = useState<Record<number, number>>({});
+  const [editingShip, setEditingShip] = useState<Record<number, boolean>>({});
+  const [editShipValues, setEditShipValues] = useState<Record<number, number>>({});
   const { toast } = useToast();
 
   const searchActive = searchTerm.trim() !== "";
@@ -185,9 +189,52 @@ export default function ShippingOrders() {
 
           {currentCompleted > 0 && (
             <div className="space-y-1">
-              <div className="flex justify-between text-xs">
+              <div className="flex justify-between items-center text-xs">
                 <span className="text-slate-500">المستلم من المصنع</span>
-                <span className="font-semibold text-blue-700">{currentCompleted} / {item.quantity} <span className="text-slate-400">({completedPct}%)</span></span>
+                {editingReceive[item.id] ? (
+                  <div className="flex items-center gap-1">
+                    <Input
+                      type="number" min={0}
+                      value={editReceiveValues[item.id] ?? currentCompleted}
+                      onChange={(e) => {
+                        const val = e.target.value === '' ? 0 : Number(e.target.value);
+                        if (val >= 0) setEditReceiveValues(prev => ({ ...prev, [item.id]: val }));
+                      }}
+                      className="w-20 h-6 text-center text-xs px-1"
+                      data-testid={`input-edit-completed-${item.id}`}
+                      autoFocus
+                    />
+                    <Button size="icon" variant="ghost" className="h-6 w-6 text-green-600 hover:bg-green-50"
+                      onClick={async () => {
+                        const newVal = editReceiveValues[item.id] ?? currentCompleted;
+                        try {
+                          await updateCompleted.mutateAsync({ itemId: item.id, completedQuantity: newVal });
+                          toast({ title: "تم التعديل" });
+                          setEditingReceive(prev => ({ ...prev, [item.id]: false }));
+                        } catch (err: any) {
+                          toast({ title: "خطأ", description: err.message, variant: "destructive" });
+                        }
+                      }}
+                      disabled={updateCompleted.isPending}
+                      data-testid={`button-confirm-edit-completed-${item.id}`}
+                    ><Check className="h-3 w-3" /></Button>
+                    <Button size="icon" variant="ghost" className="h-6 w-6 text-slate-400 hover:bg-slate-100"
+                      onClick={() => setEditingReceive(prev => ({ ...prev, [item.id]: false }))}
+                      data-testid={`button-cancel-edit-completed-${item.id}`}
+                    ><X className="h-3 w-3" /></Button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-semibold text-blue-700">{currentCompleted} / {item.quantity} <span className="text-slate-400">({completedPct}%)</span></span>
+                    <Button size="icon" variant="ghost" className="h-5 w-5 text-slate-400 hover:text-blue-600 hover:bg-blue-50"
+                      onClick={() => {
+                        setEditReceiveValues(prev => ({ ...prev, [item.id]: currentCompleted }));
+                        setEditingReceive(prev => ({ ...prev, [item.id]: true }));
+                      }}
+                      data-testid={`button-edit-completed-${item.id}`}
+                    ><Pencil className="h-3 w-3" /></Button>
+                  </div>
+                )}
               </div>
               <Progress value={completedPct} className="h-2 bg-slate-200 [&>div]:bg-blue-500" />
             </div>
@@ -279,9 +326,52 @@ export default function ShippingOrders() {
             </div>
             {currentShipped > 0 && (
               <div className="space-y-1">
-                <div className="flex justify-between text-xs">
+                <div className="flex justify-between items-center text-xs">
                   <span className="text-slate-500">تم الشحن</span>
-                  <span className="font-semibold text-purple-700">{currentShipped} / {totalQty} <span className="text-slate-400">({shippedPct}%)</span></span>
+                  {editingShip[item.id] ? (
+                    <div className="flex items-center gap-1">
+                      <Input
+                        type="number" min={0}
+                        value={editShipValues[item.id] ?? currentShipped}
+                        onChange={(e) => {
+                          const val = e.target.value === '' ? 0 : Number(e.target.value);
+                          if (val >= 0) setEditShipValues(prev => ({ ...prev, [item.id]: val }));
+                        }}
+                        className="w-20 h-6 text-center text-xs px-1"
+                        data-testid={`input-edit-ship-${item.id}`}
+                        autoFocus
+                      />
+                      <Button size="icon" variant="ghost" className="h-6 w-6 text-green-600 hover:bg-green-50"
+                        onClick={async () => {
+                          const newVal = editShipValues[item.id] ?? currentShipped;
+                          try {
+                            await shipItem.mutateAsync({ itemId: item.id, shippedQuantity: newVal });
+                            toast({ title: "تم التعديل" });
+                            setEditingShip(prev => ({ ...prev, [item.id]: false }));
+                          } catch (err: any) {
+                            toast({ title: "خطأ", description: err.message, variant: "destructive" });
+                          }
+                        }}
+                        disabled={shipItem.isPending}
+                        data-testid={`button-confirm-edit-ship-${item.id}`}
+                      ><Check className="h-3 w-3" /></Button>
+                      <Button size="icon" variant="ghost" className="h-6 w-6 text-slate-400 hover:bg-slate-100"
+                        onClick={() => setEditingShip(prev => ({ ...prev, [item.id]: false }))}
+                        data-testid={`button-cancel-edit-ship-${item.id}`}
+                      ><X className="h-3 w-3" /></Button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-semibold text-purple-700">{currentShipped} / {totalQty} <span className="text-slate-400">({shippedPct}%)</span></span>
+                      <Button size="icon" variant="ghost" className="h-5 w-5 text-slate-400 hover:text-purple-600 hover:bg-purple-50"
+                        onClick={() => {
+                          setEditShipValues(prev => ({ ...prev, [item.id]: currentShipped }));
+                          setEditingShip(prev => ({ ...prev, [item.id]: true }));
+                        }}
+                        data-testid={`button-edit-ship-${item.id}`}
+                      ><Pencil className="h-3 w-3" /></Button>
+                    </div>
+                  )}
                 </div>
                 <Progress value={shippedPct} className="h-2 bg-slate-200 [&>div]:bg-purple-500" />
               </div>
